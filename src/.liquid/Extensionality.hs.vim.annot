@@ -1,0 +1,2 @@
+1:1-1:1::Extensionality.$trModule :: "GHC.Types.Module"
+12:1-12:15::Extensionality.extensionality :: "forall a b .\nx1:(a -> b) -> x3:(a -> b) -> (x6:a -> {VV : () | x1 x6 == x3 x6}) -> {VV : () | x1 == x3}"

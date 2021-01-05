@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>/Users/henry/Documents/Projects/monadic-quicksort-verification/src/Nat.hs</title>
+</head>
+<head>
+<link type='text/css' rel='stylesheet' href='liquid.css' />
+</head>
+
+<body>
+<hr>
+Put mouse over identifiers to see inferred types
+<pre><span class=hs-linenum> 1: </span><a class=annot href="#"><span class=annottext>{VV##473 : GHC.Types.Module | $k_##474}</span><span class='hs-keyword'>module</span></a> <span class='hs-conid'>Nat</span> <span class='hs-keyword'>where</span>
+<span class=hs-linenum> 2: </span>
+<span class=hs-linenum> 3: </span><span class='hs-keyword'>import</span>           <span class='hs-conid'>Prelude</span>                 <span class='hs-varid'>hiding</span> <span class='hs-layout'>(</span> <span class='hs-layout'>(</span><span class='hs-varop'>+</span><span class='hs-layout'>)</span> <span class='hs-layout'>)</span>
+<span class=hs-linenum> 4: </span>
+<span class=hs-linenum> 5: </span>
+<span class=hs-linenum> 6: </span><span class='hs-keyword'>infixr</span> <span class='hs-num'>6</span> <span class='hs-varop'>+</span>
+<span class=hs-linenum> 7: </span><span class='hs-keyword'>{-@</span> <span class='hs-keyword'>infixr</span> <span class='hs-num'>6</span> <span class='hs-varop'>+</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 8: </span>
+<span class=hs-linenum> 9: </span>
+<span class=hs-linenum>10: </span><span class='hs-keyword'>{-@</span>
+<span class=hs-linenum>11: </span><span class='hs-keyword'>data</span> <span class='hs-conid'>N</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Zero</span> <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Suc</span> <span class='hs-conid'>N</span>
+<span class=hs-linenum>12: </span><span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>13: </span><span class='hs-keyword'>data</span> <span class='hs-conid'>N</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Zero</span> <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Suc</span> <span class='hs-conid'>N</span>
+<span class=hs-linenum>14: </span>
+<span class=hs-linenum>15: </span>
+<span class=hs-linenum>16: </span><span class='hs-keyword'>{-@</span> <span class='hs-layout'>(</span><span class='hs-varop'>+</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>N</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>N</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>N</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>17: </span><span class='hs-layout'>(</span><span class='hs-varop'>+</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>N</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>N</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>N</span>
+<span class=hs-linenum>18: </span><span class='hs-conid'>Zero</span>  <a class=annot href="#"><span class=annottext>lq_tmp$x##433:Nat.N -&gt; lq_tmp$x##434:Nat.N -&gt; Nat.N</span><span class='hs-varop'>+</span></a> <a class=annot href="#"><span class=annottext>Nat.N</span><span class='hs-varid'>n</span></a> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##445 : Nat.N | lq_tmp$x##445 == n##a4nX}</span><span class='hs-varid'>n</span></a>
+<span class=hs-linenum>19: </span><span class='hs-conid'>Suc</span> <span class='hs-varid'>m</span> <span class='hs-varop'>+</span> <span class='hs-varid'>n</span> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>lq_tmp$x##470:Nat.N -&gt; {lq_tmp$x##468 : Nat.N | (is$Nat.Zero lq_tmp$x##468 &lt;=&gt; false)
+                                                &amp;&amp; lqdc##$select##Nat.Suc##1 lq_tmp$x##468 == lq_tmp$x##470
+                                                &amp;&amp; lqdc##$select##Nat.Suc##1 lq_tmp$x##468 == lq_tmp$x##470
+                                                &amp;&amp; (is$Nat.Suc lq_tmp$x##468 &lt;=&gt; true)
+                                                &amp;&amp; lq_tmp$x##468 == Nat.Suc lq_tmp$x##470}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##459 : Nat.N | lq_tmp$x##459 == Nat.+ m##a4nY n##a4nX}</span><span class='hs-layout'>(</span></a><a class=annot href="#"><span class=annottext>{lq_tmp$x##464 : Nat.N | lq_tmp$x##464 == m##a4nY}</span><span class='hs-varid'>m</span></a> <span class='hs-varop'>+</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##465 : Nat.N | lq_tmp$x##465 == n##a4nX}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+</pre>
+</body>
+</html>

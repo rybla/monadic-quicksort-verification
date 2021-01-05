@@ -1,0 +1,11 @@
+module Size where
+
+
+import           Liquid.ProofCombinators
+
+import           Natural
+
+
+{-@
+class measure size :: a -> Natural
+@-}

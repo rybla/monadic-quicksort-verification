@@ -1,0 +1,45 @@
+module IsMonadPlus where
+
+import           Liquid.ProofCombinators
+import           Function
+
+
+{-@
+data IsMonadPlus m = IsMonadPlus
+  { vlift :: forall a . a -> m a
+  , vbind :: forall a b . m a -> (a -> m b) -> m b
+  , vseq :: forall a b . m1:m a -> m2:m b -> {m : m b | m = vbind m1 (vconst m2)}
+  , kleisli :: forall a b c . f:(a -> m b) -> g:(b -> m c) -> x:a -> {m : m c | m = vbind (f x) g}
+  , vepsilon :: forall a . m a
+  , vmadd :: forall a . Op2 (m a)
+  , vmadd_ap :: forall a b . f:(a -> m b) -> g:(a -> m b) -> x:a -> {m : m b | m = vmadd (f x) (g x)}
+  , vbind_identity_right :: forall a . m:m a ->
+      {vbind m vlift = m}
+  , vbind_vlift :: forall a b . f:(a -> m b) -> x:a ->
+      {vbind (vlift x) f = f x}
+  , vbind_distribution :: forall a b c . m:m a -> f:(a -> m b) -> g:(b -> m c) ->
+      {vbind (vbind m f) g = vbind m (kleisli f g)}
+  , vbind_identity_left :: forall a b . f:(a -> m b) ->
+      {vbind vepsilon f = vepsilon}
+  , vseq_identity_right :: forall a . m:m a ->
+      {vseq m vepsilon = vepsilon}
+  , vmadd_distribute_left :: forall a b . m1:m a -> m2:m a -> f:(a -> m b) ->
+      {vbind (vmadd m1 m2) f = vmadd (vbind m1 f) (vbind m2 f)}
+  , vmadd_distribute_right :: forall a b . m: m a -> f:(a -> m b) -> g:(a -> m b) ->
+      {vbind m (vmadd_ap f g) = vmadd (vbind m f) (vbind m g)} }
+@-}
+data IsMonadPlus m = IsMonadPlus
+  { vlift :: forall a . a -> m a
+  , vbind :: forall a b . m a -> (a -> m b) -> m b
+  , vseq :: forall a b . m a -> m b -> m b
+  , kleisli :: forall a b c . (a -> m b) -> (b -> m c) -> a -> m c
+  , vepsilon :: forall a . m a
+  , vmadd :: forall a . Op2 (m a)
+  , vmadd_ap :: forall a b . (a -> m b) -> (a -> m b) -> a -> m b
+  , vbind_identity_right :: forall a . m a -> Proof
+  , vbind_vlift :: forall a b . (a -> m b) -> a -> Proof
+  , vbind_distribution :: forall a b c . m a -> (a -> m b) -> (b -> m c) -> Proof
+  , vbind_identity_left :: forall a b . (a -> m b) -> Proof
+  , vseq_identity_right :: forall a . m a -> Proof
+  , vmadd_distribute_left :: forall a b . m a -> m a -> (a -> m b) -> Proof
+  , vmadd_distribute_right :: forall a b . m a -> (a -> m b) -> (a -> m b) -> Proof }

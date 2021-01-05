@@ -1,0 +1,45 @@
+{-# LANGUAGE ExplicitForAll #-}
+{-@ LIQUID "--typeclass" @-}
+{-@ LIQUID "--reflection" @-}
+{-@ LIQUID "--ple" @-}
+
+
+module Order where
+
+
+import           Prelude                 hiding ( (<=) )
+import           Liquid.ProofCombinators
+import           Data.Function
+import           Data.List
+
+
+{-@ infix 4 (<=) @-}
+
+
+-- Ordered terms
+class Ordered a where
+
+  -- interface
+
+  {-@ leq :: a -> a -> Bool @-}
+  leq :: a -> a -> Bool
+
+  {-@ (<=) :: a -> a -> Bool @-}
+  (<=) :: a -> a -> Bool
+  (<=) = leq
+
+  -- properties
+
+  {-@ leq_reflexive :: x : a ->
+        {leq x x} @-}
+  leq_reflexive :: a -> Proof
+
+  {-@ leq_transitive :: x : a -> y : a -> z : a ->
+        {leq x y && leq y z => leq x z} @-}
+  leq_transitive :: a -> a -> a -> Proof -> Proof -> Proof
+
+  {-# MINIMAL leq, leq_reflexive, leq_transitive #-}
+
+
+-- Sorted list
+-- data SortedList a where

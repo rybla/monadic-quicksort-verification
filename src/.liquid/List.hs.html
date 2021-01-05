@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>/Users/henry/Documents/Projects/monadic-quicksort-verification/src/List.hs</title>
+</head>
+<head>
+<link type='text/css' rel='stylesheet' href='liquid.css' />
+</head>
+
+<body>
+<hr>
+Put mouse over identifiers to see inferred types
+<pre><span class=hs-linenum> 1: </span><a class=annot href="#"><span class=annottext>GHC.Types.Module</span><span class='hs-keyword'>module</span></a> <span class='hs-conid'>List</span> <span class='hs-keyword'>where</span>
+<span class=hs-linenum> 2: </span>
+<span class=hs-linenum> 3: </span><span class='hs-keyword'>import</span>           <span class='hs-conid'>Prelude</span>                 <span class='hs-varid'>hiding</span> <span class='hs-layout'>(</span> <span class='hs-varid'>head</span>
+<span class=hs-linenum> 4: </span>                                                <span class='hs-layout'>,</span> <span class='hs-varid'>tail</span>
+<span class=hs-linenum> 5: </span>                                                <span class='hs-layout'>,</span> <span class='hs-varid'>all</span>
+<span class=hs-linenum> 6: </span>                                                <span class='hs-layout'>,</span> <span class='hs-varid'>length</span>
+<span class=hs-linenum> 7: </span>                                                <span class='hs-layout'>,</span> <span class='hs-layout'>(</span><span class='hs-varop'>++</span><span class='hs-layout'>)</span>
+<span class=hs-linenum> 8: </span>                                                <span class='hs-layout'>,</span> <span class='hs-layout'>(</span><span class='hs-varop'>+</span><span class='hs-layout'>)</span>
+<span class=hs-linenum> 9: </span>                                                <span class='hs-layout'>)</span>
+<span class=hs-linenum>10: </span>
+<span class=hs-linenum>11: </span><span class='hs-keyword'>import</span>           <span class='hs-conid'>Liquid.ProofCombinators</span>
+<span class=hs-linenum>12: </span>
+<span class=hs-linenum>13: </span><span class='hs-keyword'>import</span>           <span class='hs-conid'>Natural</span>
+<span class=hs-linenum>14: </span>
+<span class=hs-linenum>15: </span>
+<span class=hs-linenum>16: </span><span class='hs-comment'>{-
+For some reason, it won't let me name the fields "head" and "tail".
+Gives this error:
+
+  /Users/henry/Documents/Projects/monadic-quicksort-verification/src/List.hs:15:21-35: Error: Illegal type specification for `List.Cons`
+
+   15 | data List a = Nil | Cons a (List a)
+                            ^^^^^^^^^^^^^^^
+
+       List.Cons :: forall a .
+                    head:a -&gt; tail:(List.List a) -&gt; {VV : (List.List a) | tail VV == tail
+                                                                          &amp;&amp; head VV == head}
+       Sort Error in Refinement: {VV : (List.List a##a3h6) | ((is$List.Nil VV &lt;=&gt; false)
+                                                              &amp;&amp; tail VV == tail##List.Cons
+                                                              &amp;&amp; head VV == head##List.Cons
+                                                              &amp;&amp; tail VV == tail##List.Cons
+                                                              &amp;&amp; head VV == head##List.Cons
+                                                              &amp;&amp; (is$List.Cons VV &lt;=&gt; true))}
+       Cannot unify fix$36$$91$$93$ with List.List in expression: tail VV
+  make: *** [check] Error 2
+-}</span>
+<span class=hs-linenum>37: </span><span class='hs-keyword'>{-@</span>
+<span class=hs-linenum>38: </span><span class='hs-keyword'>data</span> <span class='hs-conid'>List</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Nil</span> <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Cons</span> <span class='hs-layout'>{</span><span class='hs-varid'>hd</span><span class='hs-keyglyph'>::</span><span class='hs-varid'>a</span><span class='hs-layout'>,</span> <span class='hs-varid'>tl</span><span class='hs-keyglyph'>::</span><span class='hs-conid'>List</span> <span class='hs-varid'>a</span><span class='hs-layout'>}</span>
+<span class=hs-linenum>39: </span><span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>40: </span><span class='hs-keyword'>data</span> <span class='hs-conid'>List</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Nil</span> <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Cons</span> <span class='hs-varid'>a</span> <span class='hs-layout'>(</span><span class='hs-conid'>List</span> <span class='hs-varid'>a</span><span class='hs-layout'>)</span>
+<span class=hs-linenum>41: </span>
+<span class=hs-linenum>42: </span>
+<span class=hs-linenum>43: </span><span class='hs-keyword'>{-@</span>
+<span class=hs-linenum>44: </span><span class='hs-definition'>measure</span> <span class='hs-varid'>list_size</span> <span class='hs-keyglyph'>::</span> <span class='hs-keyword'>forall</span> <span class='hs-varid'>a</span> <span class='hs-varop'>.</span> <span class='hs-conid'>List</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Natural</span>
+<span class=hs-linenum>45: </span><span class='hs-definition'>list_size</span> <span class='hs-conid'>Nil</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Zero</span>
+<span class=hs-linenum>46: </span><span class='hs-definition'>list_size</span> <span class='hs-layout'>(</span><span class='hs-conid'>Cons</span> <span class='hs-keyword'>_</span> <span class='hs-varid'>xs</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Suc</span> <span class='hs-layout'>(</span><span class='hs-varid'>list_size</span> <span class='hs-varid'>xs</span><span class='hs-layout'>)</span>
+<span class=hs-linenum>47: </span><span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>48: </span>
+<span class=hs-linenum>49: </span>
+<span class=hs-linenum>50: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>reflect</span> <span class='hs-varid'>length</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>51: </span><span class='hs-definition'>length</span> <span class='hs-keyglyph'>::</span> <span class='hs-keyword'>forall</span> <span class='hs-varid'>a</span> <span class='hs-varop'>.</span> <span class='hs-conid'>List</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Natural</span>
+<span class=hs-linenum>52: </span><a class=annot href="#"><span class=annottext>forall a .
+x1:(List.List a) -&gt; {VV : Natural.Natural | VV == length x1}</span><span class='hs-definition'>length</span></a> <span class='hs-conid'>Nil</span>         <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>{v : Natural.Natural | v == Zero}</span><span class='hs-conid'>Zero</span></a>
+<span class=hs-linenum>53: </span><span class='hs-definition'>length</span> <span class='hs-layout'>(</span><span class='hs-conid'>Cons</span> <span class='hs-varid'>x</span> <span class='hs-varid'>xs</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>x1:Natural.Natural -&gt; {v : Natural.Natural | lqdc##$select v == x1
+                                             &amp;&amp; v == Suc x1}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{v : Natural.Natural | v == length xs}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>length</span> <a class=annot href="#"><span class=annottext>{v : (List.List a) | v == xs}</span><span class='hs-varid'>xs</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum>54: </span>
+<span class=hs-linenum>55: </span>
+<span class=hs-linenum>56: </span>
+<span class=hs-linenum>57: </span><span class='hs-keyword'>{-@</span>
+<span class=hs-linenum>58: </span><span class='hs-definition'>append</span> <span class='hs-keyglyph'>::</span> <span class='hs-keyword'>forall</span> <span class='hs-varid'>a</span> <span class='hs-varop'>.</span> <span class='hs-varid'>xs</span><span class='hs-conop'>:</span><span class='hs-conid'>List</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>ys</span><span class='hs-conop'>:</span><span class='hs-conid'>List</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>{zs :</span> <span class='hs-conid'>List</span> <span class='hs-varid'>a</span> <span class='hs-keyword'>| length zs = add (length xs) (length ys)}</span>
+<span class=hs-linenum>59: </span><span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>60: </span><span class='hs-definition'>append</span> <span class='hs-keyglyph'>::</span> <span class='hs-keyword'>forall</span> <span class='hs-varid'>a</span> <span class='hs-varop'>.</span> <span class='hs-conid'>List</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>List</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>List</span> <span class='hs-varid'>a</span>
+<span class=hs-linenum>61: </span><a class=annot href="#"><span class=annottext>forall a .
+x1:(List.List a) -&gt; x2:(List.List a) -&gt; {zs : (List.List a) | length zs == add (length x1) (length x2)}</span><span class='hs-definition'>append</span></a> <span class='hs-conid'>Nil</span>         <a class=annot href="#"><span class=annottext>(List.List a)</span><span class='hs-varid'>ys</span></a> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>{v : (List.List a) | v == ys}</span><span class='hs-varid'>ys</span></a>
+<span class=hs-linenum>62: </span><span class='hs-definition'>append</span> <span class='hs-layout'>(</span><span class='hs-conid'>Cons</span> <span class='hs-varid'>x</span> <span class='hs-varid'>xs</span><span class='hs-layout'>)</span> <span class='hs-varid'>ys</span> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>{VV : forall a .
+      x1:a -&gt; x2:(List.List a) -&gt; {v : (List.List a) | tl v == x2
+                                                       &amp;&amp; hd v == x1
+                                                       &amp;&amp; list_size v == Suc (list_size x2)
+                                                       &amp;&amp; v == Cons x1 x2} | VV == Cons}</span><span class='hs-conid'>Cons</span></a> <a class=annot href="#"><span class=annottext>{VV : a | VV == x}</span><span class='hs-varid'>x</span></a> <a class=annot href="#"><span class=annottext>{v : (List.List a) | length v == add (length xs) (length ys)
+                     &amp;&amp; v == append xs ys}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>append</span> <a class=annot href="#"><span class=annottext>{v : (List.List a) | v == xs}</span><span class='hs-varid'>xs</span></a> <a class=annot href="#"><span class=annottext>{v : (List.List a) | v == ys}</span><span class='hs-varid'>ys</span></a><span class='hs-layout'>)</span>
+</pre>
+</body>
+</html>

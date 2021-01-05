@@ -1,0 +1,19 @@
+module IsEq where
+
+import           Liquid.ProofCombinators
+import           Function
+import           Relation
+
+
+{-@
+data IsEq a = IsEq
+  { equ :: RelationD a
+  , equ_reflexive  :: x:a ->               {IsReflexive  equ x}
+  , eq_symmetric   :: x:a -> y:a ->        {IsSymmetric  equ x y}
+  , equ_transitive :: x:a -> y:a -> z:a -> {IsTransitive equ x y z} }
+@-}
+data IsEq a = IsEq
+  { equ :: RelationD a
+  , equ_reflexive  :: a ->           Proof
+  , equ_symmetric  :: a -> a ->      Proof
+  , equ_transitive :: a -> a -> a -> Proof }

@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>/Users/henry/Documents/Projects/monadic-quicksort-verification/monadic-quicksort-verification/src/Relation.hs</title>
+</head>
+<head>
+<link type='text/css' rel='stylesheet' href='liquid.css' />
+</head>
+
+<body>
+<hr>
+Put mouse over identifiers to see inferred types
+<pre><span class=hs-linenum> 1: </span><a class=annot href="#"><span class=annottext>GHC.Types.Module</span><span class='hs-keyword'>module</span></a> <span class='hs-conid'>Relation</span> <span class='hs-keyword'>where</span>
+<span class=hs-linenum> 2: </span>
+<span class=hs-linenum> 3: </span><span class='hs-keyword'>import</span>           <span class='hs-conid'>Liquid.ProofCombinators</span>
+<span class=hs-linenum> 4: </span>
+<span class=hs-linenum> 5: </span>
+<span class=hs-linenum> 6: </span><span class='hs-comment'>-- `Relation&lt;n&gt;` is an N-ary relation.</span>
+<span class=hs-linenum> 7: </span><span class='hs-comment'>-- `Relation&lt;n&gt;D` is a homogenous N-ary relation.</span>
+<span class=hs-linenum> 8: </span>
+<span class=hs-linenum> 9: </span><span class='hs-keyword'>{-@</span> <span class='hs-keyword'>type</span> <span class='hs-conid'>Predicate</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Bool</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>10: </span><span class='hs-keyword'>type</span> <span class='hs-conid'>Predicate</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Bool</span>
+<span class=hs-linenum>11: </span>
+<span class=hs-linenum>12: </span><span class='hs-keyword'>{-@</span> <span class='hs-keyword'>type</span> <span class='hs-conid'>Relation</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>b</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Bool</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>13: </span><span class='hs-keyword'>type</span> <span class='hs-conid'>Relation</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>b</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Bool</span>
+<span class=hs-linenum>14: </span>
+<span class=hs-linenum>15: </span><span class='hs-keyword'>{-@</span> <span class='hs-keyword'>type</span> <span class='hs-conid'>RelationD</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Relation</span> <span class='hs-varid'>a</span> <span class='hs-varid'>a</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>16: </span><span class='hs-keyword'>type</span> <span class='hs-conid'>RelationD</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Relation</span> <span class='hs-varid'>a</span> <span class='hs-varid'>a</span>
+<span class=hs-linenum>17: </span>
+<span class=hs-linenum>18: </span><span class='hs-keyword'>{-@</span> <span class='hs-keyword'>type</span> <span class='hs-conid'>Relation3</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span> <span class='hs-varid'>c</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>b</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>c</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Bool</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>19: </span><span class='hs-keyword'>type</span> <span class='hs-conid'>Relation3</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span> <span class='hs-varid'>c</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>b</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>c</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Bool</span>
+<span class=hs-linenum>20: </span>
+<span class=hs-linenum>21: </span><span class='hs-keyword'>{-@</span> <span class='hs-keyword'>type</span> <span class='hs-conid'>Relation3D</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Relation3</span> <span class='hs-varid'>a</span> <span class='hs-varid'>a</span> <span class='hs-varid'>a</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>22: </span><span class='hs-keyword'>type</span> <span class='hs-conid'>Relation3D</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Relation3</span> <span class='hs-varid'>a</span> <span class='hs-varid'>a</span> <span class='hs-varid'>a</span>
+<span class=hs-linenum>23: </span>
+<span class=hs-linenum>24: </span>
+<span class=hs-linenum>25: </span><span class='hs-comment'>-- Predicates.</span>
+<span class=hs-linenum>26: </span><span class='hs-comment'>-- NOTE. Predicate parameters must be capitalized.</span>
+<span class=hs-linenum>27: </span>
+<span class=hs-linenum>28: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>predicate</span> <span class='hs-conid'>IsReflexive</span>  <span class='hs-conid'>R</span> <span class='hs-conid'>X</span>     <span class='hs-keyglyph'>=</span> <span class='hs-conid'>R</span> <span class='hs-conid'>X</span> <span class='hs-conid'>X</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>29: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>predicate</span> <span class='hs-conid'>IsSymmetric</span>  <span class='hs-conid'>R</span> <span class='hs-conid'>X</span> <span class='hs-conid'>Y</span>   <span class='hs-keyglyph'>=</span> <span class='hs-conid'>R</span> <span class='hs-conid'>X</span> <span class='hs-conid'>Y</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>R</span> <span class='hs-conid'>Y</span> <span class='hs-conid'>X</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>30: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>predicate</span> <span class='hs-conid'>IsTransitive</span> <span class='hs-conid'>R</span> <span class='hs-conid'>X</span> <span class='hs-conid'>Y</span> <span class='hs-conid'>Z</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>R</span> <span class='hs-conid'>X</span> <span class='hs-conid'>Y</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>R</span> <span class='hs-conid'>Y</span> <span class='hs-conid'>Z</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>R</span> <span class='hs-conid'>X</span> <span class='hs-conid'>Y</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>31: </span>
+<span class=hs-linenum>32: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>predicate</span> <span class='hs-conid'>PreservesMeasure</span>   <span class='hs-conid'>M</span> <span class='hs-conid'>F</span> <span class='hs-conid'>X</span>   <span class='hs-keyglyph'>=</span> <span class='hs-conid'>M</span> <span class='hs-conid'>X</span>   <span class='hs-keyglyph'>=</span>  <span class='hs-conid'>M</span> <span class='hs-layout'>(</span><span class='hs-conid'>F</span> <span class='hs-conid'>X</span><span class='hs-layout'>)</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>33: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>predicate</span> <span class='hs-conid'>PreservesPredicate</span> <span class='hs-conid'>P</span> <span class='hs-conid'>F</span> <span class='hs-conid'>X</span>   <span class='hs-keyglyph'>=</span> <span class='hs-conid'>P</span> <span class='hs-conid'>X</span>   <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>P</span> <span class='hs-layout'>(</span><span class='hs-conid'>F</span> <span class='hs-conid'>X</span><span class='hs-layout'>)</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>34: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>predicate</span> <span class='hs-conid'>PreservesRelation</span>  <span class='hs-conid'>R</span> <span class='hs-conid'>F</span> <span class='hs-conid'>X</span> <span class='hs-conid'>Y</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>R</span> <span class='hs-conid'>X</span> <span class='hs-conid'>Y</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>R</span> <span class='hs-layout'>(</span><span class='hs-conid'>F</span> <span class='hs-conid'>X</span><span class='hs-layout'>)</span> <span class='hs-layout'>(</span><span class='hs-conid'>F</span> <span class='hs-conid'>Y</span><span class='hs-layout'>)</span> <span class='hs-keyword'>@-}</span>
+</pre>
+</body>
+</html>

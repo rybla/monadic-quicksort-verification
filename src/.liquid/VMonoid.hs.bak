@@ -1,0 +1,33 @@
+module IsMonoid where
+
+import           Liquid.ProofCombinators
+import           Function
+import           IsSemigroup
+
+
+{-@
+data IsMonoid a = IsMonoid
+  { semigroup :: IsSemigroup a
+  , epsilon :: a
+  , op_associative :: x:a -> y:a -> z:a -> {IsAssociative (op semigroup) x y z}
+  , op_identity :: x:a -> {IsIdentity (op semigroup) epsilon x} }
+@-}
+data IsMonoid a = IsMonoid
+  { semigroup :: IsSemigroup a
+  , epsilon :: a
+  , op_associative :: a -> a -> a -> Proof
+  , op_identity :: a -> Proof }
+
+
+-- {-@
+-- data IsMonoid a = IsMonoid
+--   { op :: Op2 a
+--   , epsilon :: a
+--   , op_associative :: x:a -> y:a -> z:a -> {IsAssociative op x y z}
+--   , op_identity :: x:a -> {IsIdentity op epsilon x} }
+-- @-}
+-- data IsMonoid a = IsMonoid
+--   { op :: Op2 a
+--   , epsilon :: a
+--   , op_associative :: a -> a -> a -> Proof
+--   , op_identity :: a -> Proof }

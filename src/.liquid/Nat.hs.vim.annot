@@ -1,0 +1,8 @@
+1:1-1:1::Nat.$trModule :: "GHC.Types.Module"
+18:7-18:8::Nat.+ :: "Nat.N -> Nat.N -> Nat.N"
+18:9-18:10::n :: "Nat.N"
+18:13-18:14::n :: "{v : Nat.N | v == n}"
+19:13-19:24::Nat.Suc :: "x1:Nat.N -> {v : Nat.N | lqdc##$select v == x1\n                         && v == Suc x1}"
+19:17-19:24::lq_anf$##7205759403792810522 :: "{v : Nat.N | v == + m n}"
+19:18-19:19::m :: "{v : Nat.N | v == m}"
+19:22-19:23::n :: "{v : Nat.N | v == n}"
