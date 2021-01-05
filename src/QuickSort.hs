@@ -3,9 +3,9 @@ module QuickSort where
 import           Liquid.ProofCombinators
 import           Function
 import           Relation
-import           IsMonad
-import           IsMonadPlus
-import           IsOrdered
+import           VMonad
+import           VMonadPlus
+import           VOrdered
 import           VList
 
 import           SlowSort
@@ -16,14 +16,14 @@ import           SlowSort
 --------------------------------------------------------------------------------
 
 
-quicksort :: forall a . IsOrdered a -> VList a -> VList a
-quicksort iOrd Nil = Nil
-quicksort iOrd (Cons x xs) =
+quicksort :: forall a . VOrdered a -> VList a -> VList a
+quicksort iOrdered Nil = Nil
+quicksort iOrdered (Cons x xs) =
   let (ys, zs) = partition_ x xs
   in  vappend (quicksort_ ys) (vappend (vsingleton x) (quicksort_ ys))
  where
-  partition_ = partition iOrd
-  quicksort_ = quicksort iOrd
+  partition_ = partition iOrdered
+  quicksort_ = quicksort iOrdered
 
 
 --------------------------------------------------------------------------------
@@ -35,63 +35,58 @@ quicksort iOrd (Cons x xs) =
 {-@ reflect partition_specification @-}
 partition_specification
   :: forall m a
-   . IsMonadPlus m
-  -> IsOrdered a
+   . VMonadPlus m
+  -> VOrdered a
   -> a
   -> VList a
   -> m (VList a, VList a)
-partition_specification isMonadPlus iOrd x xs = vbind_
+partition_specification iMonadPlus iOrdered x xs = vbind_
   (split_ xs)
   (mguardBy_ (isSortedBetween_ x))
  where
-  vbind_            = vbind isMonad_
-  isMonad_            = isMonad isMonadPlus
-  isSortedBetween_ = isSortedBetween iOrd
-  split_           = split isMonadPlus
-  mguardBy_        = mguardBy isMonadPlus
+  vbind_           = vbind iMonad_
+  iMonad_          = iMonad iMonadPlus
+  isSortedBetween_ = isSortedBetween iOrdered
+  split_           = split iMonadPlus
+  mguardBy_        = mguardBy iMonadPlus
 
 
 -- Predicate. Refinement specification of `partition`.
-{-@ predicate IsPartition F X XS = MRefines isMonadPlus (vlift (isMonad isMonadPlus) (f iOrd x xs)) (partition_specification iOrd isMonadPlus x xs) @-}
+{-@ predicate IsPartition F X XS = MRefines iMonadPlus (vlift (iMonad iMonadPlus) (f iOrdered x xs)) (partition_specification iOrdered iMonadPlus x xs) @-}
 
 
 -- Function. Partition a `VList` into a sublist of elements less than and a
 -- sublist of elements greater than a given element.
 {-@ reflect partition @-}
-partition :: IsOrdered a -> a -> VList a -> (VList a, VList a)
-partition iOrd x' Nil = (Nil, Nil)
-partition iOrd x' (Cons x xs) =
-  let (ys, zs) = partition iOrd x xs
+partition :: VOrdered a -> a -> VList a -> (VList a, VList a)
+partition iOrdered x' Nil = (Nil, Nil)
+partition iOrdered x' (Cons x xs) =
+  let (ys, zs) = partition iOrdered x xs
   in  if leq_ x x' then (Cons x ys, zs) else (ys, Cons x zs)
-  where leq_ = leq iOrd
+  where leq_ = leq iOrdered
 
 
 -- Lemma. `partition` refines `partition_step`
--- TODO: prove
+-- TODO. prove
 {-@
-assume partition_correct :: forall m a . isMonadPlus:IsMonadPlus m -> iOrd:IsOrdered a -> x:a -> xs:VList a ->
-  {MRefines isMonadPlus (vlift (isMonad isMonadPlus) (partition iOrd x xs)) (partition_specification isMonadPlus iOrd x xs)}
+assume partition_correct :: forall m a . iMonadPlus:VMonadPlus m -> iOrdered:VOrdered a -> x:a -> xs:VList a ->
+  {MRefines iMonadPlus (vlift (iMonad iMonadPlus) (partition iOrdered x xs)) (partition_specification iMonadPlus iOrdered x xs)}
 @-}
 partition_correct
-  :: forall m a
-   . IsMonadPlus m
-  -> IsOrdered a
-  -> a
-  -> VList a
-  -> Proof
-partition_correct isMonadPlus iOrd x xs = ()
+  :: forall m a . VMonadPlus m -> VOrdered a -> a -> VList a -> Proof
+partition_correct iMonadPlus iOrdered x xs = ()
 
 
 -- Lemma. "Divide and conquer" property
 {-@ reflect slowsort_step @-}
 slowsort_step
   :: forall m a
-   . IsMonadPlus m
-  -> IsOrdered a
+   . VMonadPlus m
+  -> VOrdered a
   -> a
   -> VList a
   -> m (VList a)
-slowsort_step isMonadPlus iOrd x xs = vbind_
+slowsort_step iMonadPlus iOrdered x xs = vbind_
   (vlift_ (partition_ x xs))
   (\(ys, zs) -> vbind_
     (slowsort_ ys)
@@ -101,23 +96,19 @@ slowsort_step isMonadPlus iOrd x xs = vbind_
     )
   )
  where
-  slowsort_  = slowsort isMonadPlus iOrd
-  partition_ = partition iOrd
-  vlift_      = vlift isMonad_
-  vbind_      = vbind isMonad_
-  isMonad_      = isMonad isMonadPlus
+  slowsort_  = slowsort iMonadPlus iOrdered
+  partition_ = partition iOrdered
+  vlift_     = vlift iMonad_
+  vbind_     = vbind iMonad_
+  iMonad_    = iMonad iMonadPlus
 
 
 -- Lemma. The "divide and conquer" property: `slowsort_step` refines `slowsort`.
+-- TODO. prove
 {-@
-assume divide_and_conquer :: forall m a . isMonadPlus:IsMonadPlus m -> iOrd:IsOrdered a -> x:a -> xs:VList a ->
-  {MRefines isMonadPlus (slowsort_step isMonadPlus iOrd x xs) (slowsort isMonadPlus iOrd (Cons x xs))}
+assume divide_and_conquer :: forall m a . iMonadPlus:VMonadPlus m -> iOrdered:VOrdered a -> x:a -> xs:VList a ->
+  {MRefines iMonadPlus (slowsort_step iMonadPlus iOrdered x xs) (slowsort iMonadPlus iOrdered (Cons x xs))}
 @-}
 divide_and_conquer
-  :: forall m a
-   . IsMonadPlus m
-  -> IsOrdered a
-  -> a
-  -> VList a
-  -> Proof
-divide_and_conquer isMonadPlus iOrd x xs = ()
+  :: forall m a . VMonadPlus m -> VOrdered a -> a -> VList a -> Proof
+divide_and_conquer iMonadPlus iOrdered x xs = ()

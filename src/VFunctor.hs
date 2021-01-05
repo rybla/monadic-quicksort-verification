@@ -1,17 +1,18 @@
-module IsFunctor where
+module VFunctor where
 
 import           Liquid.ProofCombinators
 import           Relation
 import           Function
 
 
+-- Data Class. A functor is a TODO
 {-@
-data IsFunctor f = IsFunctor
+data VFunctor f = VFunctor
   { vmap :: forall a b . (a -> b) -> (f a -> f b)
   , vmap_vid :: forall a . x:f a -> {vmap vid x = vid x}
   }
 @-}
-data IsFunctor f = IsFunctor
+data VFunctor f = VFunctor
   { vmap :: forall a b . (a -> b) -> (f a -> f b)
   , vmap_vid :: forall a . f a -> Proof
   }

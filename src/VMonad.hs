@@ -1,19 +1,19 @@
-module IsMonad where
+module VMonad where
 
 import           Liquid.ProofCombinators
-import           IsFunctor
+import           VFunctor
 import           Function
 import           VUnit
 
 
--- Class.
+-- Data Class. A monad is a TODO.
 {-@
-data IsMonad m = IsMonad
-  { isFunctor :: IsFunctor m
+data VMonad m = VMonad
+  { iFunctor :: VFunctor m
   , vlift :: forall a . a -> m a
   , vbind :: forall a b . m a -> (a -> m b) -> m b
   , vbind_correct :: forall a b . m:m a -> f:(a -> b) ->
-      {vbind m (vcomp vlift f) = vmap isFunctor f m}
+      {vbind m (vcomp vlift f) = vmap iFunctor f m}
   , vbind_identity :: forall a . m:m a ->
       {vbind m vlift = m}
   , vbind_vlift :: forall a b . k:(a -> m b) -> x:a ->
@@ -22,8 +22,8 @@ data IsMonad m = IsMonad
       {vbind (vbind m k1) k2 = vbind m (raw_kleisli vbind k1 k2)}
   }
 @-}
-data IsMonad m = IsMonad
-  { isFunctor :: IsFunctor m
+data VMonad m = VMonad
+  { iFunctor :: VFunctor m
   , vlift :: forall a . a -> m a
   , vbind :: forall a b . m a -> (a -> m b) -> m b
   , vbind_correct :: forall a b . m a -> (a -> b) -> Proof
@@ -48,32 +48,32 @@ raw_kleisli raw_vbind f g x = raw_vbind (f x) g
 {-@ reflect kleisli @-}
 kleisli
   :: forall m a b c
-   . IsMonad m
+   . VMonad m
   -> (a -> m b)
   -> (b -> m c)
   -> (a -> m c)
-kleisli isMonad = raw_kleisli (vbind isMonad)
+kleisli iMonad = raw_kleisli (vbind iMonad)
 
 
 -- Lemma. Function.
 {-@ reflect vseq @-}
-vseq :: forall m a b . IsMonad m -> m a -> m b -> m b
-vseq isMonad m1 m2 = (vbind isMonad) m1 (vconst m2)
+vseq :: forall m a b . VMonad m -> m a -> m b -> m b
+vseq iMonad m1 m2 = (vbind iMonad) m1 (vconst m2)
 
 
 -- Term.
 {-@ reflect vseq_epsilon @-}
-vseq_epsilon :: forall m . IsMonad m -> m VUnit
-vseq_epsilon isMonad = vlift isMonad vunit
+vseq_epsilon :: forall m . VMonad m -> m VUnit
+vseq_epsilon iMonad = vlift iMonad vunit
 
 
 -- Lemma.
 {-@
-vseq_identity_left :: forall m . isMonad:IsMonad m -> m:m VUnit ->
-  {IsIdentityLeft (vseq isMonad) (vseq_epsilon isMonad) m}
+vseq_identity_left :: forall m . iMonad:VMonad m -> m:m VUnit ->
+  {IsIdentityLeft (vseq iMonad) (vseq_epsilon iMonad) m}
 @-}
-vseq_identity_left :: forall m . IsMonad m -> m VUnit -> Proof
-vseq_identity_left isMonad m =
+vseq_identity_left :: forall m . VMonad m -> m VUnit -> Proof
+vseq_identity_left iMonad m =
   vseq_ vseq_epsilon_ m
     ==. vbind_ (vlift_ vunit) (vconst m)
     ==. vconst m vunit
@@ -81,20 +81,20 @@ vseq_identity_left isMonad m =
     ==. m
     *** QED
  where
-  vseq_         = vseq isMonad
-  vseq_epsilon_ = vseq_epsilon isMonad
-  vbind_        = vbind isMonad
-  vlift_        = vlift isMonad
-  vbind_vlift_  = vbind_vlift isMonad
+  vseq_         = vseq iMonad
+  vseq_epsilon_ = vseq_epsilon iMonad
+  vbind_        = vbind iMonad
+  vlift_        = vlift iMonad
+  vbind_vlift_  = vbind_vlift iMonad
 
 
 -- Lemma
 {-@
-assume vseq_identity_right :: forall m a . isMonad:IsMonad m -> m:m VUnit ->
-  {IsIdentityRight (vseq isMonad) (vseq_epsilon isMonad) m}
+assume vseq_identity_right :: forall m a . iMonad:VMonad m -> m:m VUnit ->
+  {IsIdentityRight (vseq iMonad) (vseq_epsilon iMonad) m}
 @-}
-vseq_identity_right :: forall m a . IsMonad m -> m VUnit -> Proof
-vseq_identity_right isMonad m = ()
+vseq_identity_right :: forall m a . VMonad m -> m VUnit -> Proof
+vseq_identity_right iMonad m = ()
  --  vseq_ m vseq_epsilon_
  --    ==. vbind_ m (vconst vseq_epsilon_)
  --    ==. vbind_ m (vconst (vlift_ vunit))
@@ -104,44 +104,44 @@ vseq_identity_right isMonad m = ()
  --    ?   vbind_identity_ m
  --    *** QED
  -- where
- --  vseq_           = vseq isMonad
- --  vseq_epsilon_   = vseq_epsilon isMonad
- --  vbind_          = vbind isMonad
- --  vlift_          = vlift isMonad
- --  vbind_identity_ = vbind_identity isMonad
+ --  vseq_           = vseq iMonad
+ --  vseq_epsilon_   = vseq_epsilon iMonad
+ --  vbind_          = vbind iMonad
+ --  vlift_          = vlift iMonad
+ --  vbind_identity_ = vbind_identity iMonad
 
 
 -- Lemma.
 {-@
-assume vseq_identity :: forall m a . isMonad:IsMonad m -> m:m VUnit ->
-  {IsIdentity (vseq isMonad) (vseq_epsilon isMonad) m}
+assume vseq_identity :: forall m a . iMonad:VMonad m -> m:m VUnit ->
+  {IsIdentity (vseq iMonad) (vseq_epsilon iMonad) m}
 @-}
-vseq_identity :: forall m a . IsMonad m -> m VUnit -> Proof
-vseq_identity isMonad m =
-  let _ = vseq_identity_left isMonad m
-      _ = vseq_identity_right isMonad m
+vseq_identity :: forall m a . VMonad m -> m VUnit -> Proof
+vseq_identity iMonad m =
+  let _ = vseq_identity_left iMonad m
+      _ = vseq_identity_right iMonad m
   in  ()
 
 
 -- Function.
 {-@ reflect vliftF @-}
-vliftF :: forall m a b . IsMonad m -> (a -> b) -> m a -> m b
-vliftF isMonad f m = vbind' m (\x -> vlift' (f x))
+vliftF :: forall m a b . VMonad m -> (a -> b) -> m a -> m b
+vliftF iMonad f m = vbind' m (\x -> vlift' (f x))
  where
-  vlift' = vlift isMonad
-  vbind' = vbind isMonad
+  vlift' = vlift iMonad
+  vbind' = vbind iMonad
 
 
 -- Function.
 {-@ reflect vliftF2 @-}
 vliftF2
-  :: forall m a b c . IsMonad m -> (a -> b -> c) -> m a -> m b -> m c
-vliftF2 isMonad f ma mb = vbind'
+  :: forall m a b c . VMonad m -> (a -> b -> c) -> m a -> m b -> m c
+vliftF2 iMonad f ma mb = vbind'
   ma
   (\x -> vbind' mb (\y -> vlift' (f x y)))
  where
-  vlift' = vlift isMonad
-  vbind' = vbind isMonad
+  vlift' = vlift iMonad
+  vbind' = vbind iMonad
 
 
 -- Predicate. Commutativity for monads.

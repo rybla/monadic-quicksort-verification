@@ -1,16 +1,17 @@
-module IsSemigroup where
+module VSemigroup where
 
 import           Liquid.ProofCombinators
 import           Function
 
 
+-- Data Class. A semigroup is a TODO.
 {-@
-data IsSemigroup a = IsSemigroup
+data VSemigroup a = VSemigroup
   { op :: Op2 a
   , op_associative :: x:a -> y:a -> z:a -> {IsAssociative op x y z}
   }
 @-}
-data IsSemigroup a = IsSemigroup
+data VSemigroup a = VSemigroup
   { op :: Op2 a
   , op_associative :: a -> a -> a -> Proof
   }

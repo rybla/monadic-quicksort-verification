@@ -3,10 +3,12 @@ module VIdentity where
 import           Liquid.ProofCombinators
 import           Relation
 import           Function
-import           IsFunctor
-import           IsMonad
+import           VFunctor
+import           VMonad
 
 
+-- Data. The identity functor trivially wraps a type with its single
+-- constructor.
 {-@
 data VIdentity a = VIdentity a
 @-}
@@ -27,10 +29,10 @@ vmap_vid_VIdentity :: forall a . VIdentity a -> Proof
 vmap_vid_VIdentity x = ()
 
 
-{-@ reflect isFunctor_VIdentity @-}
-isFunctor_VIdentity :: IsFunctor VIdentity
-isFunctor_VIdentity =
-  IsFunctor { vmap = vmap_VIdentity, vmap_vid = vmap_vid_VIdentity }
+{-@ reflect iFunctor_VIdentity @-}
+iFunctor_VIdentity :: VFunctor VIdentity
+iFunctor_VIdentity =
+  VFunctor { vmap = vmap_VIdentity, vmap_vid = vmap_vid_VIdentity }
 
 
 {-@ reflect vlift_VIdentity @-}
@@ -46,7 +48,7 @@ vbind_VIdentity (VIdentity x) k = k x
 
 {-@
 vbind_correct_VIdentity :: forall a b . m:VIdentity a -> f:(a -> b) ->
-  {vbind_VIdentity m (vcomp vlift_VIdentity f) = vmap isFunctor_VIdentity f m}
+  {vbind_VIdentity m (vcomp vlift_VIdentity f) = vmap iFunctor_VIdentity f m}
 @-}
 vbind_correct_VIdentity
   :: forall a b . VIdentity a -> (a -> b) -> Proof
@@ -83,14 +85,13 @@ vbind_vbind_VIdentity
 vbind_vbind_VIdentity _ _ _ = ()
 
 
-{-@ reflect isMonad_VIdentity @-}
-isMonad_VIdentity :: IsMonad VIdentity
-isMonad_VIdentity = IsMonad
-  { isFunctor      = isFunctor_VIdentity
-  , vbind          = vbind_VIdentity
-  , vlift          = vlift_VIdentity
-  , vbind_correct  = vbind_correct_VIdentity
-  , vbind_identity = vbind_identity_VIdentity
-  , vbind_vlift    = vbind_vlift_VIdentity
-  , vbind_vbind    = vbind_vbind_VIdentity
-  }
+{-@ reflect iMonad_VIdentity @-}
+iMonad_VIdentity :: VMonad VIdentity
+iMonad_VIdentity = VMonad { iFunctor       = iFunctor_VIdentity
+                          , vbind          = vbind_VIdentity
+                          , vlift          = vlift_VIdentity
+                          , vbind_correct  = vbind_correct_VIdentity
+                          , vbind_identity = vbind_identity_VIdentity
+                          , vbind_vlift    = vbind_vlift_VIdentity
+                          , vbind_vbind    = vbind_vbind_VIdentity
+                          }

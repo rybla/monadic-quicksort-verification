@@ -4,7 +4,7 @@ import           Liquid.ProofCombinators
 import           Function
 
 
--- Data. Natural numbers.
+-- Data. The natural numbers.
 {-@
 data VNat = Zero | Suc VNat
 @-}

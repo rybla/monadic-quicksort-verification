@@ -1,11 +1,9 @@
 module Function where
 
 
--- Types
-
+-- Types. For N-ary operators.
 {-@ type Op1 a = a -> a @-}
 type Op1 a = a -> a
-
 {-@ type Op2 a = a -> a -> a @-}
 type Op2 a = a -> a -> a
 
@@ -24,6 +22,10 @@ type Op2 a = a -> a -> a
 {-@ predicate IsZeroLeft  F Z X = F Z X = Z @-}
 {-@ predicate IsZeroRight F Z X = F X Z = Z @-}
 {-@ predicate IsZero      F Z X = IsZeroLeft F Z X && IsZeroRight F Z X @-}
+
+{-@ predicate IsInvertibleLeft  F I X = F (I X) X = X @-}
+{-@ predicate IsInvertibleRight F I X = F X (I X) = X @-}
+{-@ predicate IsInvertible      F I X = IsInvertibleLeft F I X && IsInvertibleRight F I X @-}
 
 
 -- Functions

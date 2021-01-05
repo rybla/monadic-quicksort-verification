@@ -3,13 +3,15 @@ module VList where
 import           Liquid.ProofCombinators
 import           Function
 import           Relation
-import           IsSemigroup
-import           IsMonoid
-import           IsMonad
-import           IsMonadPlus
+import           VSemigroup
+import           VMonoid
+import           VMonad
+import           VMonadPlus
 import           VNat
 
 
+-- Data. A list is a sequence of elements, constructed as either the empty list
+-- or a head element appended to another list.
 {-@
 data VList a = Nil | Cons {hd::a, tl::VList a}
 @-}
@@ -56,11 +58,11 @@ vappend_associative xs ys zs = ()
 
 -- Instance. `VList a` forms a semigroup with operator `vappend`.
 {-@
-isSemigroup_vappend :: forall a . IsSemigroup (VList a)
+iSemigroup_vappend :: forall a . VSemigroup (VList a)
 @-}
-isSemigroup_vappend :: forall a . IsSemigroup (VList a)
-isSemigroup_vappend =
-  IsSemigroup { op = vappend, op_associative = vappend_associative }
+iSemigroup_vappend :: forall a . VSemigroup (VList a)
+iSemigroup_vappend =
+  VSemigroup { op = vappend, op_associative = vappend_associative }
 
 
 -- Lemma. `vappend` has identity `Nil`.
@@ -72,13 +74,13 @@ vappend_identity :: forall a . VList a -> Proof
 vappend_identity xs = ()
 
 
--- NOTE: doesn't infer that `op isSemigroup_vappend = vappend`
+-- NOTE: doesn't infer that `op iSemigroup_vappend = vappend`
 -- -- Instance .`VList a` forms a monoid with operator `vappend` and identity `Nil`.
 -- {-@
--- isMonoid_vappend :: forall a . IsMonoid (VList a)
+-- isMonoid_vappend :: forall a . VMonoid (VList a)
 -- @-}
--- isMonoid_vappend :: forall a . IsMonoid (VList a)
--- isMonoid_vappend = IsMonoid { isSemigroup        = isSemigroup_vappend
+-- isMonoid_vappend :: forall a . VMonoid (VList a)
+-- isMonoid_vappend = VMonoid { iSemigroup        = iSemigroup_vappend
 --                             , epsilon     = Nil
 --                             , op_identity = vappend_identity
 --                             }
