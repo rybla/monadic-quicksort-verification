@@ -14,9 +14,10 @@ A Liquid Haskell verification of Mu and Chiang's _[Deriving Monadic Quicksort][M
   - [x] functor (`VFunctor.hs`)
   - [x] group (`VGroup.hs`)
   - [x] monad (`VMonad.hs`)
+    - [ ] monadic sequence right-identity (`vseq_identity_right`)
   - [ ] plus-monad, used for monadic nondeterminism (`VMonadPlus.hs`)
     - [x] implement
-    - [ ] plus-monadic refinement (`MRefines` and `MRefinesF`)
+    - [x] plus-monadic refinement (`MRefines` and `MRefinesF`)
     - [ ] plus-monadic refinement is monotic in monadic binding (`vbind_monotonic_refinement`)
     - [ ] guarding monad-commutes with other monad elements (that have just (monadic) effect)
     - [ ] guarding a conjunction is the same as the sequence of guarding each conjunct (`mguard_and_vseq`)
@@ -24,12 +25,12 @@ A Liquid Haskell verification of Mu and Chiang's _[Deriving Monadic Quicksort][M
   - [ ] array-monad, used for monadic array interface (`VMonadArray.hs`)
     - [x] implement
     - [ ] array-monad writing the append of two lists is the same as the sequence of array-monad writing the first list and then array-monad writing the second list ofset by the length of the first list
-  - [ ] ordered (set) (`VOrdered.hs`)
+  - [x] ordered (set) (`VOrdered.hs`)
 - [ ] data
   - [x] identity functor (`VIdentity.hs`)
   - [x] list (`VList.hs`)
   - [x] natural numbers (`VNat.hs`)
-- [ ] SlowSort (`SlowSort.hs`)
+- [x] SlowSort (`SlowSort.hs`)
   - [x] filter (nondeterministic) (`vfilter`)
   - [x] predicate for "sorted" (`isSorted`)
   - [x] permutation (nondeterministic) (`permute`)

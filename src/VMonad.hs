@@ -88,7 +88,8 @@ vseq_identity_left iMonad m =
   vbind_vlift_  = vbind_vlift iMonad
 
 
--- Lemma
+-- Lemma.
+-- TODO. prove
 {-@
 assume vseq_identity_right :: forall m a . iMonad:VMonad m -> m:m VUnit ->
   {IsIdentityRight (vseq iMonad) (vseq_epsilon iMonad) m}
@@ -145,5 +146,5 @@ vliftF2 iMonad f ma mb = vbind'
 
 
 -- Predicate. Commutativity for monads.
-{-@ predicate IsMCommutative IMON M1 M2 F =
-      vliftF2 IMON F M1 M2 = vliftF2 IMON (vflip F) M2 M1 @-}
+{-@ predicate IsMCommutative IMONAD M1 M2 F =
+      vliftF2 IMONAD F M1 M2 = vliftF2 IMONAD F M2 M1 @-}
