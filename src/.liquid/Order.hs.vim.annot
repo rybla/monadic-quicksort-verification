@@ -1,3 +1,0 @@
-1:1-1:1::Order.$trModule :: "GHC.Types.Module"
-28:3-28:25::Order.$dm<= :: "forall a .\n(Order.Ordered<[]> a) =>\nx1:a -> x2:a -> {v : GHC.Types.Bool | v == leq $dOrdered_a5RJ x1 x2}"
-29:3-29:13::_ :: "x1:a -> x2:a -> {v : GHC.Types.Bool | v == leq $dOrdered_a5RJ x1 x2}"

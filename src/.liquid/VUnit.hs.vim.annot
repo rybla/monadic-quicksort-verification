@@ -1,2 +1,0 @@
-1:1-1:1::VUnit.$trModule :: "GHC.Types.Module"
-10:1-10:6::VUnit.vunit :: "{VV : () | VV == vunit\n           && VV == ()}"

@@ -1,1 +1,0 @@
-{"o_vars":[],"o_types":[[{"spanInfo":{"startLine":1,"endLine":1,"endCol":1,"startCol":1,"filename":"/Users/henry/Documents/Projects/monadic-quicksort-verification/monadic-quicksort-verification/src/IsEq.hs"},"realSpan":true},[["IsEq.$trModule","GHC.Types.Module"]]]],"o_templs":[],"o_bots":[],"o_result":{"tag":"Safe"}}

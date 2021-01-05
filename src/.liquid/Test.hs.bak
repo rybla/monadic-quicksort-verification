@@ -1,9 +1,0 @@
-{-@ LIQUID "--typeclass" @-}
-{-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--ple" @-}
-
-module Test where
-
-
-import           Data.Functor.Classes
-import           Data.Function
