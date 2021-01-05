@@ -1,7 +1,7 @@
 # Monadic Quicksort Verification in Liquid Haskell
 
 
-A Liquid Haskell verification of Mu and Chiang's _[Deriving Monadic Quicksort][Mu S, Chiang T - Declarative Pearl- Deriving Monadic Quicksort]_
+A Liquid Haskell verification of Mu and Chiang's _[Deriving Monadic Quicksort][Mu S, Chiang T - Declarative Pearl- Deriving Monadic Quicksort]_.
 
 ## Tasks
 
