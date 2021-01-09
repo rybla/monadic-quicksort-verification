@@ -1,9 +1,8 @@
 module VFunctor where
 
-import           Liquid.ProofCombinators
-import           Relation
-import           Function
-
+import Function
+import Liquid.ProofCombinators
+import Relation
 
 -- Data Class. A functor is a TODO
 {-@
@@ -13,6 +12,6 @@ data VFunctor f = VFunctor
   }
 @-}
 data VFunctor f = VFunctor
-  { vmap :: forall a b . (a -> b) -> (f a -> f b)
-  , vmap_vid :: forall a . f a -> Proof
+  { vmap :: forall a b. (a -> b) -> (f a -> f b),
+    vmap_vid :: forall a. f a -> Proof
   }

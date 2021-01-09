@@ -1,9 +1,8 @@
 module VMonoid where
 
-import           Liquid.ProofCombinators
-import           Function
-import           VSemigroup
-
+import Function
+import Liquid.ProofCombinators
+import VSemigroup
 
 -- Data Class. A monoid is TODO.
 {-@
@@ -14,7 +13,7 @@ data VMonoid a = VMonoid
   }
 @-}
 data VMonoid a = VMonoid
-  { iSemigroup :: VSemigroup a
-  , epsilon :: a
-  , op_identity :: a -> Proof
+  { iSemigroup :: VSemigroup a,
+    epsilon :: a,
+    op_identity :: a -> Proof
   }

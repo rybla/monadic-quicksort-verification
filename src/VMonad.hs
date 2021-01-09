@@ -1,10 +1,9 @@
 module VMonad where
 
-import           Liquid.ProofCombinators
-import           VFunctor
-import           Function
-import           VUnit
-
+import Function
+import Liquid.ProofCombinators
+import VFunctor
+import VUnit
 
 -- Data Class. A monad is a TODO.
 {-@
@@ -23,70 +22,64 @@ data VMonad m = VMonad
   }
 @-}
 data VMonad m = VMonad
-  { iFunctor :: VFunctor m
-  , vlift :: forall a . a -> m a
-  , vbind :: forall a b . m a -> (a -> m b) -> m b
-  , vbind_correct :: forall a b . m a -> (a -> b) -> Proof
-  , vbind_identity :: forall a . m a -> Proof
-  , vbind_vlift :: forall a b . (a -> m b) -> a -> Proof
-  , vbind_vbind :: forall a b c . m a -> (a -> m b) -> (b -> m c) -> Proof
+  { iFunctor :: VFunctor m,
+    vlift :: forall a. a -> m a,
+    vbind :: forall a b. m a -> (a -> m b) -> m b,
+    vbind_correct :: forall a b. m a -> (a -> b) -> Proof,
+    vbind_identity :: forall a. m a -> Proof,
+    vbind_vlift :: forall a b. (a -> m b) -> a -> Proof,
+    vbind_vbind :: forall a b c. m a -> (a -> m b) -> (b -> m c) -> Proof
   }
-
 
 -- Function.
 {-@ reflect raw_kleisli @-}
-raw_kleisli
-  :: forall m a b c
-   . (forall a b . m a -> (a -> m b) -> m b) -- vbind
-  -> (a -> m b)
-  -> (b -> m c)
-  -> (a -> m c)
+raw_kleisli ::
+  forall m a b c.
+  (forall a b. m a -> (a -> m b) -> m b) -> -- vbind
+  (a -> m b) ->
+  (b -> m c) ->
+  (a -> m c)
 raw_kleisli raw_vbind f g x = raw_vbind (f x) g
-
 
 -- Function.
 {-@ reflect kleisli @-}
-kleisli
-  :: forall m a b c
-   . VMonad m
-  -> (a -> m b)
-  -> (b -> m c)
-  -> (a -> m c)
+kleisli ::
+  forall m a b c.
+  VMonad m ->
+  (a -> m b) ->
+  (b -> m c) ->
+  (a -> m c)
 kleisli iMonad = raw_kleisli (vbind iMonad)
-
 
 -- Lemma. Function.
 {-@ reflect vseq @-}
-vseq :: forall m a b . VMonad m -> m a -> m b -> m b
+vseq :: forall m a b. VMonad m -> m a -> m b -> m b
 vseq iMonad m1 m2 = (vbind iMonad) m1 (vconst m2)
-
 
 -- Term.
 {-@ reflect vseq_epsilon @-}
-vseq_epsilon :: forall m . VMonad m -> m VUnit
+vseq_epsilon :: forall m. VMonad m -> m VUnit
 vseq_epsilon iMonad = vlift iMonad vunit
-
 
 -- Lemma.
 {-@
 vseq_identity_left :: forall m . iMonad:VMonad m -> m:m VUnit ->
   {IsIdentityLeft (vseq iMonad) (vseq_epsilon iMonad) m}
 @-}
-vseq_identity_left :: forall m . VMonad m -> m VUnit -> Proof
+vseq_identity_left :: forall m. VMonad m -> m VUnit -> Proof
 vseq_identity_left iMonad m =
   vseq_ vseq_epsilon_ m
     ==. vbind_ (vlift_ vunit) (vconst m)
     ==. vconst m vunit
-    ?   vbind_vlift_ (vconst m) vunit
+    ? vbind_vlift_ (vconst m) vunit
     ==. m
     *** QED
- where
-  vseq_         = vseq iMonad
-  vseq_epsilon_ = vseq_epsilon iMonad
-  vbind_        = vbind iMonad
-  vlift_        = vlift iMonad
-  vbind_vlift_  = vbind_vlift iMonad
-
+  where
+    vseq_ = vseq iMonad
+    vseq_epsilon_ = vseq_epsilon iMonad
+    vbind_ = vbind iMonad
+    vlift_ = vlift iMonad
+    vbind_vlift_ = vbind_vlift iMonad
 
 -- Lemma.
 -- TODO. prove
@@ -94,56 +87,54 @@ vseq_identity_left iMonad m =
 assume vseq_identity_right :: forall m a . iMonad:VMonad m -> m:m VUnit ->
   {IsIdentityRight (vseq iMonad) (vseq_epsilon iMonad) m}
 @-}
-vseq_identity_right :: forall m a . VMonad m -> m VUnit -> Proof
+vseq_identity_right :: forall m a. VMonad m -> m VUnit -> Proof
 vseq_identity_right iMonad m = ()
- --  vseq_ m vseq_epsilon_
- --    ==. vbind_ m (vconst vseq_epsilon_)
- --    ==. vbind_ m (vconst (vlift_ vunit))
- --    ==. vbind_ m (\() -> vlift_ ())
- --    ==. vbind_ m vlift_
- --    ==. m
- --    ?   vbind_identity_ m
- --    *** QED
- -- where
- --  vseq_           = vseq iMonad
- --  vseq_epsilon_   = vseq_epsilon iMonad
- --  vbind_          = vbind iMonad
- --  vlift_          = vlift iMonad
- --  vbind_identity_ = vbind_identity iMonad
 
+--  vseq_ m vseq_epsilon_
+--    ==. vbind_ m (vconst vseq_epsilon_)
+--    ==. vbind_ m (vconst (vlift_ vunit))
+--    ==. vbind_ m (\() -> vlift_ ())
+--    ==. vbind_ m vlift_
+--    ==. m
+--    ?   vbind_identity_ m
+--    *** QED
+-- where
+--  vseq_           = vseq iMonad
+--  vseq_epsilon_   = vseq_epsilon iMonad
+--  vbind_          = vbind iMonad
+--  vlift_          = vlift iMonad
+--  vbind_identity_ = vbind_identity iMonad
 
 -- Lemma.
 {-@
 assume vseq_identity :: forall m a . iMonad:VMonad m -> m:m VUnit ->
   {IsIdentity (vseq iMonad) (vseq_epsilon iMonad) m}
 @-}
-vseq_identity :: forall m a . VMonad m -> m VUnit -> Proof
+vseq_identity :: forall m a. VMonad m -> m VUnit -> Proof
 vseq_identity iMonad m =
   let _ = vseq_identity_left iMonad m
       _ = vseq_identity_right iMonad m
-  in  ()
-
+   in ()
 
 -- Function.
 {-@ reflect vliftF @-}
-vliftF :: forall m a b . VMonad m -> (a -> b) -> m a -> m b
+vliftF :: forall m a b. VMonad m -> (a -> b) -> m a -> m b
 vliftF iMonad f m = vbind' m (\x -> vlift' (f x))
- where
-  vlift' = vlift iMonad
-  vbind' = vbind iMonad
-
+  where
+    vlift' = vlift iMonad
+    vbind' = vbind iMonad
 
 -- Function.
 {-@ reflect vliftF2 @-}
-vliftF2
-  :: forall m a b c . VMonad m -> (a -> b -> c) -> m a -> m b -> m c
-vliftF2 iMonad f ma mb = vbind'
-  ma
-  (\x -> vbind' mb (\y -> vlift' (f x y)))
- where
-  vlift' = vlift iMonad
-  vbind' = vbind iMonad
-
+vliftF2 ::
+  forall m a b c. VMonad m -> (a -> b -> c) -> m a -> m b -> m c
+vliftF2 iMonad f ma mb =
+  vbind'
+    ma
+    (\x -> vbind' mb (\y -> vlift' (f x y)))
+  where
+    vlift' = vlift iMonad
+    vbind' = vbind iMonad
 
 -- Predicate. Commutativity for monads.
 {-@

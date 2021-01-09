@@ -1,7 +1,6 @@
 module Relation where
 
-import           Liquid.ProofCombinators
-
+import Liquid.ProofCombinators
 
 -- Types. Forms of generic relations.
 -- `Relation<n>` is an N-ary relation.
@@ -22,7 +21,6 @@ type Relation3 a b c = a -> b -> c -> Bool
 {-@ type Relation3D a = Relation3 a a a @-}
 type Relation3D a = Relation3 a a a
 
-
 -- Predicates.
 -- NOTE. Predicate parameters must be capitalized.
 
@@ -38,7 +36,8 @@ type Relation3D a = Relation3 a a a
 {-@ predicate PreservesPredicate P F X   = P X   => P (F X) @-}
 {-@ predicate PreservesRelation  R F X Y = R X Y => R (F X) (F Y) @-}
 
-
 type Property a = a -> Proof
+
 type Property2 a = a -> a -> Proof
+
 type Property3 a = a -> a -> a -> Proof

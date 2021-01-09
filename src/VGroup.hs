@@ -1,12 +1,9 @@
 module VGroup where
 
-
-import           Liquid.ProofCombinators
-import           Function
-import           Relation
-
-import           VSemigroup
-
+import Function
+import Liquid.ProofCombinators
+import Relation
+import VSemigroup
 
 -- Data Class. A group is a semigroup with an invertible operator and an
 -- identity element epsilon.
@@ -20,9 +17,9 @@ data Group a = Group
   }
 @-}
 data Group a = Group
-  { iSemigroup :: VSemigroup a
-  , epsilon :: a
-  , invert  :: Op1 a
-  , op_identity   :: Property a
-  , op_invertible :: Property a
+  { iSemigroup :: VSemigroup a,
+    epsilon :: a,
+    invert :: Op1 a,
+    op_identity :: Property a,
+    op_invertible :: Property a
   }

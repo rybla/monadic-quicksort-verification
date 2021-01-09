@@ -1,8 +1,7 @@
 module VSemigroup where
 
-import           Liquid.ProofCombinators
-import           Function
-
+import Function
+import Liquid.ProofCombinators
 
 -- Data Class. A semigroup is a TODO.
 {-@
@@ -12,6 +11,6 @@ data VSemigroup a = VSemigroup
   }
 @-}
 data VSemigroup a = VSemigroup
-  { op :: Op2 a
-  , op_associative :: a -> a -> a -> Proof
+  { op :: Op2 a,
+    op_associative :: a -> a -> a -> Proof
   }
