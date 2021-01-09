@@ -85,7 +85,7 @@ assume vbind_monotonic_refinement :: forall m a b .
   m1:m a -> m2: m a ->
   f:(a -> m b) ->
   {RefinesPlusMonadic iMonadPlus m1 m2 =>
-   RefinesPlusMonadic iMonadPlus (vbind (iMonad iMonadPlus) m1 f) (vbind (iMonad iMonadPlus) m2 f)}
+   RefinesPlusMonadic iMonadPlus (vbind (VMonadPlus.iMonad iMonadPlus) m1 f) (vbind (VMonadPlus.iMonad iMonadPlus) m2 f)}
 @-}
 vbind_monotonic_refinement ::
   forall m a b. VMonadPlus m -> m a -> m a -> (a -> m b) -> Proof
@@ -98,7 +98,7 @@ assume mguard_isCommutativeMonadic :: forall m a b .
   b:Bool ->
   m:m a ->
   f:(a -> b) ->
-  {IsCommutativeMonadic (iMonad iMonadPlus) (mguard iMonadPlus b) m (vconstF f)}
+  {IsCommutativeMonadic (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus b) m (vconstF f)}
 @-}
 mguard_isCommutativeMonadic ::
   forall m a b. VMonadPlus m -> Bool -> m a -> (a -> b) -> Proof
@@ -114,7 +114,7 @@ mguard_and iMonadPlus b1 b2 = mguard iMonadPlus (vand b1 b2)
 assume mguard_and_vseq :: forall m .
   iMonadPlus:VMonadPlus m ->
   b1:Bool -> b2:Bool ->
-  {mguard_and iMonadPlus b1 b2 = vseq (iMonad iMonadPlus) (mguard iMonadPlus b1) (mguard iMonadPlus b2)}
+  {mguard_and iMonadPlus b1 b2 = vseq (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus b1) (mguard iMonadPlus b2)}
 @-}
 mguard_and_vseq :: forall m. VMonadPlus m -> Bool -> Bool -> Proof
 mguard_and_vseq _ _ _ = ()
@@ -126,8 +126,8 @@ mguard_disjoint ::
 mguard_disjoint iMonadPlus b m1 m2 =
   vmadd
     iMonadPlus
-    (vseq (iMonad iMonadPlus) (mguard iMonadPlus b) m1)
-    (vseq (iMonad iMonadPlus) (mguard iMonadPlus (vnot b)) m1)
+    (vseq (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus b) m1)
+    (vseq (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus (vnot b)) m1)
 
 -- Lemma.
 -- NOTE. idk why I need to prefix `vbranch` with `VBool` here, but I do...

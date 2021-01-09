@@ -20,20 +20,20 @@ import VOrdered
 -- Partitioning
 --------------------------------------------------------------------------------
 
--- Function. Tail-recursive partition.
-{-@ reflect partition @-}
-partition ::
-  forall a.
-  VOrdered a ->
-  a ->
-  (VList a, VList a) ->
-  VList a ->
-  (VList a, VList a)
-partition iOrdered p (ys, zs) Nil = (ys, zs)
-partition iOrdered p (ys, zs) (Cons x xs) =
-  if leq_ x p
-    then partition_ p (vappend ys (vsingleton x), zs) xs
-    else partition_ p (ys, vappend zs (vsingleton x)) xs
-  where
-    partition_ = partition iOrdered
-    leq_ = leq iOrdered
+-- -- Function. Tail-recursive partition.
+-- {-@ reflect partition @-}
+-- partition ::
+--   forall a.
+--   VOrdered a ->
+--   a ->
+--   (VList a, VList a) ->
+--   VList a ->
+--   (VList a, VList a)
+-- partition iOrdered p (ys, zs) Nil = (ys, zs)
+-- partition iOrdered p (ys, zs) (Cons x xs) =
+--   if leq_ x p
+--     then partition_ p (vappend ys (vsingleton x), zs) xs
+--     else partition_ p (ys, vappend zs (vsingleton x)) xs
+--   where
+--     partition_ = partition iOrdered
+--     leq_ = leq iOrdered
