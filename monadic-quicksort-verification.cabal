@@ -22,10 +22,26 @@ extra-source-files:  CHANGELOG.md
 library
   hs-source-dirs: src
   exposed-modules:
-    Monad,
-    Order,
-    SlowSort,
-    Test
+    Function,
+    QuickSortArray,
+    QuickSortList,
+    Relation,
+    SlowSortList,
+    VBool,
+    VFunctor,
+    VGroup,
+    VIdentity,
+    VList,
+    VMonad,
+    VMonadArray,
+    VMonadPlus,
+    VMonoid,
+    VNat,
+    VOrdered,
+    VPartitioned,
+    VSemigroup,
+    VTuple,
+    VUnit
   build-depends:
     base >= 4 && < 5,
     liquidhaskell
