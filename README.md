@@ -17,7 +17,7 @@ A Liquid Haskell verification of Mu and Chiang's _[Deriving Monadic Quicksort][M
     - [ ] monadic sequence right-identity (`vseq_identity_right`)
   - [ ] plus-monad, used for monadic nondeterminism (`VMonadPlus.hs`)
     - [x] implement
-    - [x] plus-monadic refinement (`MRefines` and `MRefinesF`)
+    - [x] plus-monadic refinement (`RefinesPlusMonadic` and `RefinesPlusMonadicF`)
     - [ ] plus-monadic refinement is monotic in monadic binding (`vbind_monotonic_refinement`)
     - [ ] guarding monad-commutes with other monad elements (that have just (monadic) effect)
     - [ ] guarding a conjunction is the same as the sequence of guarding each conjunct (`mguard_and_vseq`)
