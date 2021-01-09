@@ -73,9 +73,15 @@ mguardBy iMonadPlus p x = vseq_ (mguard_ (p x)) (vlift_ x)
   iMonad_ = iMonad iMonadPlus
 
 
--- Predicate. `MonadPlus` refinement (i.e. "refinement").
-{-@ predicate MRefines  IMONADPLUS M1 M2 = vmadd IMONPLU M1 M2 = M2 @-}
-{-@ predicate MRefinesF IMONADPLUS F G X = MRefines IMONPLU (F X) (G X) @-}
+-- Predicates. Plus-monadic refinement.
+{-@
+predicate RefinesPlusMonadic IMONADPLUS M1 M2 =
+  vmadd IMONADPLUS M1 M2 = M2
+@-}
+{-@
+predicate RefinesPlusMonadicF IMONADPLUS F G X =
+  RefinesPlusMonadic IMONADPLUS (F X) (G X)
+@-}
 
 
 -- Lemma. `vbind` is monotonic with respect to refinement.
@@ -84,8 +90,8 @@ assume vbind_monotonic_refinement :: forall m a b .
   iMonadPlus:VMonadPlus m ->
   m1:m a -> m2: m a ->
   f:(a -> m b) ->
-  {MRefines iMonadPlus m1 m2 =>
-   MRefines iMonadPlus (vbind (iMonad iMonadPlus) m1 f) (vbind (iMonad iMonadPlus) m2 f)}
+  {RefinesPlusMonadic iMonadPlus m1 m2 =>
+   RefinesPlusMonadic iMonadPlus (vbind (iMonad iMonadPlus) m1 f) (vbind (iMonad iMonadPlus) m2 f)}
 @-}
 vbind_monotonic_refinement
   :: forall m a b . VMonadPlus m -> m a -> m a -> (a -> m b) -> Proof
@@ -94,16 +100,17 @@ vbind_monotonic_refinement _ _ _ _ = ()
 
 -- Lemma. `mguard` monad-commutes with `m` since `m` has just one effect.
 {-@
-assume mguard_isMCommutative :: forall m a b .
+assume mguard_isCommutativeMonadic :: forall m a b .
   iMonadPlus:VMonadPlus m ->
   b:Bool ->
   m:m a ->
   f:(a -> b) ->
-  {IsMCommutative (iMonad iMonadPlus) (mguard iMonadPlus b) m (vconstF f)}
+  {IsCommutativeMonadic (iMonad iMonadPlus) (mguard iMonadPlus b) m (vconstF f)}
 @-}
-mguard_isMCommutative
+mguard_isCommutativeMonadic
   :: forall m a b . VMonadPlus m -> Bool -> m a -> (a -> b) -> Proof
-mguard_isMCommutative _ _ _ _ = ()
+mguard_isCommutativeMonadic _ _ _ _ = ()
+
 
 -- Function.
 {-@ reflect mguard_and @-}
@@ -138,7 +145,7 @@ mguard_disjoint iMonadPlus b m1 m2 = vmadd
 assume mguard_disjoint_branch :: forall m a .
   iMonadPlus:VMonadPlus m ->
   b:Bool -> m1:m a -> m2: m a ->
-  {MRefines iMonadPlus (mguard_disjoint iMonadPlus b m1 m2) (VBool.vbranch b m1 m2)}
+  {RefinesPlusMonadic iMonadPlus (mguard_disjoint iMonadPlus b m1 m2) (VBool.vbranch b m1 m2)}
 @-}
 mguard_disjoint_branch
   :: forall m a . VMonadPlus m -> Bool -> m a -> m a -> Proof

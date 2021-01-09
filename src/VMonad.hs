@@ -146,5 +146,7 @@ vliftF2 iMonad f ma mb = vbind'
 
 
 -- Predicate. Commutativity for monads.
-{-@ predicate IsMCommutative IMONAD M1 M2 F =
-      vliftF2 IMONAD F M1 M2 = vliftF2 IMONAD F M2 M1 @-}
+{-@
+predicate IsCommutativeMonadic IMONAD M1 M2 F =
+  vliftF2 IMONAD F M1 M2 = vliftF2 IMONAD (vflip F) M2 M1
+@-}

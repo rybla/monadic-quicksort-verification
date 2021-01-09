@@ -52,7 +52,7 @@ partition_specification iMonadPlus iOrdered x xs = vbind_
 
 
 -- Predicate. Refinement specification of `partition`.
-{-@ predicate IsPartition F X XS = MRefines iMonadPlus (vlift (iMonad iMonadPlus) (f iOrdered x xs)) (partition_specification iOrdered iMonadPlus x xs) @-}
+{-@ predicate IsPartition F X XS = RefinesPlusMonadic iMonadPlus (vlift (iMonad iMonadPlus) (f iOrdered x xs)) (partition_specification iOrdered iMonadPlus x xs) @-}
 
 
 -- Function. Partition a `VList` into a sublist of elements less than and a
@@ -70,7 +70,7 @@ partition iOrdered x' (Cons x xs) =
 -- TODO. prove
 {-@
 assume partition_correct :: forall m a . iMonadPlus:VMonadPlus m -> iOrdered:VOrdered a -> x:a -> xs:VList a ->
-  {MRefines iMonadPlus (vlift (iMonad iMonadPlus) (partition iOrdered x xs)) (partition_specification iMonadPlus iOrdered x xs)}
+  {RefinesPlusMonadic iMonadPlus (vlift (iMonad iMonadPlus) (partition iOrdered x xs)) (partition_specification iMonadPlus iOrdered x xs)}
 @-}
 partition_correct
   :: forall m a . VMonadPlus m -> VOrdered a -> a -> VList a -> Proof
@@ -107,7 +107,7 @@ slowsort_step iMonadPlus iOrdered x xs = vbind_
 -- TODO. prove
 {-@
 assume divide_and_conquer :: forall m a . iMonadPlus:VMonadPlus m -> iOrdered:VOrdered a -> x:a -> xs:VList a ->
-  {MRefines iMonadPlus (slowsort_step iMonadPlus iOrdered x xs) (slowsort iMonadPlus iOrdered (Cons x xs))}
+  {RefinesPlusMonadic iMonadPlus (slowsort_step iMonadPlus iOrdered x xs) (slowsort iMonadPlus iOrdered (Cons x xs))}
 @-}
 divide_and_conquer
   :: forall m a . VMonadPlus m -> VOrdered a -> a -> VList a -> Proof

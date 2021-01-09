@@ -127,10 +127,6 @@ vwriteList3ToLength iMonadArray i (xs, ys, zs) = vseq_
   iMonad_     = iMonad iMonadArray
 
 
-
--- vwriteList :: VMonadArray m a -> VNat -> VList a -> m ()
-
-
 -- TODO. prove
 {-@
 assume vwriteList_vappend :: forall m a . iMonadArray:VMonadArray m a -> i:Index -> xs:VList a -> ys:VList a ->
