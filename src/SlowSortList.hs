@@ -1,4 +1,4 @@
-module SlowSort where
+module SlowSortList where
 
 import           Liquid.ProofCombinators
 import           Function

@@ -1,4 +1,4 @@
-module QuickSort where
+module QuickSortList where
 
 import           Liquid.ProofCombinators
 import           Function
@@ -8,7 +8,7 @@ import           VMonadPlus
 import           VOrdered
 import           VList
 
-import           SlowSort
+import           SlowSortList
 
 
 --------------------------------------------------------------------------------
@@ -77,16 +77,16 @@ partition_correct
 partition_correct iMonadPlus iOrdered x xs = ()
 
 
--- Lemma. "Divide and conquer" property
-{-@ reflect slowsort_step @-}
-slowsort_step
+-- Lemma. Helper for "divide and conquer" property.
+{-@ reflect quicksort_step @-}
+quicksort_step
   :: forall m a
    . VMonadPlus m
   -> VOrdered a
   -> a
   -> VList a
   -> m (VList a)
-slowsort_step iMonadPlus iOrdered x xs = vbind_
+quicksort_step iMonadPlus iOrdered x xs = vbind_
   (vlift_ (partition_ x xs))
   (\(ys, zs) -> vbind_
     (slowsort_ ys)
@@ -103,11 +103,11 @@ slowsort_step iMonadPlus iOrdered x xs = vbind_
   iMonad_    = iMonad iMonadPlus
 
 
--- Lemma. The "divide and conquer" property: `slowsort_step` refines `slowsort`.
+-- Lemma. The "divide and conquer" property: `quicksort_step` refines `slowsort`.
 -- TODO. prove
 {-@
 assume divide_and_conquer :: forall m a . iMonadPlus:VMonadPlus m -> iOrdered:VOrdered a -> x:a -> xs:VList a ->
-  {RefinesPlusMonadic iMonadPlus (slowsort_step iMonadPlus iOrdered x xs) (slowsort iMonadPlus iOrdered (Cons x xs))}
+  {RefinesPlusMonadic iMonadPlus (quicksort_step iMonadPlus iOrdered x xs) (slowsort iMonadPlus iOrdered (Cons x xs))}
 @-}
 divide_and_conquer
   :: forall m a . VMonadPlus m -> VOrdered a -> a -> VList a -> Proof
