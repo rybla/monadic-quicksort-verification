@@ -1,12 +1,11 @@
 module Function where
 
-
 -- Types. For N-ary operators.
 {-@ type Op1 a = a -> a @-}
 type Op1 a = a -> a
+
 {-@ type Op2 a = a -> a -> a @-}
 type Op2 a = a -> a -> a
-
 
 -- Predicates
 -- NOTE. Predicate parameters must be capitalized.
@@ -27,43 +26,37 @@ type Op2 a = a -> a -> a
 {-@ predicate IsInvertibleRight F I X = F X (I X) = X @-}
 {-@ predicate IsInvertible      F I X = IsInvertibleLeft F I X && IsInvertibleRight F I X @-}
 
-
 -- Functions
 -- NOTE. Doesn't allow reference to these functions unless I use `reflect`
 -- i.e. I can't give them my own liquid type declarations
 
 {-@ reflect vid @-}
-vid :: forall a . a -> a
+vid :: forall a. a -> a
 vid x = x
 
-
 {-@ reflect vcomp @-}
-vcomp :: forall a b c . (b -> c) -> (a -> b) -> (a -> c)
+vcomp :: forall a b c. (b -> c) -> (a -> b) -> (a -> c)
 vcomp f g = \x -> f (g x)
 
-
 {-@ reflect vconst @-}
-vconst :: forall a b . a -> b -> a
+vconst :: forall a b. a -> b -> a
 vconst x _ = x
 
-
 {-@ reflect vconstF @-}
-vconstF :: forall a b c . (b -> c) -> (a -> b -> c)
+vconstF :: forall a b c. (b -> c) -> (a -> b -> c)
 vconstF f _ y = f y
 
-
 {-@ reflect vflip @-}
-vflip :: forall a b c . (b -> a -> c) -> (a -> b -> c)
+vflip :: forall a b c. (b -> a -> c) -> (a -> b -> c)
 vflip f x y = f y x
 
-
 {-@ reflect vdiagonalize @-}
-vdiagonalize :: forall a b . (a -> a -> a) -> (a -> a)
+vdiagonalize :: forall a. (a -> a -> a) -> (a -> a)
 vdiagonalize f x = f x x
-
 
 {-@ infix 0 & @-}
 infix 0 &
+
 {-@ reflect & @-}
-(&) :: forall a b . a -> (a -> b) -> b
+(&) :: forall a b. a -> (a -> b) -> b
 x & f = f x
