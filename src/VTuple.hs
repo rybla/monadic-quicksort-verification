@@ -16,3 +16,23 @@ vtuple2D x1 x2 = (x1, x2)
 {-@ reflect vtuple3D @-}
 vtuple3D :: forall a. a -> a -> a -> VTuple3D a
 vtuple3D x1 x2 x3 = (x1, x2, x3)
+
+{-@ reflect fst2D @-}
+fst2D :: VTuple2D a -> a
+fst2D (x, _) = x
+
+{-@ reflect snd2D @-}
+snd2D :: VTuple2D a -> a
+snd2D (_, y) = y
+
+{-@ reflect fst2D @-}
+fst3D :: VTuple3D a -> a
+fst3D (x, _, _) = x
+
+{-@ reflect snd2D @-}
+snd3D :: VTuple3D a -> a
+snd3D (_, y, _) = y
+
+{-@ reflect thd2D @-}
+thd3D :: VTuple3D a -> a
+thd3D (_, _, z) = z

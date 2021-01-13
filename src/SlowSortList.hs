@@ -28,8 +28,8 @@ slowsort iMonadPlus iOrdered =
     kleisli_ = kleisli iMonad_
     iMonad_ = iMonad iMonadPlus
 
-{-@ lazy permute @-}
 -- TODO: prove termination
+{-@ lazy permute @-}
 {-@ reflect permute @-}
 permute :: forall m a. VMonadPlus m -> VList a -> m (VList a)
 permute iMonadPlus Nil = vlift_ Nil

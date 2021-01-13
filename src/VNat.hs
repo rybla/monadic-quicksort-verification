@@ -9,6 +9,18 @@ data VNat = Zero | Suc VNat
 @-}
 data VNat = Zero | Suc VNat
 
+{-@ reflect vzero @-}
+vzero :: VNat
+vzero = Zero
+
+{-@ reflect vone @-}
+vone :: VNat
+vone = Suc Zero
+
+{-@ reflect vtwo @-}
+vtwo :: VNat
+vtwo = Suc vone
+
 -- Function. Addition.
 {-@ reflect vadd @-}
 vadd :: Op2 VNat
@@ -84,7 +96,7 @@ vmul Zero _ = Zero
 vmul (Suc m) n = vadd n (vmul m n)
 
 -- Lemma. Multiplicative identity.
-{-@ vmul_identity :: n:VNat -> {IsIdentity vmul (Suc Zero) n} @-}
+{-@ vmul_identity :: n:VNat -> {IsIdentity vmul vone n} @-}
 vmul_identity :: VNat -> Proof
 vmul_identity Zero = ()
 vmul_identity (Suc n) = vmul_identity n

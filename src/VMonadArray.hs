@@ -6,6 +6,7 @@ import Relation
 import VBool
 import VList
 import VMonad
+import VMonadPlus
 import VNat
 import VTuple
 import VUnit
@@ -48,6 +49,8 @@ data VMonadArray m a = VMonadArray
     vwrite_commutative :: Index -> Index -> Proof -> a -> a -> Proof,
     vread_vwrite_commutative :: Index -> Index -> Proof -> a -> Proof
   }
+
+iMonadPlus_VMonadArray
 
 {-@ reflect vreadList @-}
 vreadList :: VMonadArray m a -> Index -> VNat -> m (VList a)
@@ -94,13 +97,13 @@ vwriteListToLength iMonadArray i xs =
     vlift_ = vlift iMonad_
     iMonad_ = iMonad iMonadArray
 
-{-@ reflect vwriteList2ToLength @-}
-vwriteList2ToLength ::
+{-@ reflect vwriteListsToLengths2 @-}
+vwriteListsToLengths2 ::
   VMonadArray m a ->
   Index ->
   VTuple2D (VList a) ->
   m (VTuple2D VNat)
-vwriteList2ToLength iMonadArray i (xs, ys) =
+vwriteListsToLengths2 iMonadArray i (xs, ys) =
   vseq_
     (vwriteList_ i (vappend xs ys))
     (vlift_ (vlength xs, vlength ys))
@@ -110,13 +113,13 @@ vwriteList2ToLength iMonadArray i (xs, ys) =
     vwriteList_ = vwriteList iMonadArray
     iMonad_ = iMonad iMonadArray
 
-{-@ reflect vwriteList3ToLength @-}
-vwriteList3ToLength ::
+{-@ reflect vwriteListsToLengths3 @-}
+vwriteListsToLengths3 ::
   VMonadArray m a ->
   Index ->
   VTuple3D (VList a) ->
   m (VTuple3D VNat)
-vwriteList3ToLength iMonadArray i (xs, ys, zs) =
+vwriteListsToLengths3 iMonadArray i (xs, ys, zs) =
   vseq_
     (vwriteList_ i (vappend xs (vappend ys zs)))
     (vlift_ (vlength xs, vlength ys, vlength zs))
