@@ -1,14 +1,13 @@
 module Function where
 
--- Types. For N-ary operators.
-{-@ type Op1 a = a -> a @-}
+-- Types. Form of generic homogeneous operators.
+-- - `Op<n>` is an `n`-ary operator.
+
 type Op1 a = a -> a
 
-{-@ type Op2 a = a -> a -> a @-}
 type Op2 a = a -> a -> a
 
--- Predicates
--- NOTE. Predicate parameters must be capitalized.
+-- Predicates.
 
 {-@ predicate IsAssociative  F X Y Z   = F X (F Y Z) = F (F X Y) Z @-}
 {-@ predicate IsCommutative  F X Y     = F X Y = F Y X @-}
@@ -26,9 +25,7 @@ type Op2 a = a -> a -> a
 {-@ predicate IsInvertibleRight F I X = F X (I X) = X @-}
 {-@ predicate IsInvertible      F I X = IsInvertibleLeft F I X && IsInvertibleRight F I X @-}
 
--- Functions
--- NOTE. Doesn't allow reference to these functions unless I use `reflect`
--- i.e. I can't give them my own liquid type declarations
+-- Functions.
 
 {-@ reflect vid @-}
 vid :: forall a. a -> a
