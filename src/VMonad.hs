@@ -116,6 +116,14 @@ vseq_identity iMonad m =
       _ = vseq_identity_right iMonad m
    in ()
 
+-- Lemma. Sequencing is associative.
+{-@
+vseq_associative :: forall m a b c . iMonad:VMonad m -> x:m a -> y:m b -> z:m c ->
+  {IsAssociative (vseq iMonad) x y z}
+@-}
+vseq_associative :: forall m a b c. VMonad m -> m a -> m b -> m c -> Proof
+vseq_associative iMonad x y z = ()
+
 -- Function.
 {-@ reflect vliftF @-}
 vliftF :: forall m a b. VMonad m -> (a -> b) -> m a -> m b
