@@ -27,59 +27,82 @@ vadd :: Op2 VNat
 vadd Zero n = n
 vadd (Suc m) n = Suc (vadd m n)
 
--- Lemma. Additive identity.
+-- Lemma. Additive right-identity.
+{-@ automatic-instances vadd_identity_right @-}
 {-@
-vadd_identity :: n:VNat ->
-  {IsIdentity vadd Zero n}
+vadd_identity_right :: n:VNat -> {vadd n Zero = n}
 @-}
-vadd_identity :: VNat -> Proof
-vadd_identity Zero = ()
-vadd_identity (Suc n) = vadd_identity n
+vadd_identity_right :: VNat -> Proof
+vadd_identity_right Zero = ()
+-- vadd Zero Zero
+--   ==. Zero
+--   *** QED
+vadd_identity_right (Suc n) =
+  vadd (Suc n) Zero
+    ==. Suc (vadd n Zero)
+    ==. Suc n ? vadd_identity_right n
+    *** QED
 
+-- Lemma. Addition with successor on the right i.e. m + S n = S (m + n).
 {-@
-vadd_m_Sn :: m:VNat -> n:VNat ->
-  {vadd m (Suc n) = Suc (vadd m n)}
+vadd_Suc_right :: m:VNat -> n:VNat -> {vadd m (Suc n) = Suc (vadd m n)}
 @-}
-vadd_m_Sn :: VNat -> VNat -> Proof
-vadd_m_Sn Zero n = ()
-vadd_m_Sn (Suc m) n =
+vadd_Suc_right :: VNat -> VNat -> Proof
+vadd_Suc_right Zero n =
+  vadd Zero (Suc n)
+    ==. Suc n ? vadd_identity_right (Suc n)
+    ==. Suc (vadd Zero n) ? vadd_identity_right n
+    *** QED
+vadd_Suc_right (Suc m) n =
   vadd (Suc m) (Suc n)
     ==. Suc (vadd m (Suc n))
-    ==. Suc (Suc (vadd m n))
-    ? vadd_m_Sn m n
+    ==. Suc (Suc (vadd m n)) ? vadd_Suc_right m n
     ==. Suc (vadd (Suc m) n)
     *** QED
 
--- {-@
--- vadd_Sm_n :: m:VNat -> n:VNat ->
---   {vadd (Suc m) n = Suc (vadd m n)}
--- @-}
--- vadd_Sm_n :: VNat -> VNat -> Proof
--- vadd_Sm_n m n = ()
+-- Lemma. Additive left-identity.
+{-@ automatic-instances vadd_identity_left @-}
+{-@
+vadd_identity_left:: n:VNat -> {IsIdentityLeft vadd Zero n}
+@-}
+vadd_identity_left :: VNat -> Proof
+vadd_identity_left _ = ()
+
+-- Lemma. Additive identity.
+{-@ automatic-instances vadd_identity @-}
+{-@
+vadd_identity :: n:VNat -> {IsIdentity vadd Zero n}
+@-}
+vadd_identity :: VNat -> Proof
+vadd_identity n = vadd_identity_right n
 
 -- Lemma. Addition is commutative.
 {-@
-vadd_commutative :: m:VNat -> n:VNat ->
-  {IsCommutative vadd m n}
+vadd_commutative :: m:VNat -> n:VNat -> {IsCommutative vadd m n}
 @-}
 vadd_commutative :: VNat -> VNat -> Proof
-vadd_commutative Zero n = vadd_identity n
+vadd_commutative Zero n =
+  vadd Zero n
+    ==. n ? vadd_identity n
+    ==. vadd n Zero ? vadd_identity n
+    *** QED
 vadd_commutative (Suc m) n =
   vadd (Suc m) n
     ==. Suc (vadd m n)
-    ==. Suc (vadd n m)
-    ? vadd_commutative m n
-    ==. vadd n (Suc m)
-    ? vadd_m_Sn n m
+    ==. Suc (vadd n m) ? vadd_commutative m n
+    ==. vadd n (Suc m) ? vadd_Suc_right n m
     *** QED
 
 -- Lemma. Addition is associative.
 {-@
-vadd_associative :: l:VNat -> m:VNat -> n:VNat ->
-  {IsAssociative vadd l m n}
+vadd_associative :: l:VNat -> m:VNat -> n:VNat -> {IsAssociative vadd l m n}
 @-}
 vadd_associative :: VNat -> VNat -> VNat -> Proof
-vadd_associative Zero m n = ()
+vadd_associative Zero m n =
+  vadd Zero (vadd m n)
+    ==. vadd m n ? vadd_identity (vadd m n)
+    ==. vadd (vadd Zero m) n ? vadd_identity m
+    *** QED
 vadd_associative (Suc l) m n =
   vadd (Suc l) (vadd m n)
     ==. Suc (vadd l (vadd m n))
@@ -96,9 +119,10 @@ vmul Zero _ = Zero
 vmul (Suc m) n = vadd n (vmul m n)
 
 -- Lemma. Multiplicative identity.
+{-@ automatic-instances vmul_identity @-}
 {-@ vmul_identity :: n:VNat -> {IsIdentity vmul vone n} @-}
 vmul_identity :: VNat -> Proof
-vmul_identity Zero = ()
+vmul_identity Zero = trivial
 vmul_identity (Suc n) = vmul_identity n
 
 -- Lemma. Multiplicative annihilator.

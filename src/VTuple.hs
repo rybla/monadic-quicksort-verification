@@ -33,6 +33,6 @@ fst3D (x, _, _) = x
 snd3D :: VTuple3D a -> a
 snd3D (_, y, _) = y
 
-{-@ reflect thd2D @-}
+{-@ reflect thd3D @-}
 thd3D :: VTuple3D a -> a
 thd3D (_, _, z) = z

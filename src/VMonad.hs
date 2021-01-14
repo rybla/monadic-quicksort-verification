@@ -142,7 +142,16 @@ predicate IsCommutativeMonadic IMONAD M1 M2 F =
   vliftF2 IMONAD F M1 M2 = vliftF2 IMONAD (vflip F) M2 M1
 @-}
 
--- Function. Lifts tuple into monad, after applying a function to second component.
+-- Function. Lifts tuple into monad, after applying a function to second
+-- component.
 {-@ reflect vlift_apply_second @-}
-vlift_apply_second :: forall m a b c. VMonad m -> (b -> c) -> (a, b) -> m (b, c)
-vlift_apply_second iMonad f (x, y) = vbind iMonad (f y) (\y' -> vlift (x, y'))
+vlift_apply_second ::
+  forall m a b c.
+  VMonad m ->
+  (b -> m c) ->
+  (a, b) ->
+  m (a, c)
+vlift_apply_second iMonad f (x, y) = vbind_ (f y) (\y' -> vlift_ (x, y'))
+  where
+    vlift_ = vlift iMonad
+    vbind_ = vbind iMonad

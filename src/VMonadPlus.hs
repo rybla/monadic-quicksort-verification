@@ -7,47 +7,59 @@ import VBool
 import VMonad
 
 -- A plus-monad (there must be a better name for this...) is TODO.
+-- - vepsilon: e.
+-- - vmpadd: x <+> y.
+-- - vmpaddF: f <+> g.
+-- - vbind_identity_left:              e >>= f = e.
+-- - vseq_identity_right:               x >> e = e.
+-- - vmpadd_identity:                   x <+> e = x,
+--                                     e <+> x = x.
+-- - vmpadd_distributive_left:  (x <+> y) >>= f = (x >>= f) <+> (y >>= f).
+-- - vmpadd_distributive_right: x >>= (f <+> g) = (x >>= f) <+> (x >>= g).
 {-@
 data VMonadPlus m = VMonadPlus
   { iMonad :: VMonad m
   , vepsilon :: forall a . m a
-  , vmadd :: forall a . Op2 (m a)
+  , vmpadd :: forall a . Op2 (m a)
   , vbind_identity_left :: forall a b . f:(a -> m b) ->
       {vbind iMonad vepsilon f = vepsilon}
-  , vseq_identity_right :: forall a . m:m a ->
-      {vseq iMonad m vepsilon = vepsilon}
-  , vmadd_distributive_left :: forall a b . m1:m a -> m2:m a -> f:(a -> m b) ->
-      {vbind iMonad (vmadd m1 m2) f = vmadd (vbind iMonad m1 f) (vbind iMonad m2 f)}
-  , vmadd_distributive_right :: forall a b . m: m a -> f:(a -> m b) -> g:(a -> m b) ->
-      {vbind iMonad m (raw_vmaddF vmadd f g) = vmadd (vbind iMonad m f) (vbind iMonad m g)} }
+  , vseq_identity_right :: forall a . x:m a ->
+      {vseq iMonad x vepsilon = vepsilon}
+  , vmpadd_identity :: forall a. x:m a ->
+      {IsIdentity vmpadd vepsilon x}
+  , vmpadd_distributive_left :: forall a b . x:m a -> y:m a -> f:(a -> m b) ->
+      {vbind iMonad (vmpadd x y) f = vmpadd (vbind iMonad x f) (vbind iMonad y f)}
+  , vmpadd_distributive_right :: forall a b . x:m a -> f:(a -> m b) -> g:(a -> m b) ->
+      {vbind iMonad x (raw_vmpaddF vmpadd f g) = vmpadd (vbind iMonad x f) (vbind iMonad x g)} }
 @-}
 data VMonadPlus m = VMonadPlus
   { iMonad :: VMonad m,
     vepsilon :: forall a. m a,
-    vmadd :: forall a. Op2 (m a),
+    vmpadd :: forall a. Op2 (m a),
     vbind_identity_left :: forall a b. (a -> m b) -> Proof,
     vseq_identity_right :: forall a. m a -> Proof,
-    vmadd_distributive_left :: forall a b. m a -> m a -> (a -> m b) -> Proof,
-    vmadd_distributive_right :: forall a b. m a -> (a -> m b) -> (a -> m b) -> Proof
+    vmpadd_identity :: forall a. m a -> Proof,
+    vmpadd_distributive_left :: forall a b. m a -> m a -> (a -> m b) -> Proof,
+    vmpadd_distributive_right :: forall a b. m a -> (a -> m b) -> (a -> m b) -> Proof
   }
 
-{-@ reflect raw_vmaddF @-}
-raw_vmaddF ::
+{-@ reflect raw_vmpaddF @-}
+raw_vmpaddF ::
   forall m a b.
-  (forall a. Op2 (m a)) -> -- vmadd
+  (forall a. Op2 (m a)) -> -- vmpadd
   (a -> m b) ->
   (a -> m b) ->
   (a -> m b)
-raw_vmaddF raw_vmadd f g x = raw_vmadd (f x) (g x)
+raw_vmpaddF raw_vmpadd f g x = raw_vmpadd (f x) (g x)
 
-{-@ reflect vmaddF @-}
-vmaddF ::
+{-@ reflect vmpaddF @-}
+vmpaddF ::
   forall m a b.
   VMonadPlus m ->
   (a -> m b) ->
   (a -> m b) ->
   (a -> m b)
-vmaddF iMP = raw_vmaddF vmadd_ where vmadd_ = vmadd iMP
+vmpaddF iMP = raw_vmpaddF vmpadd_ where vmpadd_ = vmpadd iMP
 
 -- Function. Condition `MonadPlus` branch by a boolean.
 {-@ reflect mguard @-}
@@ -68,37 +80,93 @@ mguardBy iMonadPlus p x = vseq_ (mguard_ (p x)) (vlift_ x)
     vlift_ = vlift iMonad_
     iMonad_ = iMonad iMonadPlus
 
--- Predicates. Plus-monadic refinement.
+-- Predicate. Plus-monadic refinement.
 {-@
-predicate RefinesPlusMonadic IMONADPLUS M1 M2 =
-  vmadd IMONADPLUS M1 M2 = M2
+predicate RefinesPlusMonadic IMONADPLUS X Y =
+  vmpadd IMONADPLUS X Y = Y
 @-}
+
+-- Predicate. Function-extended plus-monadic refinement.
 {-@
 predicate RefinesPlusMonadicF IMONADPLUS F G X =
   RefinesPlusMonadic IMONADPLUS (F X) (G X)
 @-}
 
+-- Lemma. e refines x.
+{-@
+vepsilon_refines :: forall m a. iMonadPlus:VMonadPlus m -> x:m a ->
+  {RefinesPlusMonadic iMonadPlus (vepsilon iMonadPlus) x}
+@-}
+vepsilon_refines :: forall m a. VMonadPlus m -> m a -> Proof
+vepsilon_refines iMonadPlus x = vmpadd_identity_ x
+  where
+    vmpadd_identity_ = vmpadd_identity iMonadPlus
+
+-- TODO: assumption?
+-- Lemma. x refines x.
+{-@
+assume identity_refines :: forall m a. iMonadPlus:VMonadPlus m -> x:m a ->
+  {RefinesPlusMonadic iMonadPlus x x}
+@-}
+identity_refines :: forall m a. VMonadPlus m -> m a -> Proof
+identity_refines iMonadPlus x = ()
+
+-- TODO: assumption?
+-- Lemma. x refines x <+> y
+{-@
+assume component_left_refines ::
+  forall m a.
+  iMonadPlus:VMonadPlus m ->
+  x:m a ->
+  y:m a ->
+  {RefinesPlusMonadic iMonadPlus x (vmpadd iMonadPlus x y)}
+@-}
+component_left_refines :: forall m a. VMonadPlus m -> m a -> m a -> Proof
+component_left_refines iMonadPlus x y = ()
+
+-- TODO: assumption?
+-- Lemma. y refines x <+> y.
+{-@
+assume component_right_refines ::
+  forall m a.
+  iMonadPlus:VMonadPlus m ->
+  x:m a ->
+  y:m a ->
+  {RefinesPlusMonadic iMonadPlus y (vmpadd iMonadPlus x y)}
+@-}
+component_right_refines :: forall m a. VMonadPlus m -> m a -> m a -> Proof
+component_right_refines iMonadPlus x y = ()
+
+-- TODO: prove
 -- Lemma. `vbind` is monotonic with respect to refinement.
 {-@
-assume vbind_monotonic_refinement :: forall m a b .
+assume vbind_monotonic_refinement ::
+  forall m a b .
   iMonadPlus:VMonadPlus m ->
-  m1:m a -> m2: m a ->
+  x:m a -> y: m a ->
   f:(a -> m b) ->
-  {RefinesPlusMonadic iMonadPlus m1 m2 =>
-   RefinesPlusMonadic iMonadPlus (vbind (VMonadPlus.iMonad iMonadPlus) m1 f) (vbind (VMonadPlus.iMonad iMonadPlus) m2 f)}
+  {RefinesPlusMonadic iMonadPlus x y =>
+   RefinesPlusMonadic iMonadPlus (vbind (VMonadPlus.iMonad iMonadPlus) x f) (vbind (VMonadPlus.iMonad iMonadPlus) y f)}
 @-}
 vbind_monotonic_refinement ::
-  forall m a b. VMonadPlus m -> m a -> m a -> (a -> m b) -> Proof
+  forall m a b.
+  VMonadPlus m ->
+  m a ->
+  m a ->
+  (a -> m b) ->
+  Proof
 vbind_monotonic_refinement _ _ _ _ = ()
 
+-- TODO: prove
 -- Lemma. `mguard` monad-commutes with `m` since `m` has just one effect.
 {-@
 assume mguard_isCommutativeMonadic :: forall m a b .
   iMonadPlus:VMonadPlus m ->
   b:Bool ->
-  m:m a ->
+  x:m a ->
   f:(a -> b) ->
-  {IsCommutativeMonadic (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus b) m (vconstF f)}
+  {IsCommutativeMonadic (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus b)
+    x (vconstF f)}
 @-}
 mguard_isCommutativeMonadic ::
   forall m a b. VMonadPlus m -> Bool -> m a -> (a -> b) -> Proof
@@ -109,6 +177,7 @@ mguard_isCommutativeMonadic _ _ _ _ = ()
 mguard_and :: forall m. VMonadPlus m -> Bool -> Bool -> m ()
 mguard_and iMonadPlus b1 b2 = mguard iMonadPlus (vand b1 b2)
 
+-- TODO: prove
 -- Lemma.
 {-@
 assume mguard_and_vseq :: forall m .
@@ -123,19 +192,20 @@ mguard_and_vseq _ _ _ = ()
 {-@ reflect mguard_disjoint @-}
 mguard_disjoint ::
   forall m a. VMonadPlus m -> Bool -> m a -> m a -> m a
-mguard_disjoint iMonadPlus b m1 m2 =
-  vmadd
+mguard_disjoint iMonadPlus b x y =
+  vmpadd
     iMonadPlus
-    (vseq (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus b) m1)
-    (vseq (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus (vnot b)) m1)
+    (vseq (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus b) x)
+    (vseq (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus (vnot b)) x)
 
+-- TODO: prove
 -- Lemma.
 -- NOTE. idk why I need to prefix `vbranch` with `VBool` here, but I do...
 {-@
 assume mguard_disjoint_branch :: forall m a .
   iMonadPlus:VMonadPlus m ->
-  b:Bool -> m1:m a -> m2: m a ->
-  {RefinesPlusMonadic iMonadPlus (mguard_disjoint iMonadPlus b m1 m2) (VBool.vbranch b m1 m2)}
+  b:Bool -> x:m a -> y: m a ->
+  {RefinesPlusMonadic iMonadPlus (mguard_disjoint iMonadPlus b x y) (VBool.vbranch b x y)}
 @-}
 mguard_disjoint_branch ::
   forall m a. VMonadPlus m -> Bool -> m a -> m a -> Proof

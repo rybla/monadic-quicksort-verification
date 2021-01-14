@@ -118,7 +118,10 @@ vreverse_preserves_vlength :: forall a . xs:VList a ->
   {PreservesMeasure vlength vreverse xs}
 @-}
 vreverse_preserves_vlength :: forall a. VList a -> Proof
-vreverse_preserves_vlength Nil = ()
+vreverse_preserves_vlength Nil =
+  vlength (vreverse Nil)
+    ==. vlength Nil
+    *** QED
 vreverse_preserves_vlength (Cons x xs) =
   vlength (vreverse (Cons x xs))
     ==. vlength (vappend (vreverse xs) (Cons x Nil))
@@ -129,7 +132,7 @@ vreverse_preserves_vlength (Cons x xs) =
     ? vreverse_preserves_vlength xs
     ==. vadd (vlength xs) (Suc Zero)
     ==. Suc (vadd (vlength xs) Zero)
-    ? vadd_m_Sn (vlength xs) Zero
+    ? vadd_Suc_right (vlength xs) Zero
     ==. Suc (vlength xs)
     ? vadd_identity (vlength xs)
     ==. vlength (Cons x xs)

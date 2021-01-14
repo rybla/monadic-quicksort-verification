@@ -52,8 +52,21 @@ permute iMonadPlus (Cons x xs) =
     permute_ = permute iMonadPlus
     iMonad_ = iMonad iMonadPlus
 
-{-@ lazy isSorted @-}
+-- TODO: prove
+-- Lemma. Lifting the list itself into the plus monad is a plus-monadic
+-- refinement of permutations of that list.
+{-@
+assume identity_refines_permute ::
+  forall m a.
+  iMonadPlus:VMonadPlus m ->
+  xs:VList a ->
+  {RefinesPlusMonadic iMonadPlus (vlift (iMonad iMonadPlus) xs) (permute iMonadPlus xs)}
+@-}
+identity_refines_permute :: forall m a. VMonadPlus m -> VList a -> Proof
+identity_refines_permute iMonadPlus xs = ()
+
 -- TODO: prove termination
+{-@ lazy isSorted @-}
 {-@ reflect isSorted @-}
 isSorted :: forall a. VOrdered a -> Predicate (VList a)
 isSorted iOrdered Nil = True
@@ -70,8 +83,8 @@ isSortedBetween iOrdered x (ys, zs) =
   where
     leq_ = leq iOrdered
 
-{-@ lazy split @-}
 -- TODO: prove termination
+{-@ lazy split @-}
 {-@ reflect split @-}
 split :: forall m a. VMonadPlus m -> VList a -> m (VList a, VList a)
 split iMonadPlus Nil = vlift_ (Nil, Nil)
@@ -82,11 +95,11 @@ split iMonadPlus (Cons x xs) =
   vbind_
     (split_ xs)
     ( \(ys, zs) ->
-        vmadd_ (vlift_ (Cons x ys, zs)) (vlift_ (ys, Cons x zs))
+        vmpadd_ (vlift_ (Cons x ys, zs)) (vlift_ (ys, Cons x zs))
     )
   where
     split_ = split iMonadPlus
-    vmadd_ = vmadd iMonadPlus
+    vmpadd_ = vmpadd iMonadPlus
     vlift_ = vlift iMonad_
     vbind_ = vbind iMonad_
     iMonad_ = iMonad iMonadPlus

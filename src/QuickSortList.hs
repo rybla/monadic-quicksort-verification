@@ -63,8 +63,8 @@ partition iOrdered x' (Cons x xs) =
   where
     leq_ = leq iOrdered
 
--- Lemma. `partition` refines `partition_step`
 -- TODO. prove
+-- Lemma. `partition` refines `partition_step`
 {-@
 assume partition_correct :: forall m a . iMonadPlus:VMonadPlus m -> iOrdered:VOrdered a -> x:a -> xs:VList a ->
   {RefinesPlusMonadic iMonadPlus (vlift (VMonadPlus.iMonad iMonadPlus) (partition iOrdered x xs)) (partition_specification iMonadPlus iOrdered x xs)}
@@ -73,7 +73,7 @@ partition_correct ::
   forall m a. VMonadPlus m -> VOrdered a -> a -> VList a -> Proof
 partition_correct iMonadPlus iOrdered x xs = ()
 
--- Lemma. Helper for "divide and conquer" property.
+-- Function. Helper for "divide and conquer" property.
 {-@ reflect quicksort_step @-}
 quicksort_step ::
   forall m a.
@@ -101,8 +101,8 @@ quicksort_step iMonadPlus iOrdered x xs =
     vbind_ = vbind iMonad_
     iMonad_ = iMonad iMonadPlus
 
--- Lemma. The "divide and conquer" property: `quicksort_step` refines `slowsort`.
 -- TODO. prove
+-- Lemma. The "divide and conquer" property: `quicksort_step` refines `slowsort`.
 {-@
 assume divide_and_conquer :: forall m a . iMonadPlus:VMonadPlus m -> iOrdered:VOrdered a -> x:a -> xs:VList a ->
   {RefinesPlusMonadic iMonadPlus (quicksort_step iMonadPlus iOrdered x xs) (SlowSortList.slowsort iMonadPlus iOrdered (Cons x xs))}

@@ -6,7 +6,6 @@ import Relation
 import VBool
 import VList
 import VMonad
-import VMonadPlus
 import VNat
 import VTuple
 import VUnit
@@ -49,8 +48,6 @@ data VMonadArray m a = VMonadArray
     vwrite_commutative :: Index -> Index -> Proof -> a -> a -> Proof,
     vread_vwrite_commutative :: Index -> Index -> Proof -> a -> Proof
   }
-
-iMonadPlus_VMonadArray
 
 {-@ reflect vreadList @-}
 vreadList :: VMonadArray m a -> Index -> VNat -> m (VList a)

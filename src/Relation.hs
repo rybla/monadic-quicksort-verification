@@ -32,9 +32,9 @@ type Relation3D a = Relation3 a a a
 {-@ predicate IsAntisymmetric R X Y   = R X Y => R Y X => X = Y @-}
 
 -- Predicates. Forms of property-preserving relations.
-{-@ predicate PreservesMeasure   M F X   = M X   =  M (F X) @-}
-{-@ predicate PreservesPredicate P F X   = P X   => P (F X) @-}
-{-@ predicate PreservesRelation  R F X Y = R X Y => R (F X) (F Y) @-}
+{-@ predicate PreservesMeasure   M F X   = M (F X)       =  M X @-}
+{-@ predicate PreservesPredicate P F X   = P (F X)       => P X @-}
+{-@ predicate PreservesRelation  R F X Y = R (F X) (F Y) => R X Y @-}
 
 type Property a = a -> Proof
 
