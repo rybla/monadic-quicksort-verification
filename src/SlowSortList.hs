@@ -8,16 +8,16 @@ import VMonad
 import VMonadPlus
 import VOrdered
 
---------------------------------------------------------------------------------
--- Slow Sort
---------------------------------------------------------------------------------
+-- Type. Constraints for nondeterministically interfacing with arrays of ordered
+-- elements.
+type VMonadPlusOrdered m a = (VMonadPlus m, VOrdered a)
 
-{-@ lazy slowsort @-}
 -- TODO: prove termination
+{-@ lazy slowsort @-}
 {-@ reflect slowsort @-}
 slowsort ::
-  forall m a. VMonadPlus m -> VOrdered a -> VList a -> m (VList a)
-slowsort iMonadPlus iOrdered =
+  forall m a. VMonadPlusOrdered m a -> VList a -> m (VList a)
+slowsort (iMonadPlus, iOrdered) =
   kleisli_
     permute_
     (mguardBy_ isSorted_)

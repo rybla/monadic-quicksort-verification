@@ -11,57 +11,8 @@ import VMonadArray
 import VMonadPlus
 import VOrdered
 
---------------------------------------------------------------------------------
--- Quick Sort
---------------------------------------------------------------------------------
-
--- TODO
-
---------------------------------------------------------------------------------
--- Partitioning
---------------------------------------------------------------------------------
-
 -- Type. Constraints for nondeterministically sorting arrays.
 type VMonadArrayPlusOrdered m a = (VMonadArray m a, VMonadPlus m, VOrdered a)
-
--- Type. Constraints for nondeterministically interfacing with arrays of ordered
--- elements.
-type VMonadPlusOrdered m a = (VMonadPlus m, VOrdered a)
-
--- Type.
-{-@
-type PartitiontrArray m a =
-  VMonadArrayPlusOrdered ->
-  a ->
-  Index ->
-  VTuple2D (VList a) ->
-  VList a ->
-  m (VNat, VNat)
-@-}
-type PartitiontrArray m a =
-  VMonadArrayPlusOrdered ->
-  a ->
-  Index ->
-  VTuple2D (VList a) ->
-  VList a ->
-  m (VNat, VNat)
-
--- Type.
-{-@
-type PartitiontrArray_Specification m a =
-  VMonadArrayPlusOrdered ->
-  a ->
-  VTuple2D (VList a) ->
-  VList a ->
-  m (VTuple2D (VList a))
-
-@-}
-type PartitiontrArray_Specification m a =
-  VMonadArrayPlusOrdered ->
-  a ->
-  VTuple2D (VList a) ->
-  VList a ->
-  m (VTuple2D (VList a))
 
 -- -- Function. Partition list (not tail-recursive).
 -- {-@ reflect partl @-}
