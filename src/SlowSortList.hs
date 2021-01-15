@@ -60,7 +60,7 @@ assume identity_refines_permute ::
   forall m a.
   iMonadPlus:VMonadPlus m ->
   xs:VList a ->
-  {RefinesPlusMonadic iMonadPlus (vlift (iMonad iMonadPlus) xs) (permute iMonadPlus xs)}
+  {RefinesPlusMonadic iMonadPlus (vlift (VMonadPlus.iMonad iMonadPlus) xs) (permute iMonadPlus xs)}
 @-}
 identity_refines_permute :: forall m a. VMonadPlus m -> VList a -> Proof
 identity_refines_permute iMonadPlus xs = ()
@@ -70,18 +70,18 @@ identity_refines_permute iMonadPlus xs = ()
 {-@ reflect isSorted @-}
 isSorted :: forall a. VOrdered a -> Predicate (VList a)
 isSorted iOrdered Nil = True
-isSorted iOrdered (Cons x xs) = vall (leq_ x) xs && isSorted_ xs
+isSorted iOrdered (Cons x xs) = vall (vleq_ x) xs && isSorted_ xs
   where
-    leq_ = leq iOrdered
+    vleq_ = vleq iOrdered
     isSorted_ = isSorted iOrdered
 
 {-@ reflect isSortedBetween @-}
 isSortedBetween ::
   forall a. VOrdered a -> a -> (VList a, VList a) -> Bool
 isSortedBetween iOrdered x (ys, zs) =
-  vall (\y -> leq_ y x) ys && vall (\z -> leq_ x z) zs
+  vall (\y -> vleq_ y x) ys && vall (\z -> vleq_ x z) zs
   where
-    leq_ = leq iOrdered
+    vleq_ = vleq iOrdered
 
 -- TODO: prove termination
 {-@ lazy split @-}

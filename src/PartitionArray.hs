@@ -9,26 +9,34 @@ import VList
 import VMonad
 import VMonadArray
 import VMonadPlus
+import VNat
 import VOrdered
+import VTuple
+import VUnit
+
+-- TODO: What's the theorem here? Is it just that this implementation finally
+-- shows `ipartl_specification1_correct` sound?
 
 -- Type. Constraints for nondeterministically sorting arrays.
 type VMonadArrayPlusOrdered m a = (VMonadArray m a, VMonadPlus m, VOrdered a)
 
--- -- Function. Partition list (not tail-recursive).
--- {-@ reflect partl @-}
--- partl ::
---   forall a.
---   VOrdered a ->
---   a ->
---   VTuple3D (VList a) ->
---   VTuple2D (VList a)
--- partl iOrdered p (ys, zs, xs) =
---   let (us, vs) = partition_ p xs
---   in (vappend ys us, vappend zs vs)
---   where
---     partition_ = partition iOrdered
+-- Function. Partition list `xs` onto two other lists `ys` and `zs` (not
+-- tail-recursively) using `partition`.
+{-@ reflect partl_ntr @-}
+partl_ntr ::
+  forall a.
+  VOrdered a ->
+  a ->
+  VTuple3D (VList a) ->
+  VTuple2D (VList a)
+partl_ntr iOrdered p (ys, zs, xs) =
+  let (us, vs) = partition_ p xs
+   in (vappend ys us, vappend zs vs)
+  where
+    partition_ = partition iOrdered
 
--- Function. Tail-recursive partition list.
+-- Function. Partition list `xs` onto two other lists `ys` and `zs`
+-- (tail-recursively).
 {-@ reflect partl @-}
 partl ::
   forall a.
@@ -38,18 +46,59 @@ partl ::
   VTuple2D (VList a)
 partl iOrdered p (ys, zs, Nil) = (ys, zs)
 partl iOrdered p (ys, zs, Cons x xs) =
-  if leq_ x p
-    then partl_ p (vappend ys (vsingleton x), zs) xs
-    else partl_ p (ys, vappend zs (vsingleton x)) xs
+  if vleq_ x p
+    then partl_ p (vappend ys (vsingleton x), zs, xs)
+    else partl_ p (ys, vappend zs (vsingleton x), xs)
   where
     partl_ = partl iOrdered
-    leq_ = leq iOrdered
+    vleq_ = vleq iOrdered
+
+-- Lemma.
+-- TODO: prove
+{-@
+assume partl_correct ::
+  forall a.
+  iOrdered:VOrdered a ->
+  p:a ->
+  xs:VList a ->
+  ys:VList a ->
+  zs:VList a ->
+  {partl iOrdered p (ys, zs, xs) =
+   partl iOrdered p (ys, zs, xs)}
+@-}
+partl_correct ::
+  forall a.
+  VOrdered a ->
+  a ->
+  VList a ->
+  VList a ->
+  VList a ->
+  Proof
+partl_correct iOrdered p xs ys zs = ()
+
+-- Lemma.
+-- TODO: prove
+{-@
+assume partl_generalizes_partition ::
+  forall a.
+  iOrdered:VOrdered a ->
+  p:a ->
+  xs:VList a ->
+  {partl iOrdered p (Nil, Nil, xs) = partition iOrdered p xs}
+@-}
+partl_generalizes_partition ::
+  forall a.
+  VOrdered a ->
+  a ->
+  VList a ->
+  Proof
+partl_generalizes_partition iOrdered p xs = ()
 
 -- Function. Write components to array, then `ipartl` with respective lengths.
 {-@ reflect ipartl' @-}
 ipartl' ::
   forall m a.
-  VMonadArrayPlusOrdered ->
+  VMonadArrayPlusOrdered m a ->
   a ->
   Index ->
   VTuple3D (VList a) ->
@@ -68,7 +117,7 @@ ipartl' (iMonadArray, iMonadPlus, iOrdered) p i (ys, zs, xs) =
 {-@ reflect ipartl_specification1 @-}
 ipartl_specification1 ::
   forall m a.
-  VMonadArrayPlusOrdered ->
+  VMonadArrayPlusOrdered m a ->
   a ->
   Index ->
   VTuple3D (VList a) ->
@@ -79,29 +128,30 @@ ipartl_specification1 (iMonadArray, iMonadPlus, iOrdered) p i (ys, zs, xs) =
     (vwriteListsToLengths2_ i)
   where
     vbind_ = vbind iMonad_
-    vlift_apply_second_ = vlift_apply_second_ iMonad_
+    vlift_apply_second_ = vlift_apply_second iMonad_
     permute_ = permute iMonadPlus
-    partl_ = partl (iMonadArray, iMonadPlus, iOrdered)
+    partl_ = partl iOrdered
     vwriteListsToLengths2_ = vwriteListsToLengths2 iMonadArray
     iMonad_ = VMonadPlus.iMonad iMonadPlus
 
--- Lemma. `ipartl` specification #1 is correct.
+-- Lemma.
+-- TODO: prove `ipartl` specification #1 is correct.
 {-@
 assume ipartl_specification1_correct ::
   forall m a.
-  iMonadArrayPlusOrdered:VMonadArrayPlusOrdered ->
+  iMonadArrayPlusOrdered:VMonadArrayPlusOrdered m a ->
   p:a ->
   i:Index ->
   xs:VList a ->
   ys:VList a ->
   zs:VList a ->
-  {RefinesPlusMonadic (snd iMonadArrayPlusOrdered)
+  {RefinesPlusMonadic (snd3 iMonadArrayPlusOrdered)
     (ipartl' iMonadArrayPlusOrdered p i (ys, zs, xs))
     (ipartl_specification1 iMonadArrayPlusOrdered p i (ys, zs, xs))}
 @-}
 ipartl_specification1_correct ::
   forall m a.
-  VMonadArrayPlusOrdered ->
+  VMonadArrayPlusOrdered m a ->
   a ->
   Index ->
   VList a ->
@@ -110,10 +160,11 @@ ipartl_specification1_correct ::
   Proof
 ipartl_specification1_correct iMonadArrayPlusOrdered p i xs ys zs = ()
 
--- TODO: but not actually used
--- -- Function. Combining `vlift_apply_second` into `partl`
--- -- (page 10, Derivation).
--- {-@ reflect partl' @-}
+-- TODO: how to handle this?
+-- -- NOTE: This implementation is not actually used. The actually used
+-- -- implementation is presented next.
+-- -- Function. Combining `vlift_apply_second` into `partl`.
+-- -- (viz page 10, Derivation)
 -- partl' ::
 --   forall m a.
 --   (VMonadPlus m, VOrdered a) ->
@@ -125,7 +176,7 @@ ipartl_specification1_correct iMonadArrayPlusOrdered p i xs ys zs = ()
 --     vlift_ = vlift iMonad_
 --     iMonad_ = VMonadPlus.iMonad iMonadPlus
 -- partl' (iMonadPlus, iOrdered) p (ys, zs, Cons x xs) =
---   if leq_ x p
+--   if vleq_ x p
 --     then
 --       vbind_
 --         (permute_ zs)
@@ -135,7 +186,7 @@ ipartl_specification1_correct iMonadArrayPlusOrdered p i xs ys zs = ()
 --         (permute (vappend zs (vsingleton x)))
 --         (\zs' -> partl'_ p (ys, zs', xs))
 --   where
---     leq_ = leq iOrdered
+--     vleq_ = vleq iOrdered
 --     vbind_ = vbind iMonad_
 --     permute_ = permute iMonadPlus
 --     partl'_ = partl' (iMonadPlus, iOrdered)
@@ -161,7 +212,7 @@ partl' (iMonadPlus, iOrdered) p (ys, zs, Cons x xs) =
     (partl'_ p)
   where
     dispatch x p (ys, zs, xs) =
-      if x leq_ p
+      if vleq_ x p
         then
           vbind_
             (permute_ zs)
@@ -173,15 +224,17 @@ partl' (iMonadPlus, iOrdered) p (ys, zs, Cons x xs) =
 
     vlift_ = vlift iMonad_
     vbind_ = vbind iMonad_
-    partl'_ = partl (iMonadPlus, iOrdered)
-    permute_ = permute iOrdered
+    partl'_ = partl' (iMonadPlus, iOrdered)
+    permute_ = permute iMonadPlus
+    vleq_ = vleq iOrdered
     iMonad_ = VMonadPlus.iMonad iMonadPlus
 
--- Specification. `ipartl'` specification #2 (page 10, display 10).
+-- Specification. `ipartl'` specification #2.
+-- (viz. page 10, display 10).
 {-@ reflect ipartl_specification2 @-}
 ipartl_specification2 ::
   forall m a.
-  VMonadArrayPlusOrdered ->
+  VMonadArrayPlusOrdered m a ->
   a ->
   Index ->
   VTuple3D (VList a) ->
@@ -194,23 +247,38 @@ ipartl_specification2 (iMonadArray, iMonadPlus, iOrdered) p i (ys, zs, xs) =
     vbind_ = vbind iMonad_
     partl'_ = partl' (iMonadPlus, iOrdered)
     vwriteListsToLengths2_ = vwriteListsToLengths2 iMonadArray
+    iMonad_ = VMonadPlus.iMonad iMonadPlus
 
 -- Lemma.
+-- TODO: prove
+-- (viz. page 10, display 10).
 {-@
-ipartl_specification2_correct ::
+assume ipartl_specification2_correct ::
   forall m a.
-  iMonadArrayPlusOrdered:VMonadArrayPlusOrdered ->
+  iMonadArrayPlusOrdered:VMonadArrayPlusOrdered m a->
   p:a ->
   i:Index ->
   xs:VList a ->
   ys:VList a ->
   zs:VList a ->
-  {RefinesPlusMonadic (snd iMonadArrayPlusOrdered)
+  {RefinesPlusMonadic (snd3 iMonadArrayPlusOrdered)
     (ipartl' iMonadArrayPlusOrdered p i (ys, zs, xs))
     (ipartl_specification2 iMonadArrayPlusOrdered p i (ys, zs, xs))}
 @-}
+ipartl_specification2_correct ::
+  forall m a.
+  VMonadArrayPlusOrdered m a ->
+  a ->
+  Index ->
+  VList a ->
+  VList a ->
+  VList a ->
+  Proof
+ipartl_specification2_correct (iMonadArray, iMonadPlus, iOrdered) p i xs ys zs =
+  ()
 
 -- Specification. For the `then` branch in `ipartl_Cons_specification3`.
+-- (viz. page 11, )
 {-@ reflect ipartl_Cons_then_specification3 @-}
 ipartl_Cons_then_specification3 ::
   forall m a.
@@ -218,25 +286,26 @@ ipartl_Cons_then_specification3 ::
   a ->
   Index ->
   (VList a, VList a, a, VList a) ->
-  VTuple2D VNat
+  m (VTuple2D VNat)
 ipartl_Cons_then_specification3
   (iMonadArray, iMonadPlus, iOrdered)
   p
   i
   (ys, zs, x, xs) =
-    vseq_
-      ( vbind_
-          (permute_ zs)
-          (\zs' -> vlift_ (vappend ys (vsingleton x), zs', xs))
+    vbind_
+      (permute_ zs)
+      ( \zs' ->
+          vseq_
+            (vwriteList_ i (vappend ys (vappend (vsingleton x) zs')))
+            (ipartl_ p i (Suc ys_l, vlength zs', xs_l))
       )
-      (ipartl_ p i (vadd ys_l vone, vlength zs', xs_l))
     where
-      (ys_l, xs_l) = (vlength ys, vlength xs)
-      vlift_ = vlift iMonad_
+      (xs_l, ys_l) = (vlength xs, vlength ys)
       vbind_ = vbind iMonad_
       vseq_ = vseq iMonad_
+      vwriteList_ = vwriteList iMonadArray
       permute_ = permute iMonadPlus
-      ipartl_ = ipartl_ (iMonadArray, iMonadPlus, iOrdered)
+      ipartl_ = ipartl (iMonadArray, iMonadPlus, iOrdered)
       iMonad_ = VMonadPlus.iMonad iMonadPlus
 
 -- Specification. For the `else` branch in `ipartl_Cons_specification3`.
@@ -247,22 +316,27 @@ ipartl_Cons_else_specification3 ::
   a ->
   Index ->
   (VList a, VList a, a, VList a) ->
-  VTuple2D VNat
-ipartl_Cons_else_specification3 (iMonadArray, iMonadPlus, iOrdered) p i (ys, zs, x, xs) =
-  vseq_
-    ( vbind_
-        (permute_ (vappend zs (vsingleton x)))
-        (\zs' -> vlift_ (ys, zs', xs))
-    )
-    (ipartl_ p i (ys_l, vlength zs', xs_l))
-  where
-    (ys_l, xs_l) = (vlength ys, vlength xs)
-    vlift_ = vlift iMonad_
-    vbind_ = vbind iMonad_
-    vseq_ = vseq iMonad_
-    permute_ = permute iMonadPlus
-    ipartl_ = ipartl_ (iMonadArray, iMonadPlus, iOrdered)
-    iMonad_ = VMonadPlus.iMonad iMonadPlus
+  m (VTuple2D VNat)
+ipartl_Cons_else_specification3
+  (iMonadArray, iMonadPlus, iOrdered)
+  p
+  i
+  (ys, zs, x, xs) =
+    vbind_
+      (permute_ (vappend zs (vsingleton x)))
+      ( \zs' ->
+          vseq_
+            (vlift_ (ys, zs', xs))
+            (ipartl_ p i (ys_l, vlength zs', xs_l))
+      )
+    where
+      (xs_l, ys_l) = (vlength xs, vlength ys)
+      vlift_ = vlift iMonad_
+      vbind_ = vbind iMonad_
+      vseq_ = vseq iMonad_
+      permute_ = permute iMonadPlus
+      ipartl_ = ipartl (iMonadArray, iMonadPlus, iOrdered)
+      iMonad_ = VMonadPlus.iMonad iMonadPlus
 
 -- Specification. For `ipartl'` applied to a `xs = Cons ...`.
 {-@ reflect ipartl_Cons_specification3 @-}
@@ -272,7 +346,7 @@ ipartl_Cons_specification3 ::
   a ->
   Index ->
   (VList a, VList a, a, VList a) ->
-  VTuple2D VNat
+  m (VTuple2D VNat)
 ipartl_Cons_specification3
   (iMonadArray, iMonadPlus, iOrdered)
   p
@@ -280,11 +354,12 @@ ipartl_Cons_specification3
   (ys, zs, x, xs) =
     vseq_
       (vwriteList_ (vadd i (vadd ys_l (vadd zs_l vone))) xs)
-      ( if x leq_ p
+      ( if vleq_ x p
           then ipartl_Cons_then_specification3_
           else ipartl_Cons_else_specification3_
       )
     where
+      (xs_l, ys_l, zs_l) = (vlength xs, vlength ys, vlength zs)
       ipartl_Cons_then_specification3_ =
         ipartl_Cons_then_specification3
           (iMonadArray, iMonadPlus, iOrdered)
@@ -292,17 +367,18 @@ ipartl_Cons_specification3
           i
           (ys, zs, x, xs)
       ipartl_Cons_else_specification3_ =
-        ipartl_Cons_else_specification3_
+        ipartl_Cons_else_specification3
           (iMonadArray, iMonadPlus, iOrdered)
           p
           i
           (ys, zs, x, xs)
       vseq_ = vseq iMonad_
       vwriteList_ = vwriteList iMonadArray
-      leq_ = leq iOrdered
+      vleq_ = vleq iOrdered
       iMonad_ = VMonadPlus.iMonad iMonadPlus
 
 -- Lemma.
+-- TODO: prove
 {-@
 assume ipartl_Cons_specification3_correct ::
   forall m a.
@@ -313,7 +389,7 @@ assume ipartl_Cons_specification3_correct ::
   xs:VList a ->
   ys:VList a ->
   zs:VList a ->
-  {RefinesPlusMonadic (snd iMonadArrayPlusOrdered)
+  {RefinesPlusMonadic (snd3 iMonadArrayPlusOrdered)
     (ipartl_Cons_specification3 iMonadArrayPlusOrdered p i (ys, zs, x, xs))
     (ipartl_specification2 iMonadArrayPlusOrdered p i (ys, zs, Cons x xs))}
 @-}
@@ -326,12 +402,12 @@ ipartl_Cons_specification3_correct ::
   VList a ->
   VList a ->
   Proof
-ipartl_Cons_specification3_correct = ()
+ipartl_Cons_specification3_correct iMonadArrayPlusOrdered p i x xs ys zs = ()
 
 -- Specification. For the `then` branch in `iparlt'` applied to a
 -- `xs = Cons ...`.
 -- (viz. page 11, bottom refinement).
-{-@ reflect ipartl_Cons_then_specification3_specificationification2 @-}
+{-@ reflect ipartl_Cons_then_specification4 @-}
 ipartl_Cons_then_specification4 ::
   forall m a.
   VMonadArrayPlusOrdered m a ->
@@ -352,14 +428,18 @@ ipartl_Cons_then_specification4
       )
     where
       (ys_l, zs_l, xs_l) = (vlength ys, vlength zs, vlength xs)
+      vswap_ = vswap iMonadArray
       vseq_ = vseq iMonad_
       vwriteList_ = vwriteList iMonadArray
+      ipartl_ = ipartl (iMonadArray, iMonadPlus, iOrdered)
+      iMonad_ = VMonadPlus.iMonad iMonadPlus
 
 -- Lemma.
+-- TODO: prove
 -- Uses lemma from page 12, display 11.
 -- (viz. page 11, bottom refinement).
 {-@
-ipartl_Cons_then_specification4_correct ::
+assume ipartl_Cons_then_specification4_correct ::
   forall m a.
   iMonadArrayPlusOrdered:VMonadArrayPlusOrdered m a ->
   p:a ->
@@ -368,7 +448,7 @@ ipartl_Cons_then_specification4_correct ::
   xs:VList a ->
   ys:VList a ->
   zs:VList a ->
-  {RefinesPlusMonadic (snd iMonadArrayPlusOrdered)
+  {RefinesPlusMonadic (snd3 iMonadArrayPlusOrdered)
     (ipartl_Cons_then_specification4 iMonadArrayPlusOrdered p i (ys, zs, x, xs))
     (ipartl_Cons_then_specification3 iMonadArrayPlusOrdered p i (ys, zs, x, xs))}
 @-}
@@ -382,7 +462,8 @@ ipartl_Cons_then_specification4_correct ::
   VList a ->
   VList a ->
   Proof
-ipartl_Cons_then_specification4_correct iMonadArrayPlusOrdered p i x xs ys zs = ()
+ipartl_Cons_then_specification4_correct iMonadArrayPlusOrdered p i x xs ys zs =
+  ()
 
 -- Specification. For the `else` branch in `ipartl'` applied to a
 -- `xs = Cons ...`. Note that `vlift vunit` refines `permute`.
@@ -407,13 +488,15 @@ ipartl_Cons_else_specification4
       (ys_l, zs_l, xs_l) = (vlength ys, vlength zs, vlength xs)
       vseq_ = vseq iMonad_
       ipartl_ = ipartl (iMonadArray, iMonadPlus, iOrdered)
+      vwriteList_ = vwriteList iMonadArray
       iMonad_ = VMonadPlus.iMonad iMonadPlus
 
 -- Lemma.
+-- TODO: prove
 -- Uses lemma from page 12, display 11.
 -- (viz. page 11, middle refinement).
 {-@
-ipartl_Cons_else_specification4_correct ::
+assume ipartl_Cons_else_specification4_correct ::
   forall m a.
   iMonadArrayPlusOrdered:VMonadArrayPlusOrdered m a ->
   p:a ->
@@ -422,9 +505,10 @@ ipartl_Cons_else_specification4_correct ::
   xs:VList a ->
   ys:VList a ->
   zs:VList a ->
-  {RefinesPlusMonadic (snd iMonadArrayPlusOrdered)
+  {RefinesPlusMonadic (snd3 iMonadArrayPlusOrdered)
     (ipartl_Cons_else_specification4 iMonadArrayPlusOrdered p i (ys, zs, x, xs))
-    (ipartl_Cons_else_specification3 iMonadArrayPlusOrdered p i (ys, zs, x, xs))}
+    (ipartl_Cons_else_specification3 iMonadArrayPlusOrdered p i (ys, zs, x, xs))
+  }
 @-}
 ipartl_Cons_else_specification4_correct ::
   forall m a.
@@ -436,10 +520,75 @@ ipartl_Cons_else_specification4_correct ::
   VList a ->
   VList a ->
   Proof
-ipartl_Cons_else_specification4_correct iMonadArrayPlusOrdered p i x xs ys zs =
-  ()
+ipartl_Cons_else_specification4_correct
+  (iMonadArray, iMonadPlus, iOrdered)
+  p
+  i
+  x
+  xs
+  ys
+  zs =
+    ()
+
+{-@ reflect refinement11_greater @-}
+refinement11_greater ::
+  VMonadArrayPlusOrdered m a ->
+  VNat ->
+  a ->
+  VList a ->
+  m VUnit
+refinement11_greater (iMonadArray, iMonadPlus, iOrdered) i x zs =
+  vbind_
+    (permute_ zs)
+    (\zs' -> vwriteList_ i (vappend (vsingleton x) zs'))
+  where
+    vbind_ = vbind iMonad_
+    permute_ = permute iMonadPlus
+    vwriteList_ = vwriteList iMonadArray
+    iMonad_ = VMonadPlus.iMonad iMonadPlus
+
+{-@ reflect refinement11_lesser @-}
+refinement11_lesser ::
+  VMonadArrayPlusOrdered m a ->
+  VNat ->
+  a ->
+  VList a ->
+  m VUnit
+refinement11_lesser (iMonadArray, iMonadPlus, iOrdered) i x zs =
+  vseq_
+    (vwriteList_ i (vappend zs (vsingleton x)))
+    (vswap_ i (vadd i zs_l))
+  where
+    zs_l = vlength zs
+    vseq_ = vseq iMonad_
+    vwriteList_ = vwriteList iMonadArray
+    vswap_ = vswap iMonadArray
+    iMonad_ = VMonadPlus.iMonad iMonadPlus
+
+-- Lemma.
+-- TODO: prove
+{-@
+assume refinement11 ::
+  forall m a.
+  iMonadArrayPlusOrdered:VMonadArrayPlusOrdered m a ->
+  i:VNat ->
+  x:a ->
+  zs:VList a ->
+  {RefinesPlusMonadic (snd3 iMonadArrayPlusOrdered)
+    (refinement11_lesser iMonadArrayPlusOrdered i x zs)
+    (refinement11_greater iMonadArrayPlusOrdered i x zs)}
+@-}
+refinement11 ::
+  forall m a.
+  VMonadArrayPlusOrdered m a ->
+  VNat ->
+  a ->
+  VList a ->
+  Proof
+refinement11 (iMonadArray, iMonadPlus, iOrdered) i x zs = ()
 
 -- Specification. For `ipartl'` applied to a `xs = Cons ...`.
+-- (viz page 12, middle display)
 {-@ reflect ipartl_Cons_specification4 @-}
 ipartl_Cons_specification4 ::
   forall m a.
@@ -454,15 +603,15 @@ ipartl_Cons_specification4
   i
   (ys, zs, x, xs) =
     vseq_
-      (vwriteList_ (vadd i (vadd (ys_l (vadd zs_l vone)))) xs)
-      ( if leq_ x p
+      (vwriteList_ (vadd i (vadd ys_l (Suc zs_l))) xs)
+      ( if vleq_ x p
           then ipartl_Cons_then_specification4_
-          else ipartl_Cons_else_specification4
+          else ipartl_Cons_else_specification4_
       )
     where
       (ys_l, zs_l, xs_l) = (vlength ys, vlength zs, vlength xs)
       vseq_ = vseq iMonad_
-      leq_ = leq iOrdered
+      vleq_ = vleq iOrdered
       vwriteList_ = vwriteList iMonadArray
       ipartl_Cons_then_specification4_ =
         ipartl_Cons_then_specification4
@@ -479,6 +628,8 @@ ipartl_Cons_specification4
       iMonad_ = VMonadPlus.iMonad iMonadPlus
 
 -- Specification. For `ipartl'` applied to a `xs = Cons ...`.
+-- (viz. page 12, middle refinements, bottom).
+{-@ reflect ipartl_Cons_specification5 @-}
 ipartl_Cons_specification5 ::
   forall m a.
   VMonadArrayPlusOrdered m a ->
@@ -496,10 +647,10 @@ ipartl_Cons_specification5
       ( vbind_
           (vread_ (vadd i (vadd ys_l zs_l)))
           ( \x' ->
-              if leq_ x' p
+              if vleq_ x' p
                 then
                   vseq_
-                    (swap_ (vadd i ys_l) (vadd i (vadd ys_l zs_l)))
+                    (vswap_ (vadd i ys_l) (vadd i (vadd ys_l zs_l)))
                     (ipartl_ p i (Suc ys_l, zs_l, xs_l))
                 else (ipartl_ p i (ys_l, vadd zs_l vone, xs_l))
           )
@@ -507,16 +658,23 @@ ipartl_Cons_specification5
     where
       (ys_l, zs_l, xs_l) = (vlength ys, vlength zs, vlength xs)
       vseq_ = vseq iMonad_
-      leq_ = leq iOrdered
+      vbind_ = vbind iMonad_
+      vleq_ = vleq iOrdered
       vread_ = vread iMonadArray
       vwriteList_ = vwriteList iMonadArray
+      vswap_ = vswap iMonadArray
       ipartl_ = ipartl (iMonadArray, iMonadPlus, iOrdered)
       iMonad_ = VMonadPlus.iMonad iMonadPlus
 
 -- Lemma.
--- (viz. page 12, middle equations).
+-- TODO: prove
+-- NOTE: If I use a single `=` and indent the refinement type to look nice, I
+-- get an error with that says `ipartl_Cons_specification5` is an undefined
+-- symbol; I guess it thinks that I'm trying to do an assignment if I indent
+-- after an `=`?
+-- (viz. page 12, middle refinements).
 {-@
-ipartl_Cons_specification5_correct ::
+assume ipartl_Cons_specification5_correct ::
   forall m a.
   iMonadArrayPlusOrdered:VMonadArrayPlusOrdered m a ->
   p:a ->
@@ -525,7 +683,7 @@ ipartl_Cons_specification5_correct ::
   xs:VList a ->
   ys:VList a ->
   zs:VList a ->
-  {ipartl_Cons_specification5 iMonadArrayPlusOrdered p i (ys, zs, x, xs) =
+  {ipartl_Cons_specification5 iMonadArrayPlusOrdered p i (ys, zs, x, xs) ==
    ipartl_Cons_specification4 iMonadArrayPlusOrdered p i (ys, zs, x, xs)}
 @-}
 ipartl_Cons_specification5_correct ::
@@ -544,7 +702,7 @@ ipartl_Cons_specification5_correct iMonadArrayPlusOrdered p i x xs ys zs = ()
 {-@ reflect ipartl @-}
 ipartl ::
   forall m a.
-  VMonadArrayPlusOrdered ->
+  VMonadArrayPlusOrdered m a ->
   a ->
   Index ->
   VTuple3D VNat ->
@@ -558,10 +716,18 @@ ipartl (iMonadArray, iMonadPlus, iOrdered) p i (ys_l, zs_l, Suc xs_l) =
   vbind_
     (vread_ (vadd i (vadd ys_l zs_l)))
     ( \x ->
-        if leq_ x p
+        if vleq_ x p
           then
-            seq_
-              (swap_ (vadd i ys_l) (vadd i (vadd ys_l zs_l)))
+            vseq_
+              (vswap_ (vadd i ys_l) (vadd i (vadd ys_l zs_l)))
               (ipartl_ p i (Suc ys_l, zs_l, xs_l))
           else ipartl_ p i (ys_l, Suc zs_l, xs_l)
     )
+  where
+    vbind_ = vbind iMonad_
+    vread_ = vread iMonadArray
+    vleq_ = vleq iOrdered
+    vseq_ = vseq iMonad_
+    vswap_ = vswap iMonadArray
+    ipartl_ = ipartl (iMonadArray, iMonadPlus, iOrdered)
+    iMonad_ = VMonadPlus.iMonad iMonadPlus

@@ -10,19 +10,6 @@ import VMonadPlus
 import VOrdered
 
 --------------------------------------------------------------------------------
--- Quick Sort
---------------------------------------------------------------------------------
-
-quicksort :: forall a. VOrdered a -> VList a -> VList a
-quicksort iOrdered Nil = Nil
-quicksort iOrdered (Cons x xs) =
-  let (ys, zs) = partition_ x xs
-   in vappend (quicksort_ ys) (vappend (vsingleton x) (quicksort_ ys))
-  where
-    partition_ = partition iOrdered
-    quicksort_ = quicksort iOrdered
-
---------------------------------------------------------------------------------
 -- Partitioning
 --------------------------------------------------------------------------------
 
@@ -59,12 +46,12 @@ partition :: VOrdered a -> a -> VList a -> (VList a, VList a)
 partition iOrdered x' Nil = (Nil, Nil)
 partition iOrdered x' (Cons x xs) =
   let (ys, zs) = partition iOrdered x xs
-   in if leq_ x x' then (Cons x ys, zs) else (ys, Cons x zs)
+   in if vleq_ x x' then (Cons x ys, zs) else (ys, Cons x zs)
   where
-    leq_ = leq iOrdered
+    vleq_ = vleq iOrdered
 
--- TODO. prove
 -- Lemma. `partition` refines `partition_step`
+-- TODO: prove
 {-@
 assume partition_correct :: forall m a . iMonadPlus:VMonadPlus m -> iOrdered:VOrdered a -> x:a -> xs:VList a ->
   {RefinesPlusMonadic iMonadPlus (vlift (VMonadPlus.iMonad iMonadPlus) (partition iOrdered x xs)) (partition_specification iMonadPlus iOrdered x xs)}
@@ -77,12 +64,11 @@ partition_correct iMonadPlus iOrdered x xs = ()
 {-@ reflect quicksort_step @-}
 quicksort_step ::
   forall m a.
-  VMonadPlus m ->
-  VOrdered a ->
+  VMonadPlusOrdered m a ->
   a ->
   VList a ->
   m (VList a)
-quicksort_step iMonadPlus iOrdered x xs =
+quicksort_step (iMonadPlus, iOrdered) x xs =
   vbind_
     (vlift_ (partition_ x xs))
     ( \(ys, zs) ->
@@ -95,18 +81,32 @@ quicksort_step iMonadPlus iOrdered x xs =
           )
     )
   where
-    slowsort_ = slowsort iMonadPlus iOrdered
+    slowsort_ = slowsort (iMonadPlus, iOrdered)
     partition_ = partition iOrdered
     vlift_ = vlift iMonad_
     vbind_ = vbind iMonad_
     iMonad_ = iMonad iMonadPlus
 
--- TODO. prove
 -- Lemma. The "divide and conquer" property: `quicksort_step` refines `slowsort`.
+-- TODO: prove
 {-@
-assume divide_and_conquer :: forall m a . iMonadPlus:VMonadPlus m -> iOrdered:VOrdered a -> x:a -> xs:VList a ->
-  {RefinesPlusMonadic iMonadPlus (quicksort_step iMonadPlus iOrdered x xs) (SlowSortList.slowsort iMonadPlus iOrdered (Cons x xs))}
+assume divide_and_conquer :: forall m a .
+  iMonadPlusOrdered:VMonadPlusOrdered m a -> x:a -> xs:VList a ->
+  {RefinesPlusMonadic (fst iMonadPlusOrdered) (quicksort_step iMonadPlusOrdered x xs) (slowsort iMonadPlusOrdered (Cons x xs))}
 @-}
 divide_and_conquer ::
-  forall m a. VMonadPlus m -> VOrdered a -> a -> VList a -> Proof
-divide_and_conquer iMonadPlus iOrdered x xs = ()
+  forall m a. VMonadPlusOrdered m a -> a -> VList a -> Proof
+divide_and_conquer (iMonadPlus, iOrdered) x xs = ()
+
+--------------------------------------------------------------------------------
+-- Quick Sort
+--------------------------------------------------------------------------------
+
+quicksort :: forall a. VOrdered a -> VList a -> VList a
+quicksort iOrdered Nil = Nil
+quicksort iOrdered (Cons x xs) =
+  let (ys, zs) = partition_ x xs
+   in vappend (quicksort_ ys) (vappend (vsingleton x) (quicksort_ ys))
+  where
+    partition_ = partition iOrdered
+    quicksort_ = quicksort iOrdered

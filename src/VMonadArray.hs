@@ -19,7 +19,7 @@ type Index = VNat
 data VMonadArray m a = VMonadArray
   { iMonad :: VMonad m
   , vread :: Index -> m a
-  , vwrite :: Index -> a -> m ()
+  , vwrite :: Index -> a -> m VUnit
   , vread_vwrite :: i:Index ->
       {vbind iMonad (vread i) (vwrite i) = vlift iMonad vunit}
   , vwrite_vread :: i:Index -> x:a ->
@@ -39,7 +39,7 @@ data VMonadArray m a = VMonadArray
 data VMonadArray m a = VMonadArray
   { iMonad :: VMonad m,
     vread :: Index -> m a,
-    vwrite :: Index -> a -> m (),
+    vwrite :: Index -> a -> m VUnit,
     vread_vwrite :: Index -> Proof,
     vwrite_vread :: Index -> a -> Proof,
     vwrite_vwrite :: Index -> a -> a -> Proof,
@@ -67,7 +67,7 @@ vreadList iMonadArray i (Suc n) =
     iMonad_ = iMonad iMonadArray
 
 {-@ reflect vwriteList @-}
-vwriteList :: VMonadArray m a -> Index -> VList a -> m ()
+vwriteList :: VMonadArray m a -> Index -> VList a -> m VUnit
 vwriteList iMonadArray i Nil = vlift_ ()
   where
     vlift_ = vlift iMonad_
@@ -193,3 +193,23 @@ make: *** [check] Error 2
 --  vwriteList_vappend_ = vwriteList_vappend iMonadArray
 --  vseq_               = vseq iMonad_
 --  iMonad_             = iMonad iMonadArray
+
+vswap :: forall m a. VMonadArray m a -> Index -> Index -> m VUnit
+vswap iMonadArray i j =
+  vbind_
+    (vread_ i)
+    ( \x ->
+        vbind_
+          (vread_ j)
+          ( \y ->
+              vseq_
+                (vwrite_ i y)
+                (vwrite_ j x)
+          )
+    )
+  where
+    vbind_ = vbind iMonad_
+    vseq_ = vseq iMonad_
+    vread_ = vread iMonadArray
+    vwrite_ = vwrite iMonadArray
+    iMonad_ = iMonad iMonadArray

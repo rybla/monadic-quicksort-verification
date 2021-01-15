@@ -118,7 +118,8 @@ vseq_identity iMonad m =
 
 -- Lemma. Sequencing is associative.
 {-@
-vseq_associative :: forall m a b c . iMonad:VMonad m -> x:m a -> y:m b -> z:m c ->
+assume vseq_associative ::
+  forall m a b c . iMonad:VMonad m -> x:m a -> y:m b -> z:m c ->
   {IsAssociative (vseq iMonad) x y z}
 @-}
 vseq_associative :: forall m a b c. VMonad m -> m a -> m b -> m c -> Proof

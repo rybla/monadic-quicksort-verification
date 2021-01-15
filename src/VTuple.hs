@@ -25,6 +25,18 @@ fst2D (x, _) = x
 snd2D :: VTuple2D a -> a
 snd2D (_, y) = y
 
+{-@ reflect fst3 @-}
+fst3 :: (a, b, c) -> a
+fst3 (x, _, _) = x
+
+{-@ reflect snd3 @-}
+snd3 :: (a, b, c) -> b
+snd3 (_, y, _) = y
+
+{-@ reflect thd3 @-}
+thd3 :: (a, b, c) -> c
+thd3 (_, _, z) = z
+
 {-@ reflect fst2D @-}
 fst3D :: VTuple3D a -> a
 fst3D (x, _, _) = x

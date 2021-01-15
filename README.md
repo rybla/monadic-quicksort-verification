@@ -30,12 +30,35 @@ A Liquid Haskell verification of Mu and Chiang's _[Deriving Monadic Quicksort][M
   - [x] identity functor (`VIdentity.hs`)
   - [x] list (`VList.hs`)
   - [x] natural numbers (`VNat.hs`)
-- [x] SlowSort (`SlowSort.hs`)
+- [ ] SlowSort List (`SlowSort.hs`)
   - [x] filter (nondeterministic) (`vfilter`)
-  - [x] predicate for "sorted" (`isSorted`)
+  - [x] predicate for "is sorted" (`isSorted`)
   - [x] permutation (nondeterministic) (`permute`)
   - [x] split (nondeterministic) (`split`)
-- [ ] QuickSort (`QuickSort.hs`)
+  - [ ] `slowsort` termination
+  - [ ] `permute` termination
+  - [ ] lift of a list plus-monadically refines permutations of itself (`identity_refines_permute`)
+  - [ ] `isSorted` termination
+  - [ ] `split` termination
+- [ ] QuickSort List (`QuickSortList.hs`)
+  - [ ] `partition_correct`
+  - [ ] "divide and conquer" property (`divide_and_conquer`)
+- [ ] Partition Array (`PartitionArray.hs`)
+  - [ ] what's the main theorem of this module?
+  - [x] mark corresponding terms in paper 
+  - [ ] `partl_correct`
+  - [ ] `partl_generalizes_partition`
+  - [ ] `ipartl_specification1_correct`
+  - [ ] decide how to handle (get rid of / name) commented-out implementation for `partl'` that is given in paper but then overriden
+  - [ ] `ipartl_specification2_correct`
+  - [ ] `ipartl_Cons_specification3_correct`
+  - [ ] `ipartl_Cons_then_specification4_correct`
+  - [ ] `ipartl_Cons_else_specification4_correct`
+  - [ ] `refinement11`
+  - [ ] `ipartl_Cons_specification5_correct`
+
+<!-- old -->
+- [ ] QuickSort List (`QuickSort.hs`)
   - [x] specify partition function (as function predicate)
   - [x] implement `partition`
   - [ ] prove correctness of `partition` implementation
