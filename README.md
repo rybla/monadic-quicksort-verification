@@ -56,6 +56,11 @@ A Liquid Haskell verification of Mu and Chiang's _[Deriving Monadic Quicksort][M
   - [ ] `ipartl_Cons_else_specification4_correct`
   - [ ] `refinement11`
   - [ ] `ipartl_Cons_specification5_correct`
+- [ ] QuickSort Array (`QuickSortArray.hs`)
+  - [ ] `iqsort_specification1_correct`
+  - [ ] `iqsort_specification2_correct`
+  - [ ] `refinement13`
+  - [ ] `iqsort_specification3_correct`
 
 <!-- old -->
 - [ ] QuickSort List (`QuickSort.hs`)
