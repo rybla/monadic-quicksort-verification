@@ -178,6 +178,7 @@ refinement13 ::
   Proof
 refinement13 (iMonadArray, iMonadPlus, iOrdered) p i ys = ()
 
+{-@ reflect iqsort_specification3 @-}
 iqsort_specification3 ::
   forall m a.
   VMonadArrayPlusOrdered m a ->
@@ -207,6 +208,26 @@ iqsort_specification3 (iMonadArray, iMonadPlus, iOrdered) p i xs =
     ipartl_ = ipartl (iMonadArray, iMonadPlus, iOrdered)
     iqsort_ = iqsort (iMonadArray, iMonadPlus, iOrdered)
     iMonad_ = VMonadPlus.iMonad iMonadPlus
+
+{-@
+assume iqsort_specification3_correct :: ...
+  forall m a.
+  iMonadArrayPlusOrdered:VMonadArrayPlusOrdered m a ->
+  p:a ->
+  i:Index ->
+  xs:VList a ->
+  {RefinesPlusMonadic (snd3 iMonadArrayPlusOrdered)
+    (iqsort_specification3 iMonadArrayPlusOrdered p i xs)
+    (iqsort_specification2 iMonadArrayPlusOrdered p i xs)}
+@-}
+iqsort_specification3_correct ::
+  forall m a.
+  iMonadArrayPlusOrdered : VMonadArrayPlusOrdered m a ->
+  p : a ->
+  i : Index ->
+  xs : VList a ->
+  Proof
+iqsort_specification3_correct iMonadArrayPlusOrdered p i xs = ()
 
 -- Function. Quicksort (in place) array from position `i` to `i + n`.
 iqsort :: forall m a. VMonadArrayPlusOrdered m a -> VNat -> m VUnit
