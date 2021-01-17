@@ -35,7 +35,7 @@ data VMonad m = VMonad
 {-@ reflect raw_kleisli @-}
 raw_kleisli ::
   forall m a b c.
-  (forall a b. m a -> (a -> m b) -> m b) -> -- vbind
+  (forall a' b'. m a' -> (a' -> m b') -> m b') -> -- vbind
   (a -> m b) ->
   (b -> m c) ->
   (a -> m c)
@@ -87,9 +87,10 @@ vseq_identity_left iMonad m =
 assume vseq_identity_right :: forall m a . iMonad:VMonad m -> m:m VUnit ->
   {IsIdentityRight (vseq iMonad) (vseq_epsilon iMonad) m}
 @-}
-vseq_identity_right :: forall m a. VMonad m -> m VUnit -> Proof
-vseq_identity_right iMonad m = ()
+vseq_identity_right :: forall m. VMonad m -> m VUnit -> Proof
+vseq_identity_right _ _ = ()
 
+-- TODO: proof in progress
 --  vseq_ m vseq_epsilon_
 --    === vbind_ m (vconst vseq_epsilon_)
 --    === vbind_ m (vconst (vlift_ vunit))
@@ -105,17 +106,17 @@ vseq_identity_right iMonad m = ()
 --  vlift_          = vlift iMonad
 --  vbind_identity_ = vbind_identity iMonad
 
+-- TODO: prove
 -- Lemma.
 {-@
 assume vseq_identity :: forall m a . iMonad:VMonad m -> m:m VUnit ->
   {IsIdentity (vseq iMonad) (vseq_epsilon iMonad) m}
 @-}
-vseq_identity :: forall m a. VMonad m -> m VUnit -> Proof
+vseq_identity :: forall m. VMonad m -> m VUnit -> Proof
 vseq_identity iMonad m =
-  let _ = vseq_identity_left iMonad m
-      _ = vseq_identity_right iMonad m
-   in ()
+  (vseq_identity_left iMonad m) &&& (vseq_identity_right iMonad m)
 
+-- TODO: prove
 -- Lemma. Sequencing is associative.
 {-@
 assume vseq_associative ::
@@ -123,7 +124,7 @@ assume vseq_associative ::
   {IsAssociative (vseq iMonad) x y z}
 @-}
 vseq_associative :: forall m a b c. VMonad m -> m a -> m b -> m c -> Proof
-vseq_associative iMonad x y z = ()
+vseq_associative _ _ _ _ = ()
 
 -- Function.
 {-@ reflect vliftF @-}

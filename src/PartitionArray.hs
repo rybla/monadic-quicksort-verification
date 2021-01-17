@@ -194,7 +194,7 @@ ipartl_specification1_correct iMonadArrayPlusOrdered p i xs ys zs = ()
 
 -- Function. Combining `vlift_apply_second` into `partl`. First version is
 -- presented as above, but below version is the implementation used onward
--- (page 11, bottom).
+-- (page 10, bottom).
 {-@ reflect partl' @-}
 partl' ::
   forall m a.
@@ -211,6 +211,7 @@ partl' (iMonadPlus, iOrdered) p (ys, zs, Cons x xs) =
     (dispatch x p (ys, zs, xs))
     (partl'_ p)
   where
+    dispatch :: a -> a -> VTuple3D (VList a) -> m (VTuple3D (VList a))
     dispatch x p (ys, zs, xs) =
       if vleq_ x p
         then

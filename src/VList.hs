@@ -1,11 +1,7 @@
 module VList where
 
-import Function
 import Language.Haskell.Liquid.ProofCombinators
 import Relation
-import VMonad
-import VMonadPlus
-import VMonoid
 import VNat
 import VSemigroup
 
@@ -27,7 +23,7 @@ data VList a = Nil | Cons a (VList a)
 {-@ measure vlength  @-}
 vlength :: forall a. VList a -> VNat
 vlength Nil = Zero
-vlength (Cons x xs) = Suc (vlength xs)
+vlength (Cons _ xs) = Suc (vlength xs)
 
 -- Constructor. Singleton `VList a`.
 {-@ reflect vsingleton @-}
@@ -47,7 +43,7 @@ assume vappend_associative :: forall a . xs:VList a -> ys:VList a -> zs:VList a 
 @-}
 vappend_associative ::
   forall a. VList a -> VList a -> VList a -> Proof
-vappend_associative xs ys zs = ()
+vappend_associative _ _ _ = ()
 
 -- Instance. `VList a` forms a semigroup with operator `vappend`.
 {-@
@@ -57,13 +53,14 @@ iSemigroup_vappend :: forall a. VSemigroup (VList a)
 iSemigroup_vappend =
   VSemigroup {op = vappend, op_associative = vappend_associative}
 
+-- TODO: prove
 -- Lemma. `vappend` has identity `Nil`.
 {-@
 assume vappend_identity :: forall a . xs:VList a ->
   {IsIdentity vappend Nil xs}
 @-}
 vappend_identity :: forall a. VList a -> Proof
-vappend_identity xs = ()
+vappend_identity _ = ()
 
 -- NOTE: doesn't infer that `op iSemigroup_vappend = vappend`
 -- -- Instance .`VList a` forms a monoid with operator `vappend` and identity `Nil`.
@@ -86,16 +83,14 @@ vappend_sums_vlength :: forall a. VList a -> VList a -> Proof
 vappend_sums_vlength Nil ys =
   vlength (vappend Nil ys)
     === vlength ys
-    === vadd Zero (vlength ys)
-    ? vadd_identity (vlength ys)
+    === (vadd Zero (vlength ys) ? vadd_identity (vlength ys))
     === vadd (vlength Nil) (vlength ys)
     *** QED
 vappend_sums_vlength (Cons x xs) ys =
   vlength (vappend (Cons x xs) ys)
     === vlength (Cons x (vappend xs ys))
     === Suc (vlength (vappend xs ys))
-    === Suc (vadd (vlength xs) (vlength ys))
-    ? vappend_sums_vlength xs ys
+    === (Suc (vadd (vlength xs) (vlength ys)) ? vappend_sums_vlength xs ys)
     === vadd (Suc (vlength xs)) (vlength ys)
     === vadd (vlength (Cons x xs)) (vlength ys)
     *** QED
@@ -103,7 +98,7 @@ vappend_sums_vlength (Cons x xs) ys =
 -- Function. Test if all elements of `VList a` satisfy a predicate.
 {-@ reflect vall @-}
 vall :: forall a. Predicate a -> VList a -> Bool
-vall p Nil = True
+vall _ Nil = True
 vall p (Cons x xs) = p x && vall p xs
 
 -- Function. Reversed `VList a`.
@@ -125,15 +120,15 @@ vreverse_preserves_vlength Nil =
 vreverse_preserves_vlength (Cons x xs) =
   vlength (vreverse (Cons x xs))
     === vlength (vappend (vreverse xs) (Cons x Nil))
+    === ( vadd (vlength (vreverse xs)) (vlength (Cons x Nil))
+            ? vappend_sums_vlength (vreverse xs) (Cons x Nil)
+        )
     === vadd (vlength (vreverse xs)) (vlength (Cons x Nil))
-    ? vappend_sums_vlength (vreverse xs) (Cons x Nil)
-    === vadd (vlength (vreverse xs)) (vlength (Cons x Nil))
-    === vadd (vlength xs) (vlength (Cons x Nil))
-    ? vreverse_preserves_vlength xs
+    === ( vadd (vlength xs) (vlength (Cons x Nil))
+            ? vreverse_preserves_vlength xs
+        )
     === vadd (vlength xs) (Suc Zero)
-    === Suc (vadd (vlength xs) Zero)
-    ? vadd_Suc_right (vlength xs) Zero
-    === Suc (vlength xs)
-    ? vadd_identity (vlength xs)
+    === (Suc (vadd (vlength xs) Zero) ? vadd_Suc_right (vlength xs) Zero)
+    === (Suc (vlength xs) ? vadd_identity (vlength xs))
     === vlength (Cons x xs)
     *** QED

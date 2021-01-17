@@ -41,14 +41,15 @@ data VMonadPlus m = VMonadPlus
     vmpadd_identity :: forall a. Property (m a),
     vmpadd_associative :: forall a. Property3 (m a),
     vmpadd_distributive_left :: forall a b. m a -> m a -> (a -> m b) -> Proof,
-    vmpadd_distributive_right :: forall a b. m a -> (a -> m b) -> (a -> m b) -> Proof
+    vmpadd_distributive_right :: forall a b. m a -> (a -> m b) -> (a -> m b) -> Proof,
     vbind_identity_left :: forall a b. (a -> m b) -> Proof,
-    vseq_identity_right :: forall a. m a -> Proof}
+    vseq_identity_right :: forall a. m a -> Proof
+  }
 
 {-@ reflect raw_vmpaddF @-}
 raw_vmpaddF ::
   forall m a b.
-  (forall a. Op2 (m a)) -> -- vmpadd
+  (forall a'. Op2 (m a')) -> -- vmpadd
   (a -> m b) ->
   (a -> m b) ->
   (a -> m b)
@@ -111,7 +112,7 @@ assume identity_refines :: forall m a. iMonadPlus:VMonadPlus m -> x:m a ->
   {RefinesPlusMonadic iMonadPlus x x}
 @-}
 identity_refines :: forall m a. VMonadPlus m -> m a -> Proof
-identity_refines iMonadPlus x = ()
+identity_refines _ _ = ()
 
 -- TODO: assumption?
 -- Lemma. x refines x <+> y
@@ -124,7 +125,7 @@ assume component_left_refines ::
   {RefinesPlusMonadic iMonadPlus x (vmpadd iMonadPlus x y)}
 @-}
 component_left_refines :: forall m a. VMonadPlus m -> m a -> m a -> Proof
-component_left_refines iMonadPlus x y = ()
+component_left_refines _ _ _ = ()
 
 -- TODO: assumption?
 -- Lemma. y refines x <+> y.
@@ -137,7 +138,7 @@ assume component_right_refines ::
   {RefinesPlusMonadic iMonadPlus y (vmpadd iMonadPlus x y)}
 @-}
 component_right_refines :: forall m a. VMonadPlus m -> m a -> m a -> Proof
-component_right_refines iMonadPlus x y = ()
+component_right_refines _ _ _ = ()
 
 -- TODO: prove
 -- Lemma. `vbind` is monotonic with respect to refinement.
@@ -198,7 +199,7 @@ mguard_disjoint iMonadPlus b x y =
   vmpadd
     iMonadPlus
     (vseq (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus b) x)
-    (vseq (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus (vnot b)) x)
+    (vseq (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus (vnot b)) y)
 
 -- TODO: prove
 -- Lemma.

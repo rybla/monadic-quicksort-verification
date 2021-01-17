@@ -42,7 +42,7 @@ library
     liquidhaskell == 0.8.10.2,
     liquid-base,
     liquid-prelude
-  ghc-options: -Wall -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--typed-holes -fplugin-opt=LiquidHaskell:--higherorder -fplugin-opt=LiquidHaskell:--notermination -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--prune-unsorted
+  ghc-options: -Wall -Wno-unused-imports -Wno-unused-matches -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--typed-holes -fplugin-opt=LiquidHaskell:--higherorder -fplugin-opt=LiquidHaskell:--notermination -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--prune-unsorted
   default-extensions:
     RankNTypes,
     ScopedTypeVariables,

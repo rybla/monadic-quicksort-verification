@@ -2,8 +2,6 @@ module VMonadArray where
 
 import Function
 import Language.Haskell.Liquid.ProofCombinators
-import Relation
-import VBool
 import VList
 import VMonad
 import VNat
@@ -51,7 +49,7 @@ data VMonadArray m a = VMonadArray
 
 {-@ reflect vreadList @-}
 vreadList :: VMonadArray m a -> Index -> VNat -> m (VList a)
-vreadList iMonadArray i Zero = vlift_ Nil
+vreadList iMonadArray _ Zero = vlift_ Nil
   where
     vlift_ = vlift iMonad_
     iMonad_ = iMonad iMonadArray
@@ -68,7 +66,7 @@ vreadList iMonadArray i (Suc n) =
 
 {-@ reflect vwriteList @-}
 vwriteList :: VMonadArray m a -> Index -> VList a -> m VUnit
-vwriteList iMonadArray i Nil = vlift_ ()
+vwriteList iMonadArray _ Nil = vlift_ ()
   where
     vlift_ = vlift iMonad_
     iMonad_ = iMonad iMonadArray
@@ -138,24 +136,29 @@ vwriteList_vappend ::
   VList a ->
   VList a ->
   Proof
-vwriteList_vappend iMonadArray i Nil ys =
-  vwriteList_ i (vappend Nil ys)
-    === vwriteList_ i ys
-    === vseq_ (vlift_ vunit) (vwriteList_ i ys)
-    ? vseq_identity_ (vwriteList_ i ys)
-    === vseq_ (vlift_ vunit) (vwriteList_ (VNat.vadd i Zero) ys)
-    ? vadd_identity i
-    === vseq_
-      (vwriteList_ i Nil)
-      (vwriteList_ (vadd i (vlength Nil)) ys)
-    *** QED
-  where
-    vseq_ = vseq iMonad_
-    vlift_ = vlift iMonad_
-    vseq_identity_ = vseq_identity iMonad_
-    vwriteList_ = vwriteList iMonadArray
-    iMonad_ = iMonad iMonadArray
-vwriteList_vappend iMonadArray i (Cons x xs) ys = ()
+vwriteList_vappend _ _ _ _ = ()
+
+-- TODO: proof in progress
+-- vwriteList_vappend iMonadArray i Nil ys =
+--   vwriteList_ i (vappend Nil ys)
+--     === vwriteList_ i ys
+--     === ( vseq_ (vlift_ vunit) (vwriteList_ i ys)
+--             ? vseq_identity_ (vwriteList_ i ys)
+--         )
+--     === ( vseq_ (vlift_ vunit) (vwriteList_ (VNat.vadd i Zero) ys)
+--             ? vadd_identity i
+--         )
+--     === vseq_
+--       (vwriteList_ i Nil)
+--       (vwriteList_ (vadd i (vlength Nil)) ys)
+--     *** QED
+--   where
+--     vseq_ = vseq iMonad_
+--     vlift_ = vlift iMonad_
+--     vseq_identity_ = vseq_identity iMonad_
+--     vwriteList_ = vwriteList iMonadArray
+--     iMonad_ = iMonad iMonadArray
+-- vwriteList_vappend iMonadArray i (Cons x xs) ys = ()
 
 {- TODO. fix error:
  /Users/henry/Documents/Projects/monadic-quicksort-verification/monadic-quicksort-verification/src/VMonadArray.hs:166:26: Error: GHC Error

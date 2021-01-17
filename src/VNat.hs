@@ -125,11 +125,13 @@ vmul_identity Zero = trivial
 vmul_identity (Suc n) = vmul_identity n
 
 -- Lemma. Multiplicative annihilator i.e. 0 * n = n * 0 = 0.
+{-@ automatic-instances vmul_annihilator @-}
 {-@ vmul_annihilator :: n:VNat -> {IsZero vmul Zero n} @-}
 vmul_annihilator :: VNat -> Proof
 vmul_annihilator Zero = ()
 vmul_annihilator (Suc n) = vmul_annihilator n
 
+-- TODO: prove
 -- Lemma. Multiplicative commutativity i.e. m * n = n * m.
 {-@
 assume vmul_commutative :: m:VNat -> n:VNat ->
@@ -140,6 +142,7 @@ vmul_commutative Zero n = vmul_annihilator n
 vmul_commutative m Zero = vmul_annihilator m
 vmul_commutative (Suc m) (Suc n) = ()
 
+-- TODO: proof in progress
 -- vmul (Suc m) (Suc n)
 --   === vadd (Suc n) (vmul m (Suc n))
 --   === Suc (vadd n (vmul m (Suc n)))
@@ -155,6 +158,7 @@ vmul_commutative (Suc m) (Suc n) = ()
 --   === vmul (Suc n) (Suc m)
 --   *** QED
 
+-- TODO: prove
 -- Lemma. Distribution of vmultiplication over vaddition i.e.
 -- l * (m + n) = (l * m) + (l * n).
 {-@ assume vmul_distributive :: l:VNat -> m:VNat -> n:VNat ->
@@ -162,6 +166,7 @@ vmul_commutative (Suc m) (Suc n) = ()
 vmul_distributive :: VNat -> VNat -> VNat -> Proof
 vmul_distributive l m n = ()
 
+-- TODO: proof in progress
 -- vmul_distributive Zero    m n = ()
 -- vmul_distributive (Suc l) m n
 --   =   vmul (Suc l) (vadd m n)
