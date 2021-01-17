@@ -1,7 +1,7 @@
 module VFunctor where
 
 import Function
-import Liquid.ProofCombinators
+import Language.Haskell.Liquid.ProofCombinators
 import Relation
 
 -- Data Class. A functor is a TODO

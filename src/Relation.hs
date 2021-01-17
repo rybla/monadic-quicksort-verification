@@ -1,6 +1,6 @@
 module Relation where
 
-import Liquid.ProofCombinators
+import Language.Haskell.Liquid.ProofCombinators
 
 -- Types. Forms of generic relations.
 -- - `Relation<n>` is an `n`-ary relation.

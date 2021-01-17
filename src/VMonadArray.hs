@@ -1,7 +1,7 @@
 module VMonadArray where
 
 import Function
-import Liquid.ProofCombinators
+import Language.Haskell.Liquid.ProofCombinators
 import Relation
 import VBool
 import VList
@@ -140,12 +140,12 @@ vwriteList_vappend ::
   Proof
 vwriteList_vappend iMonadArray i Nil ys =
   vwriteList_ i (vappend Nil ys)
-    ==. vwriteList_ i ys
-    ==. vseq_ (vlift_ vunit) (vwriteList_ i ys)
+    === vwriteList_ i ys
+    === vseq_ (vlift_ vunit) (vwriteList_ i ys)
     ? vseq_identity_ (vwriteList_ i ys)
-    ==. vseq_ (vlift_ vunit) (vwriteList_ (VNat.vadd i Zero) ys)
+    === vseq_ (vlift_ vunit) (vwriteList_ (VNat.vadd i Zero) ys)
     ? vadd_identity i
-    ==. vseq_
+    === vseq_
       (vwriteList_ i Nil)
       (vwriteList_ (vadd i (vlength Nil)) ys)
     *** QED
@@ -160,7 +160,7 @@ vwriteList_vappend iMonadArray i (Cons x xs) ys = ()
 {- TODO. fix error:
  /Users/henry/Documents/Projects/monadic-quicksort-verification/monadic-quicksort-verification/src/VMonadArray.hs:166:26: Error: GHC Error
 
- 166 |     ==. vseq_ (vwrite_ i x) (vwriteList_ (Suc i) (vappend xs ys))
+ 166 |     === vseq_ (vwrite_ i x) (vwriteList_ (Suc i) (vappend xs ys))
                                 ^
 
          Occurs check: cannot construct the infinite type: a ~ VList a
@@ -168,23 +168,23 @@ make: *** [check] Error 2
 
 -}
 --  vwriteList_ i (vappend (Cons x xs) ys)
---    ==. vwriteList_ i (Cons x (vappend xs ys))
---    ==. vseq_ (vwrite_ i x) (vwriteList_ (Suc i) (vappend xs ys))
---    ==. vseq_
+--    === vwriteList_ i (Cons x (vappend xs ys))
+--    === vseq_ (vwrite_ i x) (vwriteList_ (Suc i) (vappend xs ys))
+--    === vseq_
 --          (vwrite_ i x)
 --          (vseq_ (vwriteList_ (Suc i) xs)
 --                 (vwriteList_ (vadd (Suc i) (vlength xs)) ys)
 --          )
 --    ?   vwriteList_vappend_ (Suc i) xs ys
---    ==. vseq_ (vseq_ (vwrite_ i x) (vwriteList_ (Suc i) xs))
+--    === vseq_ (vseq_ (vwrite_ i x) (vwriteList_ (Suc i) xs))
 --              (vwriteList_ (vadd (Suc i) (vlength xs)) ys)
---    ==. vseq_ (vwriteList_ i (Cons x xs))
+--    === vseq_ (vwriteList_ i (Cons x xs))
 --              (vwriteList_ (vadd (Suc i) (vlength xs)) ys)
---    ==. vseq_ (vwriteList_ i (Cons x xs))
+--    === vseq_ (vwriteList_ i (Cons x xs))
 --              (vwriteList_ (Suc (vadd i (vlength xs))) ys)
---    ==. vseq_ (vwriteList_ i (Cons x xs))
+--    === vseq_ (vwriteList_ i (Cons x xs))
 --              (vwriteList_ (vadd i (Suc (vlength xs))) ys)
---    ==. vseq_ (vwriteList_ i (Cons x xs))
+--    === vseq_ (vwriteList_ i (Cons x xs))
 --              (vwriteList_ (vadd i (vlength (Cons x xs))) ys)
 --    *** QED
 -- where

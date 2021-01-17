@@ -1,7 +1,7 @@
 module VSemigroup where
 
 import Function
-import Liquid.ProofCombinators
+import Language.Haskell.Liquid.ProofCombinators
 
 -- Data Class. A semigroup is a TODO.
 {-@

@@ -1,11 +1,11 @@
 module VMonad where
 
 import Function
-import Liquid.ProofCombinators
+import Language.Haskell.Liquid.ProofCombinators
 import VFunctor
 import VUnit
 
--- Data Class. A monad is a TODO.
+-- Data Class. A monad is a ...
 {-@
 data VMonad m = VMonad
   { iFunctor :: VFunctor m
@@ -62,6 +62,7 @@ vseq_epsilon :: forall m. VMonad m -> m VUnit
 vseq_epsilon iMonad = vlift iMonad vunit
 
 -- Lemma.
+{-@ automatic-instances vseq_identity_left @-}
 {-@
 vseq_identity_left :: forall m . iMonad:VMonad m -> m:m VUnit ->
   {IsIdentityLeft (vseq iMonad) (vseq_epsilon iMonad) m}
@@ -69,10 +70,9 @@ vseq_identity_left :: forall m . iMonad:VMonad m -> m:m VUnit ->
 vseq_identity_left :: forall m. VMonad m -> m VUnit -> Proof
 vseq_identity_left iMonad m =
   vseq_ vseq_epsilon_ m
-    ==. vbind_ (vlift_ vunit) (vconst m)
-    ==. vconst m vunit
-    ? vbind_vlift_ (vconst m) vunit
-    ==. m
+    === vbind_ (vlift_ vunit) (vconst m)
+    === (vconst m vunit ? vbind_vlift_ (vconst m) vunit)
+    === m
     *** QED
   where
     vseq_ = vseq iMonad
@@ -91,11 +91,11 @@ vseq_identity_right :: forall m a. VMonad m -> m VUnit -> Proof
 vseq_identity_right iMonad m = ()
 
 --  vseq_ m vseq_epsilon_
---    ==. vbind_ m (vconst vseq_epsilon_)
---    ==. vbind_ m (vconst (vlift_ vunit))
---    ==. vbind_ m (\() -> vlift_ ())
---    ==. vbind_ m vlift_
---    ==. m
+--    === vbind_ m (vconst vseq_epsilon_)
+--    === vbind_ m (vconst (vlift_ vunit))
+--    === vbind_ m (\() -> vlift_ ())
+--    === vbind_ m vlift_
+--    === m
 --    ?   vbind_identity_ m
 --    *** QED
 -- where

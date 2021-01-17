@@ -1,7 +1,7 @@
 module SlowSortList where
 
 import Function
-import Liquid.ProofCombinators
+import Language.Haskell.Liquid.ProofCombinators
 import Relation
 import VList
 import VMonad

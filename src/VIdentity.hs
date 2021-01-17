@@ -1,7 +1,7 @@
 module VIdentity where
 
 import Function
-import Liquid.ProofCombinators
+import Language.Haskell.Liquid.ProofCombinators
 import Relation
 import VFunctor
 import VMonad

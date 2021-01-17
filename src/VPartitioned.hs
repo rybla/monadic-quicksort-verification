@@ -1,7 +1,7 @@
 module VPartitioned where
 
 import Function
-import Liquid.ProofCombinators
+import Language.Haskell.Liquid.ProofCombinators
 import Relation
 
 -- NOTE. I should be parametrizing all my classes over `VPartitioned` rather

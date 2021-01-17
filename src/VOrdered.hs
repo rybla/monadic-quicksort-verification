@@ -1,7 +1,7 @@
 module VOrdered where
 
 import Function
-import Liquid.ProofCombinators
+import Language.Haskell.Liquid.ProofCombinators
 import Relation
 
 -- Data Class. A (totally) ordered set is TODO.

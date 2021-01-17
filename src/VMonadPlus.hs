@@ -1,47 +1,49 @@
 module VMonadPlus where
 
 import Function
-import Liquid.ProofCombinators
+import Language.Haskell.Liquid.ProofCombinators
 import Relation
 import VBool
 import VMonad
 
 -- A plus-monad (there must be a better name for this...) is TODO.
--- - vepsilon: e.
+-- - vmpepsilon: e.
 -- - vmpadd: x <+> y.
 -- - vmpaddF: f <+> g.
--- - vbind_identity_left:              e >>= f = e.
--- - vseq_identity_right:               x >> e = e.
+-- - vbind_identity_left:               e >>= f = e.
+-- - vseq_identity_right:                x >> e = e.
 -- - vmpadd_identity:                   x <+> e = x,
---                                     e <+> x = x.
+--                                      e <+> x = x.
 -- - vmpadd_distributive_left:  (x <+> y) >>= f = (x >>= f) <+> (y >>= f).
 -- - vmpadd_distributive_right: x >>= (f <+> g) = (x >>= f) <+> (x >>= g).
 {-@
 data VMonadPlus m = VMonadPlus
   { iMonad :: VMonad m
-  , vepsilon :: forall a . m a
+  , vmpepsilon :: forall a . m a
   , vmpadd :: forall a . Op2 (m a)
-  , vbind_identity_left :: forall a b . f:(a -> m b) ->
-      {vbind iMonad vepsilon f = vepsilon}
-  , vseq_identity_right :: forall a . x:m a ->
-      {vseq iMonad x vepsilon = vepsilon}
   , vmpadd_identity :: forall a. x:m a ->
-      {IsIdentity vmpadd vepsilon x}
+      {IsIdentity vmpadd vmpepsilon x}
+  , vmpadd_associative :: forall a. x: m a -> y:m a -> z:m a ->
+      {IsAssociative vmpadd x y z}
   , vmpadd_distributive_left :: forall a b . x:m a -> y:m a -> f:(a -> m b) ->
       {vbind iMonad (vmpadd x y) f = vmpadd (vbind iMonad x f) (vbind iMonad y f)}
   , vmpadd_distributive_right :: forall a b . x:m a -> f:(a -> m b) -> g:(a -> m b) ->
-      {vbind iMonad x (raw_vmpaddF vmpadd f g) = vmpadd (vbind iMonad x f) (vbind iMonad x g)} }
+      {vbind iMonad x (raw_vmpaddF vmpadd f g) = vmpadd (vbind iMonad x f) (vbind iMonad x g)}
+  , vbind_identity_left :: forall a b . f:(a -> m b) ->
+      {vbind iMonad vmpepsilon f = vmpepsilon}
+  , vseq_identity_right :: forall a . x:m a ->
+      {vseq iMonad x vmpepsilon = vmpepsilon} }
 @-}
 data VMonadPlus m = VMonadPlus
   { iMonad :: VMonad m,
-    vepsilon :: forall a. m a,
+    vmpepsilon :: forall a. m a,
     vmpadd :: forall a. Op2 (m a),
-    vbind_identity_left :: forall a b. (a -> m b) -> Proof,
-    vseq_identity_right :: forall a. m a -> Proof,
-    vmpadd_identity :: forall a. m a -> Proof,
+    vmpadd_identity :: forall a. Property (m a),
+    vmpadd_associative :: forall a. Property3 (m a),
     vmpadd_distributive_left :: forall a b. m a -> m a -> (a -> m b) -> Proof,
     vmpadd_distributive_right :: forall a b. m a -> (a -> m b) -> (a -> m b) -> Proof
-  }
+    vbind_identity_left :: forall a b. (a -> m b) -> Proof,
+    vseq_identity_right :: forall a. m a -> Proof}
 
 {-@ reflect raw_vmpaddF @-}
 raw_vmpaddF ::
@@ -64,10 +66,10 @@ vmpaddF iMP = raw_vmpaddF vmpadd_ where vmpadd_ = vmpadd iMP
 -- Function. Condition `MonadPlus` branch by a boolean.
 {-@ reflect mguard @-}
 mguard :: forall m. VMonadPlus m -> Bool -> m ()
-mguard iMonadPlus b = if b then vlift_ () else vepsilon_
+mguard iMonadPlus b = if b then vlift_ () else vmpepsilon_
   where
     vlift_ = vlift iMonad_
-    vepsilon_ = vepsilon iMonadPlus
+    vmpepsilon_ = vmpepsilon iMonadPlus
     iMonad_ = iMonad iMonadPlus
 
 -- Function. Condition `MonadPlus` branch by predicating a value.
@@ -94,11 +96,11 @@ predicate RefinesPlusMonadicF IMONADPLUS F G X =
 
 -- Lemma. e refines x.
 {-@
-vepsilon_refines :: forall m a. iMonadPlus:VMonadPlus m -> x:m a ->
-  {RefinesPlusMonadic iMonadPlus (vepsilon iMonadPlus) x}
+vmpepsilon_refines :: forall m a. iMonadPlus:VMonadPlus m -> x:m a ->
+  {RefinesPlusMonadic iMonadPlus (vmpepsilon iMonadPlus) x}
 @-}
-vepsilon_refines :: forall m a. VMonadPlus m -> m a -> Proof
-vepsilon_refines iMonadPlus x = vmpadd_identity_ x
+vmpepsilon_refines :: forall m a. VMonadPlus m -> m a -> Proof
+vmpepsilon_refines iMonadPlus x = vmpadd_identity_ x
   where
     vmpadd_identity_ = vmpadd_identity iMonadPlus
 
