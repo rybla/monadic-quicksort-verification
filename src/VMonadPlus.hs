@@ -65,21 +65,21 @@ vmpaddF ::
 vmpaddF iMP = raw_vmpaddF vmpadd_ where vmpadd_ = vmpadd iMP
 
 -- Function. Condition `MonadPlus` branch by a boolean.
-{-@ reflect mguard @-}
-mguard :: forall m. VMonadPlus m -> Bool -> m ()
-mguard iMonadPlus b = if b then vlift_ () else vmpepsilon_
+{-@ reflect guard @-}
+guard :: forall m. VMonadPlus m -> Bool -> m ()
+guard iMonadPlus b = if b then vlift_ () else vmpepsilon_
   where
     vlift_ = vlift iMonad_
     vmpepsilon_ = vmpepsilon iMonadPlus
     iMonad_ = iMonad iMonadPlus
 
 -- Function. Condition `MonadPlus` branch by predicating a value.
-{-@ reflect mguardBy @-}
-mguardBy :: forall m a. VMonadPlus m -> Predicate a -> a -> m a
-mguardBy iMonadPlus p x = vseq_ (mguard_ (p x)) (vlift_ x)
+{-@ reflect guardBy @-}
+guardBy :: forall m a. VMonadPlus m -> Predicate a -> a -> m a
+guardBy iMonadPlus p x = vseq_ (guard_ (p x)) (vlift_ x)
   where
     vseq_ = vseq iMonad_
-    mguard_ = mguard iMonadPlus
+    guard_ = guard iMonadPlus
     vlift_ = vlift iMonad_
     iMonad_ = iMonad iMonadPlus
 
@@ -161,55 +161,55 @@ vbind_monotonic_refinement ::
 vbind_monotonic_refinement _ _ _ _ = ()
 
 -- TODO: prove
--- Lemma. `mguard` monad-commutes with `m` since `m` has just one effect.
+-- Lemma. `guard` monad-commutes with `m` since `m` has just one effect.
 {-@
-assume mguard_isCommutativeMonadic :: forall m a b .
+assume guard_isCommutativeMonadic :: forall m a b .
   iMonadPlus:VMonadPlus m ->
   b:Bool ->
   x:m a ->
   f:(a -> b) ->
-  {IsCommutativeMonadic (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus b)
+  {IsCommutativeMonadic (VMonadPlus.iMonad iMonadPlus) (guard iMonadPlus b)
     x (vconstF f)}
 @-}
-mguard_isCommutativeMonadic ::
+guard_isCommutativeMonadic ::
   forall m a b. VMonadPlus m -> Bool -> m a -> (a -> b) -> Proof
-mguard_isCommutativeMonadic _ _ _ _ = ()
+guard_isCommutativeMonadic _ _ _ _ = ()
 
 -- Function.
-{-@ reflect mguard_and @-}
-mguard_and :: forall m. VMonadPlus m -> Bool -> Bool -> m ()
-mguard_and iMonadPlus b1 b2 = mguard iMonadPlus (vand b1 b2)
+{-@ reflect guard_and @-}
+guard_and :: forall m. VMonadPlus m -> Bool -> Bool -> m ()
+guard_and iMonadPlus b1 b2 = guard iMonadPlus (vand b1 b2)
 
 -- TODO: prove
 -- Lemma.
 {-@
-assume mguard_and_vseq :: forall m .
+assume guard_and_vseq :: forall m .
   iMonadPlus:VMonadPlus m ->
   b1:Bool -> b2:Bool ->
-  {mguard_and iMonadPlus b1 b2 = vseq (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus b1) (mguard iMonadPlus b2)}
+  {guard_and iMonadPlus b1 b2 = vseq (VMonadPlus.iMonad iMonadPlus) (guard iMonadPlus b1) (guard iMonadPlus b2)}
 @-}
-mguard_and_vseq :: forall m. VMonadPlus m -> Bool -> Bool -> Proof
-mguard_and_vseq _ _ _ = ()
+guard_and_vseq :: forall m. VMonadPlus m -> Bool -> Bool -> Proof
+guard_and_vseq _ _ _ = ()
 
 -- Function.
-{-@ reflect mguard_disjoint @-}
-mguard_disjoint ::
+{-@ reflect guard_disjoint @-}
+guard_disjoint ::
   forall m a. VMonadPlus m -> Bool -> m a -> m a -> m a
-mguard_disjoint iMonadPlus b x y =
+guard_disjoint iMonadPlus b x y =
   vmpadd
     iMonadPlus
-    (vseq (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus b) x)
-    (vseq (VMonadPlus.iMonad iMonadPlus) (mguard iMonadPlus (vnot b)) y)
+    (vseq (VMonadPlus.iMonad iMonadPlus) (guard iMonadPlus b) x)
+    (vseq (VMonadPlus.iMonad iMonadPlus) (guard iMonadPlus (vnot b)) y)
 
 -- TODO: prove
 -- Lemma.
 -- NOTE. idk why I need to prefix `vbranch` with `VBool` here, but I do...
 {-@
-assume mguard_disjoint_branch :: forall m a .
+assume guard_disjoint_branch :: forall m a .
   iMonadPlus:VMonadPlus m ->
   b:Bool -> x:m a -> y: m a ->
-  {RefinesPlusMonadic iMonadPlus (mguard_disjoint iMonadPlus b x y) (VBool.vbranch b x y)}
+  {RefinesPlusMonadic iMonadPlus (guard_disjoint iMonadPlus b x y) (VBool.vbranch b x y)}
 @-}
-mguard_disjoint_branch ::
+guard_disjoint_branch ::
   forall m a. VMonadPlus m -> Bool -> m a -> m a -> Proof
-mguard_disjoint_branch = undefined
+guard_disjoint_branch = undefined

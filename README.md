@@ -20,8 +20,8 @@ A Liquid Haskell verification of Mu and Chiang's _[Deriving Monadic Quicksort][M
     - [x] plus-monadic refinement (`RefinesPlusMonadic` and `RefinesPlusMonadicF`)
     - [ ] plus-monadic refinement is monotic in monadic binding (`vbind_monotonic_refinement`)
     - [ ] guarding monad-commutes with other monad elements (that have just (monadic) effect)
-    - [ ] guarding a conjunction is the same as the sequence of guarding each conjunct (`mguard_and_vseq`)
-    - [ ] guarding the plus-monadic sum of two monad sequence terms with head elements are guarding on disjoint conditions plus-monad refines a top-level branching by the boolean over the sequence tails (`mguard_disjoint_branch`)
+    - [ ] guarding a conjunction is the same as the sequence of guarding each conjunct (`guard_and_vseq`)
+    - [ ] guarding the plus-monadic sum of two monad sequence terms with head elements are guarding on disjoint conditions plus-monad refines a top-level branching by the boolean over the sequence tails (`guard_disjoint_branch`)
   - [ ] array-monad, used for monadic array interface (`VMonadArray.hs`)
     - [x] implement
     - [ ] array-monad writing the append of two lists is the same as the sequence of array-monad writing the first list and then array-monad writing the second list ofset by the length of the first list

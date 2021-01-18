@@ -129,22 +129,22 @@ vseq_associative _ _ _ _ = ()
 -- Function.
 {-@ reflect vliftF @-}
 vliftF :: forall m a b. VMonad m -> (a -> b) -> m a -> m b
-vliftF iMonad f m = vbind' m (\x -> vlift' (f x))
+vliftF iMonad f m = vbind_ m (\x -> vlift_ (f x))
   where
-    vlift' = vlift iMonad
-    vbind' = vbind iMonad
+    vlift_ = vlift iMonad
+    vbind_ = vbind iMonad
 
 -- Function.
 {-@ reflect vliftF2 @-}
 vliftF2 ::
   forall m a b c. VMonad m -> (a -> b -> c) -> m a -> m b -> m c
 vliftF2 iMonad f ma mb =
-  vbind'
+  vbind_
     ma
-    (\x -> vbind' mb (\y -> vlift' (f x y)))
+    (\x -> vbind_ mb (\y -> vlift_ (f x y)))
   where
-    vlift' = vlift iMonad
-    vbind' = vbind iMonad
+    vlift_ = vlift iMonad
+    vbind_ = vbind iMonad
 
 -- Predicate. Commutativity for monads.
 {-@

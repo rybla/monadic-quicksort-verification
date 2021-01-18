@@ -7,6 +7,7 @@ import VList
 import VMonad
 import VMonadPlus
 import VOrdered
+import VTuple
 
 -- Type. Constraints for nondeterministically interfacing with arrays of ordered
 -- elements.
@@ -20,11 +21,11 @@ slowsort ::
 slowsort (iMonadPlus, iOrdered) =
   kleisli_
     permute_
-    (mguardBy_ isSorted_)
+    (guardBy_ isSorted_)
   where
     isSorted_ = isSorted iOrdered
     permute_ = permute iMonadPlus
-    mguardBy_ = mguardBy iMonadPlus
+    guardBy_ = guardBy iMonadPlus
     kleisli_ = kleisli iMonad_
     iMonad_ = iMonad iMonadPlus
 
@@ -41,7 +42,7 @@ permute iMonadPlus (Cons x xs) =
     (split_ xs)
     ( \(ys, zs) ->
         vliftF2_
-          (\ys zs -> vappend ys (vappend xs zs))
+          (\ys' zs' -> vappend ys' (vappend (vsingleton x) zs'))
           (permute_ ys)
           (permute_ zs)
     )
@@ -77,16 +78,46 @@ isSorted iOrdered (Cons x xs) = vall (vleq_ x) xs && isSorted_ xs
 
 {-@ reflect isSortedBetween @-}
 isSortedBetween ::
-  forall a. VOrdered a -> a -> (VList a, VList a) -> Bool
+  forall a. VOrdered a -> a -> VTuple2D (VList a) -> Bool
 isSortedBetween iOrdered x (ys, zs) =
+  isSorted iOrdered (vappend ys (vappend (vsingleton x) zs))
+  where
+    vleq_ = vleq iOrdered
+
+{-@ reflect isSortedBetween_expansion @-}
+isSortedBetween_expansion ::
+  forall a. VOrdered a -> a -> VTuple2D (VList a) -> Bool
+isSortedBetween_expansion iOrdered x (ys, zs) =
   vall (\y -> vleq_ y x) ys && vall (\z -> vleq_ x z) zs
   where
     vleq_ = vleq iOrdered
 
+-- TODO: prove
+-- Lemma.
+-- (viz. page 4, display 5)
+{-@
+assume isSortedBetween_expansion_correct ::
+  forall a.
+  iOrdered:VOrdered a ->
+  x:a ->
+  ys:VList a ->
+  zs:VList a ->
+  {isSorted iOrdered (vappend ys (vappend (vsingleton x) zs)) ==
+   isSortedBetween iOrdered x (ys, zs) }
+@-}
+isSortedBetween_expansion_correct ::
+  forall a.
+  VOrdered a ->
+  a ->
+  VList a ->
+  VList a ->
+  Proof
+isSortedBetween_expansion_correct iOrdered x ys zs = ()
+
 -- TODO: prove termination
 {-@ lazy split @-}
 {-@ reflect split @-}
-split :: forall m a. VMonadPlus m -> VList a -> m (VList a, VList a)
+split :: forall m a. VMonadPlus m -> VList a -> m (VTuple2D (VList a))
 split iMonadPlus Nil = vlift_ (Nil, Nil)
   where
     vlift_ = vlift iMonad_
