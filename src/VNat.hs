@@ -9,15 +9,15 @@ data VNat = Zero | Suc VNat
 @-}
 data VNat = Zero | Suc VNat
 
-{-@ reflect vzero @-}
+{-@ inline vzero @-}
 vzero :: VNat
 vzero = Zero
 
-{-@ reflect vone @-}
+{-@ inline vone @-}
 vone :: VNat
 vone = Suc Zero
 
-{-@ reflect vtwo @-}
+{-@ inline vtwo @-}
 vtwo :: VNat
 vtwo = Suc vone
 
@@ -124,12 +124,12 @@ vmul_identity :: VNat -> Proof
 vmul_identity Zero = trivial
 vmul_identity (Suc n) = vmul_identity n
 
--- Lemma. Multiplicative annihilator i.e. 0 * n = n * 0 = 0.
-{-@ automatic-instances vmul_annihilator @-}
-{-@ vmul_annihilator :: n:VNat -> {IsZero vmul Zero n} @-}
-vmul_annihilator :: VNat -> Proof
-vmul_annihilator Zero = ()
-vmul_annihilator (Suc n) = vmul_annihilator n
+-- Lemma. Multiplicative zero i.e. 0 * n = n * 0 = 0.
+{-@ automatic-instances vmul_zero @-}
+{-@ vmul_zero :: n:VNat -> {IsZero vmul Zero n} @-}
+vmul_zero :: VNat -> Proof
+vmul_zero Zero = ()
+vmul_zero (Suc n) = vmul_zero n
 
 -- TODO: prove
 -- Lemma. Multiplicative commutativity i.e. m * n = n * m.
@@ -138,8 +138,8 @@ assume vmul_commutative :: m:VNat -> n:VNat ->
   {IsCommutative vmul m n}
 @-}
 vmul_commutative :: VNat -> VNat -> Proof
-vmul_commutative Zero n = vmul_annihilator n
-vmul_commutative m Zero = vmul_annihilator m
+vmul_commutative Zero n = vmul_zero n
+vmul_commutative m Zero = vmul_zero m
 vmul_commutative (Suc m) (Suc n) = ()
 
 -- TODO: proof in progress
