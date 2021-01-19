@@ -51,11 +51,11 @@ A Liquid Haskell verification of Mu and Chiang's _[Deriving Monadic Quicksort][M
   - [ ] `ipartl_specification1_correct`
   - [ ] decide how to handle (get rid of / name) commented-out implementation for `partl'` that is given in paper but then overriden
   - [ ] `ipartl_specification2_correct`
-  - [ ] `ipartl_Cons_specification3_correct`
-  - [ ] `ipartl_Cons_then_specification4_correct`
-  - [ ] `ipartl_Cons_else_specification4_correct`
+  - [ ] `ipartl_VCons_specification3_correct`
+  - [ ] `ipartl_VCons_then_specification4_correct`
+  - [ ] `ipartl_VCons_else_specification4_correct`
   - [ ] `refinement11`
-  - [ ] `ipartl_Cons_specification5_correct`
+  - [ ] `ipartl_VCons_specification5_correct`
 - [ ] QuickSort Array (`QuickSortArray.hs`)
   - [ ] `iqsort_specification1_correct`
   - [ ] `iqsort_specification2_correct`
