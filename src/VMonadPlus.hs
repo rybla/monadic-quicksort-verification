@@ -149,7 +149,7 @@ vbind_monotonic_refinement ::
   forall m a b. iMonadPlus:VMonadPlus m ->
   x:m a -> y: m a -> f:(a -> m b) ->
   {H:() | RefinesPlusMonadic iMonadPlus x y} ->
-  {RefinesPlusMonadic iMonadPlus (vbind (VMonadPlus.iMonad iMonadPlus) x f) (vbind (VMonadPlus.iMonad iMonadPlus) y f)}
+  {RefinesPlusMonadic iMonadPlus (vbind (iMonad iMonadPlus) x f) (vbind (iMonad iMonadPlus) y f)}
 @-}
 vbind_monotonic_refinement ::
   forall m a b.
@@ -162,7 +162,7 @@ vbind_monotonic_refinement ::
 vbind_monotonic_refinement iMonadPlus x y f ref_x_y =
   (x >>= f) <+> (y >>= f)
     ==. ((x <+> y) >>= f ? vaddMP_distributive_left_ x y f)
-    ==! (y >>= f ? ref_x_y)
+    ==. (y >>= f ? ref_x_y)
     *** QED
   where
     (>>=) = vbind iMonad_
@@ -179,12 +179,12 @@ assume guard_isCommutativeMonadic :: forall m a b .
   b:Bool ->
   x:m a ->
   f:(a -> b) ->
-  {IsCommutativeMonadic (VMonadPlus.iMonad iMonadPlus) (guard iMonadPlus b)
+  {IsCommutativeMonadic (iMonad iMonadPlus) (guard iMonadPlus b)
     x (vconstF f)}
 @-}
 guard_isCommutativeMonadic ::
   forall m a b. VMonadPlus m -> Bool -> m a -> (a -> b) -> Proof
-guard_isCommutativeMonadic _ _ _ _ = ()
+guard_isCommutativeMonadic iMonadPlus b x f = ()
 
 -- Function.
 {-@ reflect guard_and @-}
@@ -197,7 +197,7 @@ guard_and iMonadPlus b1 b2 = guard iMonadPlus (vand b1 b2)
 assume guard_and_vseq :: forall m .
   iMonadPlus:VMonadPlus m ->
   b1:Bool -> b2:Bool ->
-  {guard_and iMonadPlus b1 b2 = vseq (VMonadPlus.iMonad iMonadPlus) (guard iMonadPlus b1) (guard iMonadPlus b2)}
+  {guard_and iMonadPlus b1 b2 = vseq (iMonad iMonadPlus) (guard iMonadPlus b1) (guard iMonadPlus b2)}
 @-}
 guard_and_vseq :: forall m. VMonadPlus m -> Bool -> Bool -> Proof
 guard_and_vseq _ _ _ = ()
@@ -209,8 +209,8 @@ guard_disjoint ::
 guard_disjoint iMonadPlus b x y =
   vaddMP
     iMonadPlus
-    (vseq (VMonadPlus.iMonad iMonadPlus) (guard iMonadPlus b) x)
-    (vseq (VMonadPlus.iMonad iMonadPlus) (guard iMonadPlus (vnot b)) y)
+    (vseq (iMonad iMonadPlus) (guard iMonadPlus b) x)
+    (vseq (iMonad iMonadPlus) (guard iMonadPlus (vnot b)) y)
 
 -- TODO: prove
 -- Lemma.
