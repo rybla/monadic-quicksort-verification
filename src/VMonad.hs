@@ -192,15 +192,25 @@ vmapM_aux iMonad f x = vlift_ (f x)
 
 -- Function.
 {-@ reflect vmapM2 @-}
-vmapM2 ::
-  forall m a b c. VMonad m -> (a -> b -> c) -> m a -> m b -> m c
-vmapM2 iMonad f ma mb =
-  vbind_
-    ma
-    (\x -> vbind_ mb (\y -> vlift_ (f x y)))
+vmapM2 :: forall m a b c. VMonad m -> (a -> b -> c) -> m a -> m b -> m c
+vmapM2 iMonad f ma mb = ma >>= vmapM2_aux1_ f mb
+  where
+    (>>=) = vbind iMonad
+    vmapM2_aux1_ = vmapM2_aux1 iMonad
+
+{-@ reflect vmapM2_aux1 @-}
+vmapM2_aux1 :: forall m a b c. VMonad m -> (a -> b -> c) -> m b -> a -> m c
+vmapM2_aux1 iMonad f mb x = mb >>= vmapM2_aux2_ f x
   where
     vlift_ = vlift iMonad
-    vbind_ = vbind iMonad
+    (>>=) = vbind iMonad
+    vmapM2_aux2_ = vmapM2_aux2 iMonad
+
+{-@ reflect vmapM2_aux2 @-}
+vmapM2_aux2 :: forall m a b c. VMonad m -> (a -> b -> c) -> a -> b -> m c
+vmapM2_aux2 iMonad f x y = vlift_ (f x y)
+  where
+    vlift_ = vlift iMonad
 
 -- Predicate. Commutativity for monads.
 {-@
