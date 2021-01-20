@@ -25,7 +25,7 @@ data VMonadArray m a = VMonadArray
   , vwrite_vwrite :: i:Index -> x:a -> x':a ->
       {vseq iMonad (vwrite i x) (vwrite i x') = vwrite i x'}
   , vread_vread :: i:Index -> f:(a -> a -> a) ->
-      {vliftF2 iMonad f (vread i) (vread i) = vliftF iMonad (vdiagonalize f) (vread i)}
+      {vmapM2 iMonad f (vread i) (vread i) = vmapM iMonad (vdiagonalize f) (vread i)}
   , vread_commutative :: i:Index -> j:Index ->
       {IsCommutative (vseq iMonad) (vread i) (vread j)}
   , vwrite_commutative :: i:Index -> j:Index -> {i_neq_j : Proof | i /= j} -> x:a -> y:a ->
@@ -49,28 +49,28 @@ data VMonadArray m a = VMonadArray
 
 {-@ reflect vreadList @-}
 vreadList :: VMonadArray m a -> Index -> VNat -> m (VList a)
-vreadList iMonadArray _ Zero = vlift_ Nil
+vreadList iMonadArray _ Zero = vlift_ VNil
   where
     vlift_ = vlift iMonad_
     iMonad_ = iMonad iMonadArray
 vreadList iMonadArray i (Suc n) =
-  vliftF2_
-    Cons
+  vmapM2_
+    VCons
     (vread_ i)
     (vreadList_ (Suc i) n)
   where
     vread_ = vread iMonadArray
     vreadList_ = vreadList iMonadArray
-    vliftF2_ = vliftF2 iMonad_
+    vmapM2_ = vmapM2 iMonad_
     iMonad_ = iMonad iMonadArray
 
 {-@ reflect vwriteList @-}
 vwriteList :: VMonadArray m a -> Index -> VList a -> m VUnit
-vwriteList iMonadArray _ Nil = vlift_ ()
+vwriteList iMonadArray _ VNil = vlift_ ()
   where
     vlift_ = vlift iMonad_
     iMonad_ = iMonad iMonadArray
-vwriteList iMonadArray i (Cons x xs) =
+vwriteList iMonadArray i (VCons x xs) =
   vseq_
     (vwrite_ i x)
     (vwriteList_ (Suc i) xs)
@@ -139,8 +139,8 @@ vwriteList_vappend ::
 vwriteList_vappend _ _ _ _ = ()
 
 -- TODO: proof in progress
--- vwriteList_vappend iMonadArray i Nil ys =
---   vwriteList_ i (vappend Nil ys)
+-- vwriteList_vappend iMonadArray i VNil ys =
+--   vwriteList_ i (vappend VNil ys)
 --     === vwriteList_ i ys
 --     === ( vseq_ (vlift_ vunit) (vwriteList_ i ys)
 --             ? vseq_identity_ (vwriteList_ i ys)
@@ -149,8 +149,8 @@ vwriteList_vappend _ _ _ _ = ()
 --             ? vadd_identity i
 --         )
 --     === vseq_
---       (vwriteList_ i Nil)
---       (vwriteList_ (vadd i (vlength Nil)) ys)
+--       (vwriteList_ i VNil)
+--       (vwriteList_ (vadd i (vlength VNil)) ys)
 --     *** QED
 --   where
 --     vseq_ = vseq iMonad_
@@ -158,7 +158,7 @@ vwriteList_vappend _ _ _ _ = ()
 --     vseq_identity_ = vseq_identity iMonad_
 --     vwriteList_ = vwriteList iMonadArray
 --     iMonad_ = iMonad iMonadArray
--- vwriteList_vappend iMonadArray i (Cons x xs) ys = ()
+-- vwriteList_vappend iMonadArray i (VCons x xs) ys = ()
 
 {- TODO. fix error:
  /Users/henry/Documents/Projects/monadic-quicksort-verification/monadic-quicksort-verification/src/VMonadArray.hs:166:26: Error: GHC Error
@@ -170,8 +170,8 @@ vwriteList_vappend _ _ _ _ = ()
 make: *** [check] Error 2
 
 -}
---  vwriteList_ i (vappend (Cons x xs) ys)
---    === vwriteList_ i (Cons x (vappend xs ys))
+--  vwriteList_ i (vappend (VCons x xs) ys)
+--    === vwriteList_ i (VCons x (vappend xs ys))
 --    === vseq_ (vwrite_ i x) (vwriteList_ (Suc i) (vappend xs ys))
 --    === vseq_
 --          (vwrite_ i x)
@@ -181,14 +181,14 @@ make: *** [check] Error 2
 --    ?   vwriteList_vappend_ (Suc i) xs ys
 --    === vseq_ (vseq_ (vwrite_ i x) (vwriteList_ (Suc i) xs))
 --              (vwriteList_ (vadd (Suc i) (vlength xs)) ys)
---    === vseq_ (vwriteList_ i (Cons x xs))
+--    === vseq_ (vwriteList_ i (VCons x xs))
 --              (vwriteList_ (vadd (Suc i) (vlength xs)) ys)
---    === vseq_ (vwriteList_ i (Cons x xs))
+--    === vseq_ (vwriteList_ i (VCons x xs))
 --              (vwriteList_ (Suc (vadd i (vlength xs))) ys)
---    === vseq_ (vwriteList_ i (Cons x xs))
+--    === vseq_ (vwriteList_ i (VCons x xs))
 --              (vwriteList_ (vadd i (Suc (vlength xs))) ys)
---    === vseq_ (vwriteList_ i (Cons x xs))
---              (vwriteList_ (vadd i (vlength (Cons x xs))) ys)
+--    === vseq_ (vwriteList_ i (VCons x xs))
+--              (vwriteList_ (vadd i (vlength (VCons x xs))) ys)
 --    *** QED
 -- where
 --  vwrite_             = vwriteList iMonadArray

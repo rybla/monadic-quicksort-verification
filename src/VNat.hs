@@ -100,7 +100,7 @@ vadd_associative :: l:VNat -> m:VNat -> n:VNat -> {IsAssociative vadd l m n}
 vadd_associative :: VNat -> VNat -> VNat -> Proof
 vadd_associative Zero m n =
   vadd Zero (vadd m n)
-    === vadd m n ? vadd_identity (vadd m n)
+    === (vadd m n ? vadd_identity (vadd m n))
     === (vadd (vadd Zero m) n ? vadd_identity m)
     *** QED
 vadd_associative (Suc l) m n =

@@ -1,8 +1,10 @@
 module VUnit where
 
-{-@ type VUnit = () @-}
+{-@
+type VUnit = ()
+@-}
 type VUnit = ()
 
-{-@ reflect vunit @-}
+{-@ inline vunit @-}
 vunit :: ()
 vunit = ()

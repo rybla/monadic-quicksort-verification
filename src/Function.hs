@@ -1,5 +1,7 @@
 module Function where
 
+import Language.Haskell.Liquid.ProofCombinators
+
 -- Types. Form of generic homogeneous operators.
 -- - `Op<n>` is an `n`-ary operator.
 
@@ -57,3 +59,23 @@ infix 0 &
 {-@ reflect & @-}
 (&) :: forall a b. a -> (a -> b) -> b
 x & f = f x
+
+{-@ reflect vapply @-}
+vapply :: forall a b. (a -> b) -> a -> b
+vapply f x = f x
+
+-- Axiom. Functional extensionality.
+{-@
+assume extensionality ::
+  forall a b.
+  f:(a -> b) -> g:(a -> b) ->
+  (x:a -> {f x == g x}) ->
+  {f == g}
+@-}
+extensionality ::
+  forall a b.
+  (a -> b) ->
+  (a -> b) ->
+  (a -> Proof) ->
+  Proof
+extensionality _ _ _ = ()

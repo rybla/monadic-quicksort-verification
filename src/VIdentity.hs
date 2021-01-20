@@ -13,26 +13,26 @@ data VIdentity a = VIdentity a
 @-}
 data VIdentity a = VIdentity a
 
-{-@ reflect vmap_VIdentity @-}
-vmap_VIdentity ::
+{-@ reflect vmapF_VIdentity @-}
+vmapF_VIdentity ::
   forall a b. (a -> b) -> (VIdentity a -> VIdentity b)
-vmap_VIdentity f (VIdentity x) = VIdentity (f x)
+vmapF_VIdentity f (VIdentity x) = VIdentity (f x)
 
 -- TODO: prove
--- {-@ automatic-instances vmap_vid_VIdentity @-}
+-- {-@ automatic-instances vmapF_vid_VIdentity @-}
 {-@
-assume vmap_vid_VIdentity :: forall a. x:VIdentity a ->
-  {vmap_VIdentity vid x = vid x}
+assume vmapF_vid_VIdentity :: forall a. x:VIdentity a ->
+  {vmapF_VIdentity vid x = vid x}
 @-}
-vmap_vid_VIdentity :: forall a. VIdentity a -> Proof
-vmap_vid_VIdentity _ = ()
+vmapF_vid_VIdentity :: forall a. VIdentity a -> Proof
+vmapF_vid_VIdentity _ = ()
 
 -- TODO: prove that VIdentity is a VFunctor
--- -- TODO: why does vmap_vid_VIdentity need to be qualified?
+-- -- TODO: why does vmapF_vid_VIdentity need to be qualified?
 -- {-@ reflect iFunctor_VIdentity @-}
 -- iFunctor_VIdentity :: VFunctor VIdentity
 -- iFunctor_VIdentity =
---   VFunctor {vmap = vmap_VIdentity, vmap_vid = VIdentity.vmap_vid_VIdentity}
+--   VFunctor {vmapF = vmapF_VIdentity, vmapF_vid = VIdentity.vmapF_vid_VIdentity}
 
 -- {-@ reflect vlift_VIdentity @-}
 -- vlift_VIdentity :: forall a. a -> VIdentity a
@@ -45,7 +45,7 @@ vmap_vid_VIdentity _ = ()
 
 -- {-@
 -- vbind_correct_VIdentity :: forall a b . m:VIdentity a -> f:(a -> b) ->
---   {vbind_VIdentity m (vcomp vlift_VIdentity f) = vmap iFunctor_VIdentity f m}
+--   {vbind_VIdentity m (vcomp vlift_VIdentity f) = vmapF iFunctor_VIdentity f m}
 -- @-}
 -- vbind_correct_VIdentity ::
 --   forall a b. VIdentity a -> (a -> b) -> Proof
