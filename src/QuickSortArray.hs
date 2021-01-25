@@ -78,7 +78,7 @@ import VOrdered
 --   m VUnit
 -- iqsort_specification2 iMonadArrayPlusOrdered p i xs =
 --   vbind_
---     (partl'_ p (Nil, Nil, xs))
+--     (partl'_ p (VNil, VNil, xs))
 --     ( \(ys, zs) ->
 --         ( vbind_
 --             (permute_ ys)
@@ -188,7 +188,7 @@ import VOrdered
 --   m VUnit
 -- iqsort_specification3 (iMonadArray, iMonadPlus, iOrdered) p i xs =
 --   vseq_
---     (vwriteList_ i (Cons p xs))
+--     (vwriteList_ i (VCons p xs))
 --     ( vbind_
 --         (ipartl_ p (Suc i) (Zero, Zero, xs_l))
 --         ( \(ys_l, zs_l) ->

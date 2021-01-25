@@ -1,8 +1,9 @@
 module VMonad where
 
+import Equality
 import Function
 import Language.Haskell.Liquid.Equational
-import Language.Haskell.Liquid.ProofCombinators ((&&&), (==!), (===))
+import Language.Haskell.Liquid.ProofCombinators (trivial, (&&&), (==!), (===))
 -- hiding (Proof, QED (..), (***), (==.), (?))
 import VFunctor
 import VUnit
@@ -38,7 +39,7 @@ data VMonad m = VMonad
 {-@ reflect raw_kleisli @-}
 raw_kleisli ::
   forall m a b c.
-  (forall a' b'. m a' -> (a' -> m b') -> m b') -> -- vbind
+  (m b -> (b -> m c) -> m c) -> -- vbind
   (a -> m b) ->
   (b -> m c) ->
   (a -> m c)
@@ -46,15 +47,29 @@ raw_kleisli (>>=) f g x = f x >>= g
 
 -- Function.
 {-@ reflect kleisli @-}
-kleisli ::
-  forall m a b c.
-  VMonad m ->
-  (a -> m b) ->
-  (b -> m c) ->
-  (a -> m c)
+kleisli :: forall m a b c. VMonad m -> (a -> m b) -> (b -> m c) -> (a -> m c)
 kleisli iMonad = raw_kleisli (>>=)
   where
     (>>=) = vbind iMonad
+
+--------------------------------------------------------------------------------
+-- Equality
+--------------------------------------------------------------------------------
+
+{-@ measure meq :: VMonad m -> m a -> m a -> Bool @-}
+
+{-@ type MEq m a iMonad m1 m2 = {_:MBEq m a | meq iMonad m1 m2} @-}
+
+{-@
+data MBEq :: (* -> *) -> * -> * where
+  MBEq_lift :: forall m a. iMonad:VMonad m -> x:a -> y:a -> {pf:Proof | x = y} -> MEq m a iMonad (lift iMonad x) (lift iMonad y)
+@-}
+data MBEq :: (* -> *) -> * -> * where
+  MBEq_lift :: forall m a. VMonad m -> a -> a -> Proof -> MBEq m a
+
+--------------------------------------------------------------------------------
+-- Sequencing
+--------------------------------------------------------------------------------
 
 -- Function. Monadic sequencing.
 {-@ reflect vseq @-}
@@ -115,67 +130,89 @@ vseq_identity :: forall m. VMonad m -> m VUnit -> Proof
 vseq_identity iMonad m =
   vseq_identity_left iMonad m &&& vseq_identity_right iMonad m
 
--- Lemma. Sequencing is associative.
-{-@ automatic-instances vseq_associative @-}
-{-@
-vseq_associative ::
-  forall m a b c . iMonad:VMonad m -> m1:m a -> m2:m b -> m3:m c ->
-  {IsAssociative (vseq iMonad) m1 m2 m3}
-@-}
-vseq_associative :: forall m a b c. VMonad m -> m a -> m b -> m c -> Proof
-vseq_associative iMonad m1 m2 m3 =
-  m1 >> (m2 >> m3)
-    -- [def] >>
-    ==. m1 >>= vconst (m2 >>= vconst m3)
-    ==. ( m1 >>= (vconst m2 >=> vconst m3)
-            ? extensionality
-              (vconst m2 >=> vconst m3)
-              (vconst (m2 >>= vconst m3))
-              (vseq_associative_lem1_ m2 m3)
-        )
-    -- [def] >=>
-    -- TODO: [err] invalid subtype, but I can't tell why
-    ==! ( (m1 >>= vconst m2) >>= vconst m3
-            ? vbind_associative_ m1 (vconst m2) (vconst m3)
-        )
-    -- [def] >>
-    ==! (m1 >> m2) >> m3
-    *** QED
-  where
-    (>>) = vseq iMonad
-    (>>=) = vbind iMonad
-    (>=>) = kleisli iMonad
-    vbind_associative_ = vbind_associative iMonad
-    vseq_associative_lem1_ = vseq_associative_lem1 iMonad
+-- -- Lemma. Sequencing is associative.
+-- {-@
+-- assume vseq_associative ::
+--   forall m a b c . iMonad:VMonad m -> m1:m a -> m2:m b -> m3:m c ->
+--   {peq (m c) (vseq iMonad m1 (vseq iMonad m2 m3)) (vseq iMonad (vseq iMonad m1 m2) m3)}
+-- @-}
+-- vseq_associative :: forall m a b c. VMonad m -> m a -> m b -> m c -> PBEq (m c)
+-- vseq_associative iMonad m1 m2 m3 =
+--   m1 >> (m1 >> m2)
+--     ==* _
+--     ==* (m1 >> m2) >> m3
+--     *** QED
+--   where
+--     (>>) :: forall a b. m a -> m b -> m b
+--     (>>) = vseq iMonad
+--     (>>=) :: forall a b. m a -> (a -> m b) -> m b
+--     (>>=) = vbind iMonad
+--     (>=>) = kleisli iMonad
 
-{-@ automatic-instances vseq_associative_lem1 @-}
-{-@
-vseq_associative_lem1 ::
-  forall m a b c. iMonad:VMonad m -> m2:m b -> m3:m c -> x:a ->
-  {kleisli iMonad (vconst m2) (vconst m3) x ==
-   vconst (vbind iMonad m2 (vconst m3)) x}
-@-}
-vseq_associative_lem1 ::
-  forall m a b c.
-  VMonad m ->
-  m b ->
-  m c ->
-  a ->
-  Proof
-vseq_associative_lem1 iMonad m2 m3 x =
-  -- (vconst m2 >=> vconst m3) x
-  (vconst m2 >=> vconst m3) x
-    -- [def] >=>
-    ==. vconst m2 x >>= vconst m3
-    -- [def] vconst
-    ==. m2 >>= vconst m3
-    -- [def] vconst
-    ==. vconst (m2 >>= vconst m3) x
-    *** QED
-  where
-    (>>=) = vbind iMonad
-    (>=>) = kleisli iMonad
-    kleisli_ = kleisli iMonad
+-- TODO: trying to use PBEq (above)
+-- -- Lemma. Sequencing is associative.
+-- {-@ automatic-instances vseq_associative @-}
+-- {-@
+-- vseq_associative ::
+--   forall m a b c . iMonad:VMonad m -> m1:m a -> m2:m b -> m3:m c ->
+--   {IsAssociative (vseq iMonad) m1 m2 m3}
+-- @-}
+-- vseq_associative :: forall m a b c. VMonad m -> m a -> m b -> m c -> Proof
+-- vseq_associative iMonad m1 m2 m3 =
+--   m1 >> (m2 >> m3)
+--     -- [def] >>
+--     ==. m1 >>= vconst (m2 >>= vconst m3)
+--     ==. ( m1 >>= (vconst m2 >=> vconst m3)
+--             ? extensionality
+--               (vconst m2 >=> vconst m3)
+--               (vconst (m2 >>= vconst m3))
+--               (vseq_associative_lem1_ m2 m3)
+--         )
+--     -- [def] >=>
+--     -- TODO: [err] invalid subtype, but I can't tell why
+--     ==. ( (m1 >>= vconst m2) >>= vconst m3
+--             ? vbind_associative_ m1 (vconst m2) (vconst m3)
+--         )
+--     -- [def] >>
+--     ==! (m1 >> m2) >> m3
+--     *** QED
+--   where
+--     (>>) :: forall a b. m a -> m b -> m b
+--     (>>) = vseq iMonad
+--     (>>=) :: forall a b. m a -> (a -> m b) -> m b
+--     (>>=) = vbind iMonad
+--     (>=>) = kleisli iMonad
+--     vbind_associative_ = vbind_associative iMonad
+--     vseq_associative_lem1_ = vseq_associative_lem1 iMonad
+
+-- {-@ automatic-instances vseq_associative_lem1 @-}
+-- {-@
+-- vseq_associative_lem1 ::
+--   forall m a b c. iMonad:VMonad m -> m2:m b -> m3:m c -> x:a ->
+--   {kleisli iMonad (vconst m2) (vconst m3) x ==
+--    vconst (vbind iMonad m2 (vconst m3)) x}
+-- @-}
+-- vseq_associative_lem1 ::
+--   forall m a b c.
+--   VMonad m ->
+--   m b ->
+--   m c ->
+--   a ->
+--   Proof
+-- vseq_associative_lem1 iMonad m2 m3 x =
+--   -- (vconst m2 >=> vconst m3) x
+--   (vconst m2 >=> vconst m3) x
+--     -- [def] >=>
+--     ==. vconst m2 x >>= vconst m3
+--     -- [def] vconst
+--     ==. m2 >>= vconst m3
+--     -- [def] vconst
+--     ==. vconst (m2 >>= vconst m3) x
+--     *** QED
+--   where
+--     (>>=) = vbind iMonad
+--     (>=>) = kleisli iMonad
+--     kleisli_ = kleisli iMonad
 
 -- Function.
 {-@ reflect vmapM @-}

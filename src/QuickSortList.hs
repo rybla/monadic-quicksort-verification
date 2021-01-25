@@ -1,7 +1,7 @@
 module QuickSortList where
 
 import Function
-import Language.Haskell.Liquid.ProofCombinators
+import Language.Haskell.Liquid.Equational
 import Relation
 import SlowSortList
 import VList
@@ -9,162 +9,153 @@ import VMonad
 import VMonadPlus
 import VOrdered
 import VTuple
+import Prelude hiding ((++), (<=), (>>), (>>=))
 
 --------------------------------------------------------------------------------
 -- Divide and Conquer
 --------------------------------------------------------------------------------
 
--- Function. Expanded form of `slowsort` on a `Cons`.
-{-@ reflect slowsort_Cons_expansion @-}
-slowsort_Cons_expansion ::
+{-@ reflect slowsort_VCons_expansion_aux1 @-}
+slowsort_VCons_expansion_aux1 ::
+  VMonadPlusOrdered m ->
+  a ->
+  VTuple2D (VList a) ->
+  m (VList a)
+slowsort_VCons_expansion_aux1 (iMonadPlus, iOrdered) p (ys, zs) =
+  (guard_ (isSortedBetween_ p ys zs))
+    >> ( (permute_ ys >>= guardBy_ isSorted_)
+           >>= slowsort_VCons_expansion_aux2_ p zs
+       )
+  where
+    (>>=) = vbind iMonad_
+    (>>) = vseq iMonad_
+    iMonad_ = iMonad iMonadPlus
+
+    guard_ = guard iMonadPlus
+    guardBy_ = guardBy iMonadPlus
+    permute_ = permute iMonadPlus
+
+    isSorted_ = isSorted iOrdered
+    isSortedBetween_ = isSortedBetween iOrdered
+
+    slowsort_VCons_expansion_aux2_ =
+      slowsort_VCons_expansion_aux2
+        (iMonadPlus, iOrdered)
+
+{-@ reflect slowsort_VCons_expansion_aux2 @-}
+slowsort_VCons_expansion_aux2 ::
+  VMonadPlusOrdered m a ->
+  a ->
+  VList a ->
+  VList a ->
+  m (VList a)
+slowsort_VCons_expansion_aux2 p zs ys' =
+  (permute_ zs >>= guardBy_ isSorted_)
+    >>= slowsort_VCons_expansion_aux3_ p ys'
+  where
+    (>>=) = vbind iMonad_
+    iMonad_ = iMonad iMonadPlus
+
+    guardBy_ = guardBy iMonadPlus
+    permute_ = permute iMonadPlus
+
+    isSorted_ = isSorted iOrdered
+
+    slowsort_VCons_expansion_aux3_ =
+      slowsort_VCons_expansion_aux3
+        (iMonadPlus, iOrdered)
+
+{-@ reflect slowsort_VCons_expansion_aux3 @-}
+slowsort_VCons_expansion_aux3 ::
+  VMonadPlusOrdered m a ->
+  a ->
+  VList a ->
+  VList a ->
+  m (VList a)
+slowsort_VCons_expansion_aux3 (iMonadPlus, iOrdered) p ys' zs' =
+  vlift_ (ys' ++ vsingleton p ++ zs')
+  where
+    vlift_ = vlift iMonad_
+    iMonad_ = iMonad iMonadPlus
+
+-- Function. Expanded form of `slowsort` on a `VCons`.
+{-@ reflect slowsort_VCons_expansion @-}
+slowsort_VCons_expansion ::
   forall m a.
   VMonadPlusOrdered m a ->
   a ->
   VList a ->
   m (VList a)
-slowsort_Cons_expansion (iMonadPlus, iOrdered) p xs =
-  vbind_
-    (split_ xs)
-    ( \(ys, zs) ->
-        vseq_
-          (guard_ (vall (\x -> vleq_ x p) ys && vall (vleq_ p) zs))
-          ( vbind_
-              (vbind_ (permute_ ys) (guardBy_ isSorted_))
-              ( \ys' ->
-                  vbind_
-                    (vbind_ (permute_ zs) (guardBy_ isSorted_))
-                    ( \zs' ->
-                        vlift_ (vappend ys' (vappend (vsingleton p) zs'))
-                    )
-              )
-          )
-    )
+slowsort_VCons_expansion (iMonadPlus, iOrdered) p xs =
+  split_ xs >>= slowsort_VCons_expansion_aux1_ p
   where
-    vbind_ = vbind iMonad_
+    (>>) = vseq iMonad_
+    (>>=) = vbind iMonad_
+    (>=>) = kleisli iMonad_
+    vmapM2_ = vmapM2 iMonad_
     vlift_ = vlift iMonad_
-    split_ = split iMonadPlus
-    vseq_ = vseq iMonad_
-    vleq_ = vleq iOrdered
-    permute_ = permute iMonadPlus
-    guardBy_ = guardBy iMonadPlus
-    guard_ = guard iMonadPlus
-    isSorted_ = isSorted iOrdered
     iMonad_ = iMonad iMonadPlus
+
+    split_ = split iMonadPlus
+    permute_ = permute iMonadPlus
+    guard_ = guard iMonadPlus
+    guardBy_ = guardBy iMonadPlus
+
+    isSorted_ = isSorted iOrdered
+
+    slowsort_ = slowsort (iMonadPlus, iOrdered)
+    slowsort_VCons_expansion_ = slowsort_VCons_expansion (iMonadPlus, iOrdered)
 
 -- Lemma.
 -- TODO: prove
 {-@
-assume slowsort_Cons_expansion_correct ::
+assume slowsort_VCons_expansion_correct ::
   forall m a.
   iMonadPlusOrdered:VMonadPlusOrdered m a ->
   p:a ->
   xs:VList a ->
-  {slowsort iMonadPlusOrdered (Cons p xs) ==
-   slowsort_Cons_expansion iMonadPlusOrdered p xs}
+  {slowsort iMonadPlusOrdered (VCons p xs) ==
+   slowsort_VCons_expansion iMonadPlusOrdered p xs}
 @-}
-slowsort_Cons_expansion_correct ::
+slowsort_VCons_expansion_correct ::
   forall m a.
   VMonadPlusOrdered m a ->
   a ->
   VList a ->
   Proof
-slowsort_Cons_expansion_correct (iMonadPlus, iOrdered) p xs = ()
-
 -- TODO: proof in progress
--- slowsort_ (Cons p xs)
---   -- by definition of `slowsort`
---   === kleisli_ permute_ (guardBy_ isSorted_) (Cons p xs)
---   -- by definition of `kleisli`
---   === vbind_ (permute_ (Cons p xs)) (guardBy_ isSorted_)
---   -- by definition of `permute` on a `Cons`
---   === vbind_
---     ( vbind_
---         (split_ xs)
---         ( \(ys, zs) ->
---             vliftF2_
---               ( \ys' zs' ->
---                   vappend
---                     ys'
---                     (vappend (vsingleton p) zs')
---               )
---               (permute_ ys)
---               (permute_ zs)
---         )
---     )
---     (guardBy_ isSorted_)
---   -- by definition of `vliftF2`
---   === vbind_
---     ( vbind_
---         (split_ xs)
---         ( \(ys, zs) ->
---             vbind_
---               (permute_ ys)
---               ( \ys' ->
---                   vbind_
---                     (permute zs)
---                     ( \zs' ->
---                         vlift_ (vappend ys' (vappend (vsingleton p) zs'))
---                     )
---               )
---         )
---     )
---     (guardBy_ isSorted_)
---   -- by monad laws (bring outer `vbind` inside)
---   -- TODO: prove lemma in `VMonad`, I think it would be `vbind_associative` or something
---   === vbind_
---     (split_ xs)
---     ( \(ys, zs) ->
---         vbind_
---           (permute_ ys)
---           ( \ys' ->
---               vbind_
---                 (permute_ zs)
---                 ( \zs' ->
---                     vseq_
---                       (guard_ (isSortedBetween x ys' zs'))
---                       (vlift_ (vappend ys' (vappend (vsingleton p) zs')))
---                 )
---           )
---     )
---   -- by `isSortedBetween_expansion_correct`
---   === vbind_
---     (split_ xs)
---     ( \(ys, zs) ->
---         vbind_
---           (permute_ ys)
---           ( \ys' ->
---               vbind_
---                 (permute_ zs)
---                 ( \zs' ->
---                     vseq_
---                       (guard_ (isSortedBetween_expansion x ys' zs'))
---                       (vlift_ (vappend ys' (vappend (vsingleton p) zs')))
---                 )
---           )
---     )
---   -- by `guard_and_vseq`
---   === vbind_
---     (split_ xs)
---     ( \(ys, zs) ->
---         vseq_
---           (guard_ (vall (\x -> vleq_ x p) ys && vall (vleq_ p) zs))
---           ( vbind_
---               (vbind_ (permute_ ys) (guardBy_ isSorted_))
---               ( \ys' ->
---                   vbind_
---                     (vbind_ (permute_ zs) (guardBy_ isSorted_))
---                     ( \zs' ->
---                         vlift_ (vappend ys' (vappend (vsingleton p) zs'))
---                     )
---               )
---           )
---     )
---   -- by definition of `slowsort_Cons_expansion`
---   === slowsort_Cons_expansion_ p xs
---   *** QED
--- where
---   slowsort_ = slowsort (iMonadPlus, iOrdered)
---   slowsort_Cons_expansion_ = slowsort_Cons_expansion (iMonadPlus, iOrdered)
+slowsort_VCons_expansion_correct (iMonadPlus, iOrdered) p xs =
+  slowsort_ (VCons p xs)
+    -- by definition of `slowsort`
+    ==. (permute_ >=> (guardBy_ isSorted_)) (VCons p xs)
+    -- by definition of `kleisli`
+    ==. raw_kleisli vbind_ permute_ (guardBy_ isSorted_) (VCons p xs)
+    -- by definition of `raw_kleisli`
+    ==. permute_ (VCons p xs) >>= guardBy_ isSorted_
+    -- TODO
+    ==. _
+    *** QED
+  where
+    vseq_ = vseq iMonad_
+    (>>) = vseq_
+    vbind_ = vbind iMonad_
+    (>>=) = vbind_
+    vmapM2_ = vmapM2 iMonad_
+    (>=>) = kleisli_
+    kleisli_ = kleisli iMonad_
+    vlift_ = vlift iMonad_
+    iMonad_ = iMonad iMonadPlus
+
+    split_ = split iMonadPlus
+    permute_ = permute iMonadPlus
+    guard_ = guard iMonadPlus
+    guardBy_ = guardBy iMonadPlus
+
+    vleq_ = vleq iOrdered
+    isSorted_ = isSorted iOrdered
+
+    slowsort_ = slowsort (iMonadPlus, iOrdered)
+    slowsort_VCons_expansion_ = slowsort_VCons_expansion (iMonadPlus, iOrdered)
 
 -- Function. Functional specification of `partition`.
 {-@ reflect partition_specification @-}
@@ -177,7 +168,7 @@ partition_specification ::
 partition_specification (iMonadPlus, iOrdered) x xs =
   vbind_
     (split_ xs)
-    (guardBy_ (isSortedBetween_ x))
+    (guardBy_ (\(ys, zs) -> isSortedBetween_ x (ys, zs)))
   where
     vbind_ = vbind iMonad_
     iMonad_ = iMonad iMonadPlus
@@ -185,12 +176,7 @@ partition_specification (iMonadPlus, iOrdered) x xs =
     split_ = split iMonadPlus
     guardBy_ = guardBy iMonadPlus
 
--- -- Predicate. Refinement specification of `partition`.
--- {-@
--- predicate IsPartition F X XS =
---   RefinesPlusMonadic iMonadPlus (vlift (iMonad iMonadPlus) (f iOrdered x xs)) (partition_specification iOrdered iMonadPlus x xs)
--- @-}
-
+-- Function. TODO
 {-@ reflect partition' @-}
 partition' ::
   forall m a.
@@ -206,32 +192,32 @@ partition' (iMonadPlus, iOrdered) x xs = vlift_ (partition_ x xs)
 
 -- Lemma. `partition` refines `partition_step`
 -- TODO: prove
-{-@
-assume partition_specification_correct :: forall m a. iMonadPlusOrdered:VMonadPlusOrdered m a -> x:a -> xs:VList a ->
-  {RefinesPlusMonadic (fst iMonadPlusOrdered) (partition' iMonadPlusOrdered x xs) (partition_specification iMonadPlusOrdered x xs)}
-@-}
+-- {-@
+-- assume partition_specification_correct :: forall m a. iMonadPlusOrdered:VMonadPlusOrdered m a -> x:a -> xs:VList a ->
+--   {RefinesPlusMonadic (fst2 iMonadPlusOrdered) (partition' iMonadPlusOrdered x xs) (partition_specification iMonadPlusOrdered x xs)}
+-- @-}
 partition_specification_correct ::
   forall m a. VMonadPlusOrdered m a -> a -> VList a -> Proof
 partition_specification_correct (iMonadPlus, iOrdered) x xs = ()
 
 -- TODO: proof in progress
--- vmpadd iMonadPlus (partition' iMonadPlusOrdered x xs) (partition_specification iMonadPlusOrdered x xs)
---   === vmpadd
+-- vaddMP iMonadPlus (partition' iMonadPlusOrdered x xs) (partition_specification iMonadPlusOrdered x xs)
+--   ==. vaddMP
 --     iMonadPlus
 --     (vlift_ (partition_ x xs))
 --     (vbind_ (split_ xs) (guardBy_ (isSortedBetween_ x)))
---   === partition_specification iMonadPlusOrdered x xs
+--   ==. partition_specification iMonadPlusOrdered x xs
 --   *** QED
 
 -- Function. Helper for "divide and conquer" property.
-{-@ reflect quicksort_Cons_specification @-}
-quicksort_Cons_specification ::
+{-@ reflect quicksort_VCons_specification @-}
+quicksort_VCons_specification ::
   forall m a.
   VMonadPlusOrdered m a ->
   a ->
   VList a ->
   m (VList a)
-quicksort_Cons_specification (iMonadPlus, iOrdered) x xs =
+quicksort_VCons_specification (iMonadPlus, iOrdered) x xs =
   vbind_
     (vlift_ (partition_ x xs))
     ( \(ys, zs) ->
@@ -251,14 +237,14 @@ quicksort_Cons_specification (iMonadPlus, iOrdered) x xs =
     iMonad_ = iMonad iMonadPlus
 
 -- Lemma. The "divide and conquer" property refines `slowsort`. The proof makes
--- use of `slowsort_Cons_expansion_correct` and
+-- use of `slowsort_VCons_expansion_correct` and
 -- `partition_specification_correct`.
 -- TODO: prove
-{-@
-assume divide_and_conquer :: forall m a .
-  iMonadPlusOrdered:VMonadPlusOrdered m a -> x:a -> xs:VList a ->
-  {RefinesPlusMonadic (fst iMonadPlusOrdered) (quicksort_Cons_specification iMonadPlusOrdered x xs) (slowsort iMonadPlusOrdered (Cons x xs))}
-@-}
+-- {-@
+-- assume divide_and_conquer :: forall m a .
+--   iMonadPlusOrdered:VMonadPlusOrdered m a -> x:a -> xs:VList a ->
+--   {RefinesPlusMonadic (fst2 iMonadPlusOrdered) (quicksort_VCons_specification iMonadPlusOrdered x xs) (slowsort iMonadPlusOrdered (VCons x xs))}
+-- @-}
 divide_and_conquer ::
   forall m a. VMonadPlusOrdered m a -> a -> VList a -> Proof
 divide_and_conquer (iMonadPlus, iOrdered) x xs = ()
@@ -267,10 +253,10 @@ divide_and_conquer (iMonadPlus, iOrdered) x xs = ()
 -- sublist of elements greater than a given element.
 {-@ reflect partition @-}
 partition :: VOrdered a -> a -> VList a -> VTuple2D (VList a)
-partition iOrdered x' Nil = (Nil, Nil)
-partition iOrdered x' (Cons x xs) =
+partition iOrdered x' VNil = (VNil, VNil)
+partition iOrdered x' (VCons x xs) =
   let (ys, zs) = partition iOrdered x xs
-   in if vleq_ x x' then (Cons x ys, zs) else (ys, Cons x zs)
+   in if vleq_ x x' then (VCons x ys, zs) else (ys, VCons x zs)
   where
     vleq_ = vleq iOrdered
 
@@ -278,9 +264,11 @@ partition iOrdered x' (Cons x xs) =
 -- Quick Sort
 --------------------------------------------------------------------------------
 
+{-@ lazy quicksort @-}
+{-@ reflect quicksort @-}
 quicksort :: forall a. VOrdered a -> VList a -> VList a
-quicksort iOrdered Nil = Nil
-quicksort iOrdered (Cons x xs) =
+quicksort iOrdered VNil = VNil
+quicksort iOrdered (VCons x xs) =
   let (ys, zs) = partition_ x xs
    in vappend (quicksort_ ys) (vappend (vsingleton x) (quicksort_ ys))
   where
