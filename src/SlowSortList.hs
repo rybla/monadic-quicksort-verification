@@ -43,13 +43,13 @@ permute_aux2 x ys' zs' = ys' `vappend` vsingleton x `vappend` zs'
 -- Function. Nondeterministicall permute a list.
 {-@ reflect permute @-}
 permute :: forall m a. VMonadPlus m -> VList a -> m (VList a)
-permute iMonadPlus VNil = vlift_ VNil
+permute iMonadPlus VNil = lift_ VNil
   where
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     iMonad_ = iMonad iMonadPlus
 permute iMonadPlus (VCons x xs) = split_ xs >>= permute_aux1_ x
   where
-    (>>=) = vbind iMonad_
+    (>>=) = bind iMonad_
     split_ = split iMonadPlus
     permute_aux1_ = permute_aux1 iMonadPlus
     iMonad_ = iMonad iMonadPlus
@@ -62,7 +62,7 @@ assume identity_refines_permute ::
   forall m a.
   iMonadPlus:VMonadPlus m ->
   xs:VList a ->
-  {RefinesPlusMonadic iMonadPlus (vlift (VMonadPlus.iMonad iMonadPlus) xs) (permute iMonadPlus xs)}
+  {RefinesPlusMonadic iMonadPlus (lift (VMonadPlus.iMonad iMonadPlus) xs) (permute iMonadPlus xs)}
 @-}
 identity_refines_permute :: forall m a. VMonadPlus m -> VList a -> Proof
 identity_refines_permute iMonadPlus xs = ()
@@ -118,22 +118,22 @@ isSortedBetween_expansion_correct iOrdered x ys zs = ()
 -- Function. Auxilliary for `split`.
 {-@ reflect split_aux1 @-}
 split_aux1 :: VMonadPlus m -> a -> VTuple2D (VList a) -> m (VTuple2D (VList a))
-split_aux1 iMonadPlus x (ys, zs) = vlift_ (VCons x ys, zs) <+> vlift_ (ys, VCons x zs)
+split_aux1 iMonadPlus x (ys, zs) = lift_ (VCons x ys, zs) <+> lift_ (ys, VCons x zs)
   where
     (<+>) = vaddMP iMonadPlus
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     iMonad_ = iMonad iMonadPlus
 
 -- Function. Nondeterministically split a list into two sublists.
 {-@ reflect split @-}
 split :: forall m a. VMonadPlus m -> VList a -> m (VTuple2D (VList a))
-split iMonadPlus VNil = vlift_ (VNil, VNil)
+split iMonadPlus VNil = lift_ (VNil, VNil)
   where
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     iMonad_ = iMonad iMonadPlus
 split iMonadPlus (VCons x xs) = split_ xs >>= split_aux1_ x
   where
     split_ = split iMonadPlus
     split_aux1_ = split_aux1 iMonadPlus
-    (>>=) = vbind iMonad_
+    (>>=) = bind iMonad_
     iMonad_ = iMonad iMonadPlus

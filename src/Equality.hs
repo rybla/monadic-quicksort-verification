@@ -1,8 +1,3 @@
-{-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--ple-local" @-}
-{-@ LIQUID "--higherorder" @-}
-{-@ LIQUID "--prune-unsorted" @-}
-
 module Equality where
 
 import Language.Haskell.Liquid.ProofCombinators

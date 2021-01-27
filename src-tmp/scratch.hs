@@ -10,7 +10,7 @@ slowsort_ (VCons p xs)
 permute_ (VCons p xs) >>= guardBy_ isSorted_
 === -- [def] permute on VCons
 (split_ xs >>= permute_aux1_ p) >>= guardBy_ isSorted_
-=== -- [lem] vbind_associative
+=== -- [lem] bind_associative
 split_ xs >>= (permute_aux1_ p >=> guardBy_ isSorted_)
 === -- [def] tmp_aux1
 split_ xs >>= tmp_aux1_ p
@@ -62,5 +62,5 @@ permute_ zs >>= tmp_aux3_ x ys'
 
 --------------------------------------------------------------------------------
 
-tmp_aux3 x ys' zs' = vlift_ (permute_aux2 x ys' zs')
+tmp_aux3 x ys' zs' = lift_ (permute_aux2 x ys' zs')
 

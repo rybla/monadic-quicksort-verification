@@ -123,12 +123,12 @@ import VUnit
 --   VTuple3D (VList a) ->
 --   m (VTuple2D VNat)
 -- ipartl_specification1 (iMonadArray, iMonadPlus, iOrdered) p i (ys, zs, xs) =
---   vbind_
---     (vliftM_f_second_ permute_ (partl_ p (ys, zs, xs)))
+--   bind_
+--     (liftM_f_second_ permute_ (partl_ p (ys, zs, xs)))
 --     (vwriteListsToLengths2_ i)
 --   where
---     vbind_ = vbind iMonad_
---     vliftM_f_second_ = vliftM_f_second iMonad_
+--     bind_ = bind iMonad_
+--     liftM_f_second_ = liftM_f_second iMonad_
 --     permute_ = permute iMonadPlus
 --     partl_ = partl iOrdered
 --     vwriteListsToLengths2_ = vwriteListsToLengths2 iMonadArray
@@ -163,7 +163,7 @@ import VUnit
 -- -- TODO: how to handle this?
 -- -- -- NOTE: This implementation is not actually used. The actually used
 -- -- -- implementation is presented next.
--- -- -- Function. Combining `vliftM_f_second` into `partl`.
+-- -- -- Function. Combining `liftM_f_second` into `partl`.
 -- -- -- (viz page 10, Derivation)
 -- -- partl' ::
 -- --   forall m a.
@@ -171,28 +171,28 @@ import VUnit
 -- --   a ->
 -- --   VTuple3D (VList a) ->
 -- --   m (VTuple2D (VList a))
--- -- partl' (iMonadPlus, iOrdered) p (ys, zs, VNil) = vlift_ (ys, zs)
+-- -- partl' (iMonadPlus, iOrdered) p (ys, zs, VNil) = lift_ (ys, zs)
 -- --   where
--- --     vlift_ = vlift iMonad_
+-- --     lift_ = lift iMonad_
 -- --     iMonad_ = VMonadPlus.iMonad iMonadPlus
 -- -- partl' (iMonadPlus, iOrdered) p (ys, zs, VCons x xs) =
 -- --   if vleq_ x p
 -- --     then
--- --       vbind_
+-- --       bind_
 -- --         (permute_ zs)
 -- --         (\zs' -> partl'_ p (vappend ys (vsingleton x), zs', xs))
 -- --     else
--- --       vbind_
+-- --       bind_
 -- --         (permute (vappend zs (vsingleton x)))
 -- --         (\zs' -> partl'_ p (ys, zs', xs))
 -- --   where
 -- --     vleq_ = vleq iOrdered
--- --     vbind_ = vbind iMonad_
+-- --     bind_ = bind iMonad_
 -- --     permute_ = permute iMonadPlus
 -- --     partl'_ = partl' (iMonadPlus, iOrdered)
 -- --     iMonad_ = VMonadPlus.iMonad iMonadPlus
 
--- -- Function. Combining `vliftM_f_second` into `partl`. First version is
+-- -- Function. Combining `liftM_f_second` into `partl`. First version is
 -- -- presented as above, but below version is the implementation used onward
 -- -- (page 10, bottom).
 -- {-@ reflect partl' @-}
@@ -202,12 +202,12 @@ import VUnit
 --   a ->
 --   VTuple3D (VList a) ->
 --   m (VTuple2D (VList a))
--- partl' (iMonadPlus, iOrdered) p (ys, zs, VNil) = vlift_ (ys, zs)
+-- partl' (iMonadPlus, iOrdered) p (ys, zs, VNil) = lift_ (ys, zs)
 --   where
---     vlift_ = vlift iMonad_
+--     lift_ = lift iMonad_
 --     iMonad_ = VMonadPlus.iMonad iMonadPlus
 -- partl' (iMonadPlus, iOrdered) p (ys, zs, VCons x xs) =
---   vbind_
+--   bind_
 --     (dispatch x p (ys, zs, xs))
 --     (partl'_ p)
 --   where
@@ -215,16 +215,16 @@ import VUnit
 --     dispatch x p (ys, zs, xs) =
 --       if vleq_ x p
 --         then
---           vbind_
+--           bind_
 --             (permute_ zs)
---             (\zs' -> vlift_ (vappend ys (vsingleton x), zs', xs))
+--             (\zs' -> lift_ (vappend ys (vsingleton x), zs', xs))
 --         else
---           vbind_
+--           bind_
 --             (permute_ (vappend zs (vsingleton x)))
---             (\zs' -> vlift_ (ys, zs', xs))
+--             (\zs' -> lift_ (ys, zs', xs))
 
---     vlift_ = vlift iMonad_
---     vbind_ = vbind iMonad_
+--     lift_ = lift iMonad_
+--     bind_ = bind iMonad_
 --     partl'_ = partl' (iMonadPlus, iOrdered)
 --     permute_ = permute iMonadPlus
 --     vleq_ = vleq iOrdered
@@ -241,11 +241,11 @@ import VUnit
 --   VTuple3D (VList a) ->
 --   m (VTuple2D VNat)
 -- ipartl_specification2 (iMonadArray, iMonadPlus, iOrdered) p i (ys, zs, xs) =
---   vbind_
+--   bind_
 --     (partl'_ p (ys, zs, xs))
 --     (vwriteListsToLengths2_ i)
 --   where
---     vbind_ = vbind iMonad_
+--     bind_ = bind iMonad_
 --     partl'_ = partl' (iMonadPlus, iOrdered)
 --     vwriteListsToLengths2_ = vwriteListsToLengths2 iMonadArray
 --     iMonad_ = VMonadPlus.iMonad iMonadPlus
@@ -293,7 +293,7 @@ import VUnit
 --   p
 --   i
 --   (ys, zs, x, xs) =
---     vbind_
+--     bind_
 --       (permute_ zs)
 --       ( \zs' ->
 --           vseq_
@@ -302,7 +302,7 @@ import VUnit
 --       )
 --     where
 --       (xs_l, ys_l) = (vlength xs, vlength ys)
---       vbind_ = vbind iMonad_
+--       bind_ = bind iMonad_
 --       vseq_ = vseq iMonad_
 --       vwriteList_ = vwriteList iMonadArray
 --       permute_ = permute iMonadPlus
@@ -323,17 +323,17 @@ import VUnit
 --   p
 --   i
 --   (ys, zs, x, xs) =
---     vbind_
+--     bind_
 --       (permute_ (vappend zs (vsingleton x)))
 --       ( \zs' ->
 --           vseq_
---             (vlift_ (ys, zs', xs))
+--             (lift_ (ys, zs', xs))
 --             (ipartl_ p i (ys_l, vlength zs', xs_l))
 --       )
 --     where
 --       (xs_l, ys_l) = (vlength xs, vlength ys)
---       vlift_ = vlift iMonad_
---       vbind_ = vbind iMonad_
+--       lift_ = lift iMonad_
+--       bind_ = bind iMonad_
 --       vseq_ = vseq iMonad_
 --       permute_ = permute iMonadPlus
 --       ipartl_ = ipartl (iMonadArray, iMonadPlus, iOrdered)
@@ -467,7 +467,7 @@ import VUnit
 --   ()
 
 -- -- Specification. For the `else` branch in `ipartl'` applied to a
--- -- `xs = VCons ...`. Note that `vlift vunit` refines `permute`.
+-- -- `xs = VCons ...`. Note that `lift vunit` refines `permute`.
 -- -- (viz. page 11, middle refinement).
 -- {-@ reflect ipartl_VCons_else_specification4 @-}
 -- ipartl_VCons_else_specification4 ::
@@ -539,11 +539,11 @@ import VUnit
 --   VList a ->
 --   m VUnit
 -- refinement11_greater (iMonadArray, iMonadPlus, iOrdered) i x zs =
---   vbind_
+--   bind_
 --     (permute_ zs)
 --     (\zs' -> vwriteList_ i (vappend (vsingleton x) zs'))
 --   where
---     vbind_ = vbind iMonad_
+--     bind_ = bind iMonad_
 --     permute_ = permute iMonadPlus
 --     vwriteList_ = vwriteList iMonadArray
 --     iMonad_ = VMonadPlus.iMonad iMonadPlus
@@ -645,7 +645,7 @@ import VUnit
 --   (ys, zs, x, xs) =
 --     vseq_
 --       (vwriteList_ i (vappend ys (vappend zs (VCons x xs))))
---       ( vbind_
+--       ( bind_
 --           (vread_ (vadd i (vadd ys_l zs_l)))
 --           ( \x' ->
 --               if vleq_ x' p
@@ -659,7 +659,7 @@ import VUnit
 --     where
 --       (ys_l, zs_l, xs_l) = (vlength ys, vlength zs, vlength xs)
 --       vseq_ = vseq iMonad_
---       vbind_ = vbind iMonad_
+--       bind_ = bind iMonad_
 --       vleq_ = vleq iOrdered
 --       vread_ = vread iMonadArray
 --       vwriteList_ = vwriteList iMonadArray
@@ -709,12 +709,12 @@ import VUnit
 --   VTuple3D VNat ->
 --   m (VTuple2D VNat)
 -- ipartl (iMonadArray, iMonadPlus, iOrdered) p i (ys_l, zs_l, Zero) =
---   vlift_ (ys_l, zs_l)
+--   lift_ (ys_l, zs_l)
 --   where
---     vlift_ = vlift iMonad_
+--     lift_ = lift iMonad_
 --     iMonad_ = VMonadPlus.iMonad iMonadPlus
 -- ipartl (iMonadArray, iMonadPlus, iOrdered) p i (ys_l, zs_l, Suc xs_l) =
---   vbind_
+--   bind_
 --     (vread_ (vadd i (vadd ys_l zs_l)))
 --     ( \x ->
 --         if vleq_ x p
@@ -725,7 +725,7 @@ import VUnit
 --           else ipartl_ p i (ys_l, Suc zs_l, xs_l)
 --     )
 --   where
---     vbind_ = vbind iMonad_
+--     bind_ = bind iMonad_
 --     vread_ = vread iMonadArray
 --     vleq_ = vleq iOrdered
 --     vseq_ = vseq iMonad_

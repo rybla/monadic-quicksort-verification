@@ -27,7 +27,7 @@ slowsort_VCons_expansion_aux1 (iMonadPlus, iOrdered) p (ys, zs) =
            >>= slowsort_VCons_expansion_aux2_ p zs
        )
   where
-    (>>=) = vbind iMonad_
+    (>>=) = bind iMonad_
     (>>) = vseq iMonad_
     iMonad_ = iMonad iMonadPlus
 
@@ -53,7 +53,7 @@ slowsort_VCons_expansion_aux2 p zs ys' =
   (permute_ zs >>= guardBy_ isSorted_)
     >>= slowsort_VCons_expansion_aux3_ p ys'
   where
-    (>>=) = vbind iMonad_
+    (>>=) = bind iMonad_
     iMonad_ = iMonad iMonadPlus
 
     guardBy_ = guardBy iMonadPlus
@@ -73,9 +73,9 @@ slowsort_VCons_expansion_aux3 ::
   VList a ->
   m (VList a)
 slowsort_VCons_expansion_aux3 (iMonadPlus, iOrdered) p ys' zs' =
-  vlift_ (ys' ++ vsingleton p ++ zs')
+  lift_ (ys' ++ vsingleton p ++ zs')
   where
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     iMonad_ = iMonad iMonadPlus
 
 -- Function. Expanded form of `slowsort` on a `VCons`.
@@ -90,10 +90,10 @@ slowsort_VCons_expansion (iMonadPlus, iOrdered) p xs =
   split_ xs >>= slowsort_VCons_expansion_aux1_ p
   where
     (>>) = vseq iMonad_
-    (>>=) = vbind iMonad_
+    (>>=) = bind iMonad_
     (>=>) = kleisli iMonad_
     vmapM2_ = vmapM2 iMonad_
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     iMonad_ = iMonad iMonadPlus
 
     split_ = split iMonadPlus
@@ -129,7 +129,7 @@ slowsort_VCons_expansion_correct (iMonadPlus, iOrdered) p xs =
     -- by definition of `slowsort`
     ==. (permute_ >=> (guardBy_ isSorted_)) (VCons p xs)
     -- by definition of `kleisli`
-    ==. raw_kleisli vbind_ permute_ (guardBy_ isSorted_) (VCons p xs)
+    ==. raw_kleisli bind_ permute_ (guardBy_ isSorted_) (VCons p xs)
     -- by definition of `raw_kleisli`
     ==. permute_ (VCons p xs) >>= guardBy_ isSorted_
     -- TODO
@@ -138,12 +138,12 @@ slowsort_VCons_expansion_correct (iMonadPlus, iOrdered) p xs =
   where
     vseq_ = vseq iMonad_
     (>>) = vseq_
-    vbind_ = vbind iMonad_
-    (>>=) = vbind_
+    bind_ = bind iMonad_
+    (>>=) = bind_
     vmapM2_ = vmapM2 iMonad_
     (>=>) = kleisli_
     kleisli_ = kleisli iMonad_
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     iMonad_ = iMonad iMonadPlus
 
     split_ = split iMonadPlus
@@ -166,11 +166,11 @@ partition_specification ::
   VList a ->
   m (VList a, VList a)
 partition_specification (iMonadPlus, iOrdered) x xs =
-  vbind_
+  bind_
     (split_ xs)
     (guardBy_ (\(ys, zs) -> isSortedBetween_ x (ys, zs)))
   where
-    vbind_ = vbind iMonad_
+    bind_ = bind iMonad_
     iMonad_ = iMonad iMonadPlus
     isSortedBetween_ = isSortedBetween iOrdered
     split_ = split iMonadPlus
@@ -184,9 +184,9 @@ partition' ::
   a ->
   VList a ->
   m (VTuple2D (VList a))
-partition' (iMonadPlus, iOrdered) x xs = vlift_ (partition_ x xs)
+partition' (iMonadPlus, iOrdered) x xs = lift_ (partition_ x xs)
   where
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     partition_ = partition iOrdered
     iMonad_ = iMonad iMonadPlus
 
@@ -204,8 +204,8 @@ partition_specification_correct (iMonadPlus, iOrdered) x xs = ()
 -- vaddMP iMonadPlus (partition' iMonadPlusOrdered x xs) (partition_specification iMonadPlusOrdered x xs)
 --   ==. vaddMP
 --     iMonadPlus
---     (vlift_ (partition_ x xs))
---     (vbind_ (split_ xs) (guardBy_ (isSortedBetween_ x)))
+--     (lift_ (partition_ x xs))
+--     (bind_ (split_ xs) (guardBy_ (isSortedBetween_ x)))
 --   ==. partition_specification iMonadPlusOrdered x xs
 --   *** QED
 
@@ -218,22 +218,22 @@ quicksort_VCons_specification ::
   VList a ->
   m (VList a)
 quicksort_VCons_specification (iMonadPlus, iOrdered) x xs =
-  vbind_
-    (vlift_ (partition_ x xs))
+  bind_
+    (lift_ (partition_ x xs))
     ( \(ys, zs) ->
-        vbind_
+        bind_
           (slowsort_ ys)
           ( \ys' ->
-              vbind_
+              bind_
                 (slowsort_ zs)
-                (\zs' -> vlift_ (vappend ys' (vappend (vsingleton x) zs')))
+                (\zs' -> lift_ (vappend ys' (vappend (vsingleton x) zs')))
           )
     )
   where
     slowsort_ = slowsort (iMonadPlus, iOrdered)
     partition_ = partition iOrdered
-    vlift_ = vlift iMonad_
-    vbind_ = vbind iMonad_
+    lift_ = lift iMonad_
+    bind_ = bind iMonad_
     iMonad_ = iMonad iMonadPlus
 
 -- Lemma. The "divide and conquer" property refines `slowsort`. The proof makes

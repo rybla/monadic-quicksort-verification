@@ -19,9 +19,9 @@ data VMonadArray m a = VMonadArray
   , vread :: Index -> m a
   , vwrite :: Index -> a -> m VUnit
   , vread_vwrite :: i:Index ->
-      {vbind iMonad (vread i) (vwrite i) = vlift iMonad vunit}
+      {bind iMonad (vread i) (vwrite i) = lift iMonad vunit}
   , vwrite_vread :: i:Index -> x:a ->
-    {vseq iMonad (vwrite i x) (vread i) = vseq iMonad (vwrite i x) (vlift iMonad x)}
+    {vseq iMonad (vwrite i x) (vread i) = vseq iMonad (vwrite i x) (lift iMonad x)}
   , vwrite_vwrite :: i:Index -> x:a -> x':a ->
       {vseq iMonad (vwrite i x) (vwrite i x') = vwrite i x'}
   , vread_vread :: i:Index -> f:(a -> a -> a) ->
@@ -31,7 +31,7 @@ data VMonadArray m a = VMonadArray
   , vwrite_commutative :: i:Index -> j:Index -> {i_neq_j : Proof | i /= j} -> x:a -> y:a ->
       {IsCommutative (vseq iMonad) (vwrite i x) (vwrite j y)}
   , vread_vwrite_commutative :: i:Index -> j:Index -> {i_neq_j : Proof | i /= j} -> x:a ->
-      {IsCommutative (vseq iMonad) (vseq iMonad (vread i) (vlift iMonad vunit)) (vwrite j x)}
+      {IsCommutative (vseq iMonad) (vseq iMonad (vread i) (lift iMonad vunit)) (vwrite j x)}
   }
 @-}
 data VMonadArray m a = VMonadArray
@@ -49,9 +49,9 @@ data VMonadArray m a = VMonadArray
 
 {-@ reflect vreadList @-}
 vreadList :: VMonadArray m a -> Index -> VNat -> m (VList a)
-vreadList iMonadArray _ Zero = vlift_ VNil
+vreadList iMonadArray _ Zero = lift_ VNil
   where
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     iMonad_ = iMonad iMonadArray
 vreadList iMonadArray i (Suc n) =
   vmapM2_
@@ -66,9 +66,9 @@ vreadList iMonadArray i (Suc n) =
 
 {-@ reflect vwriteList @-}
 vwriteList :: VMonadArray m a -> Index -> VList a -> m VUnit
-vwriteList iMonadArray _ VNil = vlift_ ()
+vwriteList iMonadArray _ VNil = lift_ ()
   where
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     iMonad_ = iMonad iMonadArray
 vwriteList iMonadArray i (VCons x xs) =
   vseq_
@@ -85,11 +85,11 @@ vwriteListToLength :: VMonadArray m a -> Index -> VList a -> m VNat
 vwriteListToLength iMonadArray i xs =
   vseq_
     (vwriteList_ i xs)
-    (vlift_ (vlength xs))
+    (lift_ (vlength xs))
   where
     vwriteList_ = vwriteList iMonadArray
     vseq_ = vseq iMonad_
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     iMonad_ = iMonad iMonadArray
 
 {-@ reflect vwriteListsToLengths2 @-}
@@ -101,10 +101,10 @@ vwriteListsToLengths2 ::
 vwriteListsToLengths2 iMonadArray i (xs, ys) =
   vseq_
     (vwriteList_ i (vappend xs ys))
-    (vlift_ (vlength xs, vlength ys))
+    (lift_ (vlength xs, vlength ys))
   where
     vseq_ = vseq iMonad_
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     vwriteList_ = vwriteList iMonadArray
     iMonad_ = iMonad iMonadArray
 
@@ -117,10 +117,10 @@ vwriteListsToLengths3 ::
 vwriteListsToLengths3 iMonadArray i (xs, ys, zs) =
   vseq_
     (vwriteList_ i (vappend xs (vappend ys zs)))
-    (vlift_ (vlength xs, vlength ys, vlength zs))
+    (lift_ (vlength xs, vlength ys, vlength zs))
   where
     vseq_ = vseq iMonad_
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     vwriteList_ = vwriteList iMonadArray
     iMonad_ = iMonad iMonadArray
 
@@ -142,10 +142,10 @@ vwriteList_vappend _ _ _ _ = ()
 -- vwriteList_vappend iMonadArray i VNil ys =
 --   vwriteList_ i (vappend VNil ys)
 --     === vwriteList_ i ys
---     === ( vseq_ (vlift_ vunit) (vwriteList_ i ys)
+--     === ( vseq_ (lift_ vunit) (vwriteList_ i ys)
 --             ? vseq_identity_ (vwriteList_ i ys)
 --         )
---     === ( vseq_ (vlift_ vunit) (vwriteList_ (VNat.vadd i Zero) ys)
+--     === ( vseq_ (lift_ vunit) (vwriteList_ (VNat.vadd i Zero) ys)
 --             ? vadd_identity i
 --         )
 --     === vseq_
@@ -154,7 +154,7 @@ vwriteList_vappend _ _ _ _ = ()
 --     *** QED
 --   where
 --     vseq_ = vseq iMonad_
---     vlift_ = vlift iMonad_
+--     lift_ = lift iMonad_
 --     vseq_identity_ = vseq_identity iMonad_
 --     vwriteList_ = vwriteList iMonadArray
 --     iMonad_ = iMonad iMonadArray
@@ -199,10 +199,10 @@ make: *** [check] Error 2
 
 vswap :: forall m a. VMonadArray m a -> Index -> Index -> m VUnit
 vswap iMonadArray i j =
-  vbind_
+  bind_
     (vread_ i)
     ( \x ->
-        vbind_
+        bind_
           (vread_ j)
           ( \y ->
               vseq_
@@ -211,7 +211,7 @@ vswap iMonadArray i j =
           )
     )
   where
-    vbind_ = vbind iMonad_
+    bind_ = bind iMonad_
     vseq_ = vseq iMonad_
     vread_ = vread iMonadArray
     vwrite_ = vwrite iMonadArray

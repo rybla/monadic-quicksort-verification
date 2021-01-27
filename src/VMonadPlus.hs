@@ -12,7 +12,7 @@ import Prelude hiding ((>>), (>>=))
 -- - vepsilonMP: e.
 -- - vaddMP: x <+> y.
 -- - vaddMPF: f <+> g.
--- - vbind_zero_left:                   e >>= f = e.
+-- - bind_zero_left:                   e >>= f = e.
 -- - vseq_zero_right:                    x >> e = e.
 -- - vaddMP_identity:                   x <+> e = x,
 --                                      e <+> x = x.
@@ -28,11 +28,11 @@ data VMonadPlus m = VMonadPlus
   , vaddMP_associative :: forall a. x: m a -> y:m a -> z:m a ->
       {IsAssociative vaddMP x y z}
   , vaddMP_distributive_left :: forall a b . x:m a -> y:m a -> f:(a -> m b) ->
-      {vbind iMonad (vaddMP x y) f = vaddMP (vbind iMonad x f) (vbind iMonad y f)}
+      {bind iMonad (vaddMP x y) f = vaddMP (bind iMonad x f) (bind iMonad y f)}
   , vaddMP_distributive_right :: forall a b . x:m a -> f:(a -> m b) -> g:(a -> m b) ->
-      {vbind iMonad x (raw_vaddMPF vaddMP f g) = vaddMP (vbind iMonad x f) (vbind iMonad x g)}
-  , vbind_zero_left :: forall a b . f:(a -> m b) ->
-      {vbind iMonad vepsilonMP f = vepsilonMP}
+      {bind iMonad x (raw_vaddMPF vaddMP f g) = vaddMP (bind iMonad x f) (bind iMonad x g)}
+  , bind_zero_left :: forall a b . f:(a -> m b) ->
+      {bind iMonad vepsilonMP f = vepsilonMP}
   , vseq_zero_right :: forall a . x:m a ->
       {vseq iMonad x vepsilonMP = vepsilonMP} }
 @-}
@@ -44,7 +44,7 @@ data VMonadPlus m = VMonadPlus
     vaddMP_associative :: forall a. Property3 (m a),
     vaddMP_distributive_left :: forall a b. m a -> m a -> (a -> m b) -> Proof,
     vaddMP_distributive_right :: forall a b. m a -> (a -> m b) -> (a -> m b) -> Proof,
-    vbind_zero_left :: forall a b. (a -> m b) -> Proof,
+    bind_zero_left :: forall a b. (a -> m b) -> Proof,
     vseq_zero_right :: forall a. m a -> Proof
   }
 
@@ -71,20 +71,20 @@ vaddMPF iMonadPlus = raw_vaddMPF (<+>)
 -- Function. Condition `MonadPlus` branch by a boolean.
 {-@ reflect guard @-}
 guard :: forall m. VMonadPlus m -> Bool -> m ()
-guard iMonadPlus b = if b then vlift_ () else vepsilonMP_
+guard iMonadPlus b = if b then lift_ () else vepsilonMP_
   where
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     vepsilonMP_ = vepsilonMP iMonadPlus
     iMonad_ = iMonad iMonadPlus
 
 -- Function. Condition `MonadPlus` branch by predicating a value.
 {-@ reflect guardBy @-}
 guardBy :: forall m a. VMonadPlus m -> Predicate a -> a -> m a
-guardBy iMonadPlus p x = guard_ (p x) >> vlift_ x
+guardBy iMonadPlus p x = guard_ (p x) >> lift_ x
   where
     (>>) = vseq iMonad_
     guard_ = guard iMonadPlus
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     iMonad_ = iMonad iMonadPlus
 
 -- Predicate. Plus-monadic refinement.
@@ -144,15 +144,15 @@ assume component_right_refines ::
 component_right_refines :: forall m a. VMonadPlus m -> m a -> m a -> Proof
 component_right_refines _ _ _ = ()
 
--- Lemma. `vbind` is monotonic with respect to refinement.
+-- Lemma. `bind` is monotonic with respect to refinement.
 {-@
-vbind_monotonic_refinement ::
+bind_monotonic_refinement ::
   forall m a b. iMonadPlus:VMonadPlus m ->
   x:m a -> y: m a -> f:(a -> m b) ->
   {H:() | RefinesPlusMonadic iMonadPlus x y} ->
-  {RefinesPlusMonadic iMonadPlus (vbind (iMonad iMonadPlus) x f) (vbind (iMonad iMonadPlus) y f)}
+  {RefinesPlusMonadic iMonadPlus (bind (iMonad iMonadPlus) x f) (bind (iMonad iMonadPlus) y f)}
 @-}
-vbind_monotonic_refinement ::
+bind_monotonic_refinement ::
   forall m a b.
   VMonadPlus m ->
   m a ->
@@ -160,13 +160,13 @@ vbind_monotonic_refinement ::
   (a -> m b) ->
   Proof ->
   Proof
-vbind_monotonic_refinement iMonadPlus x y f ref_x_y =
+bind_monotonic_refinement iMonadPlus x y f ref_x_y =
   (x >>= f) <+> (y >>= f)
     ==. ((x <+> y) >>= f ? vaddMP_distributive_left_ x y f)
     ==. (y >>= f ? ref_x_y)
     *** QED
   where
-    (>>=) = vbind iMonad_
+    (>>=) = bind iMonad_
     (<+>) :: forall a. m a -> m a -> m a
     (<+>) = vaddMP iMonadPlus
     iMonad_ = iMonad iMonadPlus
@@ -191,19 +191,19 @@ guard_isCommutativeMonadic iMonadPlus True x f =
     -- [def] vmapM2
     ==. guard_ True >>= vmapM2_aux1_ (vconstF f) x
     -- [def] guard on True
-    ==. vlift_ () >>= vmapM2_aux1_ (vconstF f) x
-    -- [lem] vbind_vlift
+    ==. lift_ () >>= vmapM2_aux1_ (vconstF f) x
+    -- [lem] bind_lift
     ==. ( vmapM2_aux1_ (vconstF f) x ()
-            ? vbind_vlift_ (vmapM2_aux1_ (vconstF f) x) (())
+            ? bind_lift_ (vmapM2_aux1_ (vconstF f) x) (())
         )
     -- [def] vmapM2_aux1
     ==. x >>= vmapM2_aux2_ (vconstF f) ()
     -- [lem]
     -- TODO: fix extensionality
-    ==. ( x >>= vmapM2_aux1_ (vflip (vconstF f)) (vlift_ ())
+    ==. ( x >>= vmapM2_aux1_ (vflip (vconstF f)) (lift_ ())
             ? ( extensionality
                   (vmapM2_aux2_ (vconstF f) ())
-                  (vmapM2_aux1_ (vflip (vconstF f)) (vlift_ ()))
+                  (vmapM2_aux1_ (vflip (vconstF f)) (lift_ ()))
                   (guard_isCommutativeMonadic_True_lem1_ f)
               )
         )
@@ -216,15 +216,15 @@ guard_isCommutativeMonadic iMonadPlus True x f =
     -- iMonad
     (>>) = vseq iMonad_
     (>>=) :: forall a b. m a -> (a -> m b) -> m b
-    (>>=) = vbind iMonad_
-    vlift_ = vlift iMonad_
+    (>>=) = bind iMonad_
+    lift_ = lift iMonad_
     vmapM2_ :: forall a b c. (a -> b -> c) -> m a -> m b -> m c
     vmapM2_ = vmapM2 iMonad_
     vmapM2_aux1_ :: forall a b c. (a -> b -> c) -> m b -> a -> m c
     vmapM2_aux1_ = vmapM2_aux1 iMonad_
     vmapM2_aux2_ :: forall a b c. (a -> b -> c) -> a -> b -> m c
     vmapM2_aux2_ = vmapM2_aux2 iMonad_
-    vbind_vlift_ = vbind_vlift iMonad_
+    bind_lift_ = bind_lift iMonad_
     guard_isCommutativeMonadic_True_lem1_ =
       guard_isCommutativeMonadic_True_lem1
         iMonad_
@@ -238,9 +238,9 @@ guard_isCommutativeMonadic iMonadPlus False m f =
     ==. vmapM2_ (vconstF f) vepsilonMP_ m
     -- [def] vmapM2
     ==. vepsilonMP_ >>= vmapM2_aux1_ (vconstF f) m
-    -- [lem] vbind_zero_left
+    -- [lem] bind_zero_left
     ==. ( vepsilonMP_
-            ? vbind_zero_left_ (vmapM2_aux1_ (vconstF f) m)
+            ? bind_zero_left_ (vmapM2_aux1_ (vconstF f) m)
         )
     -- [lem] vseq_zero_right
     ==. ( m >> vepsilonMP_
@@ -260,19 +260,19 @@ guard_isCommutativeMonadic iMonadPlus False m f =
   where
     -- iMonad
     (>>) = vseq iMonad_
-    (>>=) = vbind iMonad_
-    vlift_ = vlift iMonad_
+    (>>=) = bind iMonad_
+    lift_ = lift iMonad_
     vmapM2_ = vmapM2 iMonad_
     vmapM2_aux1_ = vmapM2_aux1 iMonad_
     vmapM2_aux2_ = vmapM2_aux2 iMonad_
-    vbind_vlift_ = vbind_vlift iMonad_
+    bind_lift_ = bind_lift iMonad_
     guard_isCommutativeMonadic_True_lem1_ =
       guard_isCommutativeMonadic_True_lem1
         iMonad_
     iMonad_ = iMonad iMonadPlus
     -- iMonadPlus
     guard_ = guard iMonadPlus
-    vbind_zero_left_ = vbind_zero_left iMonadPlus
+    bind_zero_left_ = bind_zero_left iMonadPlus
     vepsilonMP_ :: forall a. m a
     vepsilonMP_ = vepsilonMP iMonadPlus
     vseq_zero_right_ = vseq_zero_right iMonadPlus
@@ -284,7 +284,7 @@ guard_isCommutativeMonadic iMonadPlus False m f =
 guard_isCommutativeMonadic_True_lem1 ::
   forall m a b. iMonad_:VMonad m -> f:(a -> b) -> x:a ->
   {vmapM2_aux2 iMonad_ (vconstF f) VUnit.vunit x ==
-   vmapM2_aux1 iMonad_ (vflip (vconstF f)) (vlift iMonad_ VUnit.vunit) x}
+   vmapM2_aux1 iMonad_ (vflip (vconstF f)) (lift iMonad_ VUnit.vunit) x}
 @-}
 guard_isCommutativeMonadic_True_lem1 ::
   forall m a b.
@@ -294,10 +294,10 @@ guard_isCommutativeMonadic_True_lem1 ::
   Proof
 guard_isCommutativeMonadic_True_lem1 iMonad_ f x =
   vmapM2_aux2_ (vconstF f) ()
-    ==! vmapM2_aux1_ (vflip (vconstF f)) (vlift_ ())
+    ==! vmapM2_aux1_ (vflip (vconstF f)) (lift_ ())
     *** QED
   where
-    vlift_ = vlift iMonad_
+    lift_ = lift iMonad_
     vmapM2_aux2_ = vmapM2_aux2 iMonad_
     vmapM2_aux1_ = vmapM2_aux1 iMonad_
 
@@ -317,20 +317,20 @@ guard_isCommutativeMonadic_False_lem1 ::
 guard_isCommutativeMonadic_False_lem1 iMonadPlus f x =
   vconst vepsilonMP_ x
     ==. vepsilonMP_
-    -- [lem] vbind_zero_left
+    -- [lem] bind_zero_left
     ==. ( vepsilonMP_ >>= vmapM2_aux2_ (vflip (vconstF f)) x
-            ? vbind_zero_left_ (vmapM2_aux2_ (vflip (vconstF f)) x)
+            ? bind_zero_left_ (vmapM2_aux2_ (vflip (vconstF f)) x)
         )
     -- [def] vmapM2_aux1
     ==. vmapM2_aux1_ (vflip (vconstF f)) vepsilonMP_ x
     *** QED
   where
-    (>>=) = vbind iMonad_
+    (>>=) = bind iMonad_
     vmapM2_aux1_ = vmapM2_aux1 iMonad_
     vmapM2_aux2_ = vmapM2_aux2 iMonad_
     iMonad_ = iMonad iMonadPlus
     vepsilonMP_ = vepsilonMP iMonadPlus
-    vbind_zero_left_ = vbind_zero_left iMonadPlus
+    bind_zero_left_ = bind_zero_left iMonadPlus
 
 -- Function.
 {-@ reflect guard_and @-}
