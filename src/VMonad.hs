@@ -66,8 +66,8 @@ data EqMB :: (* -> *) -> * -> * where
       EqM m a iMonad (lift iMonad x) (lift iMonad y)
   | EqMB_bind :: forall m a. iMonad:VMonad m ->
       m1:m a -> m2:m a -> EqM m a iMonad m1 m2 ->
-      k1:(a -> m _) -> k2:(a -> m _) -> (x:a -> EqM m _ iMonad (k1 x) (k2 x)) ->
-      EqM m _ iMonad (bind m1 k1) (bind m2 k2)
+      k1:(a -> m b) -> k2:(a -> m b) -> (x:a -> EqM m b iMonad (k1 x) (k2 x)) ->
+      EqM m b iMonad (bind m1 k1) (bind m2 k2)
 @-}
 data EqMB :: (* -> *) -> * -> * where
   EqMB_lift ::
