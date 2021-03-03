@@ -1,4 +1,4 @@
-module Control.Monad.Refined where
+module Category.Monad where
 
 import Function
 import Language.Haskell.Liquid.ProofCombinators

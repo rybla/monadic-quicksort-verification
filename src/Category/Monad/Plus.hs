@@ -1,4 +1,4 @@
-module Control.Monad.Plus.Refined where
+module Category.Monad.Plus where
 
 import Control.Monad.Refined
 import Function
