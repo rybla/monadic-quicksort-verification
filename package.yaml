@@ -1,0 +1,75 @@
+name: monadic-quicksort-verification
+version: 0.1.0.0
+github: "githubuser/monadic-quicksort-verification"
+license: BSD3
+author: "Henry Blanchette"
+maintainer: "blancheh@umd.edu"
+copyright: "2021 Henry Blanchette"
+
+extra-source-files:
+  - README.md
+  - ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:
+  Please see the README on GitHub at
+  <https://github.com/githubuser/monadic-quicksort-verification#readme>
+
+dependencies:
+  # - base >= 4.7 && < 5
+  - liquidhaskell == 0.8.10.2
+  - liquid-base
+  - liquid-prelude
+
+library:
+  source-dirs: src
+  default-extensions:
+    - GADTs
+    - KindSignatures
+    - ExplicitForAll
+    - RankNTypes
+    - FlexibleInstances
+    - UndecidableInstances
+    - MultiParamTypeClasses
+    - ScopedTypeVariables
+  ghc-options:
+    - -Wall
+    - -Wno-name-shadowing
+    - -Wno-unused-imports
+    - -Wno-unused-matches
+    - -Wno-unused-local-binds
+    - -Wno-orphans
+    - -fplugin=LiquidHaskell
+    - -fplugin-opt=LiquidHaskell:--reflection
+    - -fplugin-opt=LiquidHaskell:--ple-local
+    - -fplugin-opt=LiquidHaskell:--diff
+    - -fplugin-opt=LiquidHaskell:--short-names
+    - -fplugin-opt=LiquidHaskell:--prune-unsorted
+
+tests:
+  monadic-quicksort-verification-test:
+    main: Spec.hs
+    source-dirs: test
+    default-extensions:
+      - GADTs
+      - KindSignatures
+      - ExplicitForAll
+      - RankNTypes
+      - FlexibleInstances
+      - UndecidableInstances
+      - MultiParamTypeClasses
+    ghc-options:
+      - -fplugin=LiquidHaskell
+      - -fplugin-opt=LiquidHaskell:--reflection
+      - -fplugin-opt=LiquidHaskell:--ple-local
+      - -fplugin-opt=LiquidHaskell:--diff
+      - -fplugin-opt=LiquidHaskell:--short-names
+      - -fplugin-opt=LiquidHaskell:--prune-unsorted
+    dependencies:
+      - monadic-quicksort-verification

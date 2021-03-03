@@ -1,0 +1,54 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 1aa04343a2b00f55b0ec9f17fe71b03570abf7d9ab84673e89422aa8cc8b1e1e
+
+name:           monadic-quicksort-verification
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/monadic-quicksort-verification#readme>
+homepage:       https://github.com/githubuser/monadic-quicksort-verification#readme
+bug-reports:    https://github.com/githubuser/monadic-quicksort-verification/issues
+author:         Henry Blanchette
+maintainer:     blancheh@umd.edu
+copyright:      2021 Henry Blanchette
+license:        BSD3
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/monadic-quicksort-verification
+
+library
+  other-modules:
+      Paths_monadic_quicksort_verification
+  hs-source-dirs:
+      src
+  default-extensions: GADTs KindSignatures ExplicitForAll RankNTypes FlexibleInstances UndecidableInstances MultiParamTypeClasses ScopedTypeVariables
+  ghc-options: -Wall -Wno-name-shadowing -Wno-unused-imports -Wno-unused-matches -Wno-unused-local-binds -Wno-orphans -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--prune-unsorted
+  build-depends:
+      liquid-base
+    , liquid-prelude
+    , liquidhaskell ==0.8.10.2
+  default-language: Haskell2010
+
+test-suite monadic-quicksort-verification-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_monadic_quicksort_verification
+  hs-source-dirs:
+      test
+  default-extensions: GADTs KindSignatures ExplicitForAll RankNTypes FlexibleInstances UndecidableInstances MultiParamTypeClasses
+  ghc-options: -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--prune-unsorted
+  build-depends:
+      liquid-base
+    , liquid-prelude
+    , liquidhaskell ==0.8.10.2
+    , monadic-quicksort-verification
+  default-language: Haskell2010
