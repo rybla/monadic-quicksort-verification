@@ -3,7 +3,7 @@ module Control.Monad.Refined where
 import Function
 import Language.Haskell.Liquid.ProofCombinators
 import Relation.Equality.Prop
-import Prelude hiding (Monad)
+import Prelude hiding (Monad, seq)
 
 {-
 # Monad
@@ -61,3 +61,7 @@ data Monad m = Monad
 {-@ reflect kleisli @-}
 kleisli :: Monad m -> (a -> m b) -> (b -> m c) -> (a -> m c)
 kleisli mnd k1 k2 x = bind mnd (k1 x) k2
+
+{-@ reflect seq @-}
+seq :: Monad m -> m a -> m b -> m b
+seq mnd ma mb = bind mnd ma (\_ -> mb)
