@@ -55,39 +55,46 @@ kleisli iMonad = raw_kleisli (>>=)
 -- Equality
 --------------------------------------------------------------------------------
 
-{-@ measure meq :: forall m a. VMonad m -> m a -> m a -> Bool @-}
+-- {-@ measure meq :: forall m a. VMonad m -> m a -> m a -> Bool @-}
 
-{-@ type EqM m a IMONAD M1 M2 = {_:EqMB m a | meq IMONAD M1 M2} @-}
+-- {-@ type EqM m a IMONAD M1 M2 = {_:EqMB m a | meq IMONAD M1 M2} @-}
 
-{-@
-data EqMB :: (* -> *) -> * -> * where
-    EqMB_lift :: forall m a. iMonad:VMonad m ->
-      x:a -> y:a -> {pf:Proof | x = y} ->
-      EqM m a iMonad (lift iMonad x) (lift iMonad y)
-  | EqMB_bind :: forall m a. iMonad:VMonad m ->
-      m1:m a -> m2:m a -> EqM m a iMonad m1 m2 ->
-      k1:(a -> m b) -> k2:(a -> m b) -> (x:a -> EqM m b iMonad (k1 x) (k2 x)) ->
-      EqM m b iMonad (bind m1 k1) (bind m2 k2)
-@-}
-data EqMB :: (* -> *) -> * -> * where
-  EqMB_lift ::
-    forall m a.
-    VMonad m ->
-    a -> -- x
-    a -> -- y
-    Proof -> -- x = y
-    -----------------------------------
-    EqMB m a -- lift x = lift y
-  EqMB_bind ::
-    forall m a b.
-    VMonad m ->
-    m a -> -- m1
-    m a -> -- m2
-    EqMB m a -> -- m1 = m2
-    (a -> m b) -> -- k1
-    (a -> m b) -> -- k2
-    (a -> EqMB m b) -> -- forall x, k1 x = k2 x
-    EqMB m b -- m1 >>= k1 = m2 >>= k2
+-- {-@
+-- data EqMB :: (* -> *) -> * -> * where
+--     EqMB_lift :: forall m a. iMonad:VMonad m ->
+--       x:a -> y:a -> PEq a {x} {y} ->
+--       EqM m a {lift iMonad x} {lift iMonad y}
+--   | EqMB_bind :: forall m a b. iMonad:VMonad m ->
+--       m1:m a -> m2:m a -> EqM m a iMonad m1 m2 ->
+--       k1:(a -> m _) -> k2:(a -> m _) -> (x:a -> EqM
+--         {_:EqMB m _ | meq iMonad (k1 x) (k2 x)}) ->
+
+-- @-}
+-- -- {_:EqMB m a | meq iMonad m1 m2}
+-- -- {_:EqMB m _ | meq iMonad (bind iMonad m1 k2) (bind iMonad m2 k2)}
+-- --
+-- -- EqM m a iMonad (lift iMonad x) (lift iMonad y)
+-- -- EqM m b iMonad (k1 x) (k2 x)
+-- -- EqM m b iMonad (bind iMonad m1 k1) (bind iMonad m2 k2)
+-- data EqMB :: (* -> *) -> * -> * where
+--   EqMB_lift ::
+--     forall m a.
+--     VMonad m ->
+--     a -> -- x
+--     a -> -- y
+--     Proof -> -- x = y
+--     -----------------------------------
+--     EqMB m a -- lift x = lift y
+--   EqMB_bind ::
+--     forall m a b.
+--     VMonad m ->
+--     m a -> -- m1
+--     m a -> -- m2
+--     EqMB m a -> -- m1 = m2
+--     (a -> m b) -> -- k1
+--     (a -> m b) -> -- k2
+--     (a -> EqMB m b) -> -- forall x, k1 x = k2 x
+--     EqMB m b -- m1 >>= k1 = m2 >>= k2
 
 --------------------------------------------------------------------------------
 -- Sequencing

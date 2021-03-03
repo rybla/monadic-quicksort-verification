@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>code/RunTimeCheck.hs</title>
+</head>
+<head>
+<link type='text/css' rel='stylesheet' href='liquid.css' />
+</head>
+
+<body>
+<hr>
+Put mouse over identifiers to see inferred types
+<pre><span class=hs-linenum> 1: </span><a class=annot href="#"><span class=annottext>GHC.Types.Module</span><span class='hs-comment'>{-# LANGUAGE FlexibleContexts #-}</span></a>
+<span class=hs-linenum> 2: </span><span class='hs-comment'>{-# LANGUAGE MonoLocalBinds #-}</span>
+<span class=hs-linenum> 3: </span>
+<span class=hs-linenum> 4: </span><span class='hs-keyword'>{-@</span> <span class='hs-conid'>LIQUID</span> <span class='hs-str'>"--reflection"</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 5: </span><span class='hs-keyword'>{-@</span> <span class='hs-conid'>LIQUID</span> <span class='hs-str'>"--ple"</span>        <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 6: </span><span class='hs-keyword'>{-@</span> <span class='hs-conid'>LIQUID</span> <span class='hs-str'>"--no-adt"</span>     <span class='hs-keyword'>@-}</span> 
+<span class=hs-linenum> 7: </span>
+<span class=hs-linenum> 8: </span><span class='hs-keyword'>module</span> <span class='hs-conid'>RunTimeCheck</span> <span class='hs-keyword'>where</span> 
+<span class=hs-linenum> 9: </span>
+<span class=hs-linenum>10: </span><span class='hs-keyword'>import</span> <span class='hs-conid'>Language.Haskell.Liquid.ProofCombinators</span>
+<span class=hs-linenum>11: </span><span class='hs-keyword'>import</span> <span class='hs-conid'>Prelude</span> <span class='hs-varid'>hiding</span> <span class='hs-layout'>(</span><span class='hs-layout'>(</span><span class='hs-varop'>++</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span>
+<span class=hs-linenum>12: </span><span class='hs-keyword'>import</span> <span class='hs-conid'>PropositionalEquality</span>
+<span class=hs-linenum>13: </span><span class='hs-keyword'>import</span> <span class='hs-conid'>PEqProperties</span>
+<span class=hs-linenum>14: </span>
+<span class=hs-linenum>15: </span>
+<span class=hs-linenum>16: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>critical</span> <span class='hs-keyglyph'>::</span> <span class='hs-keyword'>{x:</span><span class='hs-definition'>a</span> <span class='hs-keyword'>| slowSpec x }</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>a</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>17: </span><span class='hs-definition'>critical</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>a</span> 
+<span class=hs-linenum>18: </span><a class=annot href="#"><span class=annottext>forall a . {VV : a | slowSpec VV} -&gt; a</span><span class='hs-definition'>critical</span></a> <a class=annot href="#"><span class=annottext>{VV : a | slowSpec VV}</span><span class='hs-varid'>x</span></a> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>x</span> 
+<span class=hs-linenum>19: </span>
+<span class=hs-linenum>20: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>bar</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>EqRT</span> <span class='hs-layout'>(</span><span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Bool</span><span class='hs-layout'>)</span> <span class='hs-keyword'>{fastSpec}</span> <span class='hs-keyword'>{slowSpec}</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Maybe</span> <span class='hs-varid'>a</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>21: </span><span class='hs-definition'>bar</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>EqT</span> <span class='hs-layout'>(</span><span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Bool</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Maybe</span> <span class='hs-varid'>a</span> 
+<span class=hs-linenum>22: </span><a class=annot href="#"><span class=annottext>forall a .
+{VV : (PropositionalEquality.EqT (a -&gt; GHC.Types.Bool)) | eqT fastSpec slowSpec} -&gt; a -&gt; (GHC.Maybe.Maybe a)</span><span class='hs-definition'>bar</span></a> <a class=annot href="#"><span class=annottext>(PropositionalEquality.EqT a -&gt; GHC.Types.Bool)</span><span class='hs-varid'>pf</span></a> <a class=annot href="#"><span class=annottext>a</span><span class='hs-varid'>x</span></a> <span class='hs-keyglyph'>=</span> <span class='hs-keyword'>if</span> <a class=annot href="#"><span class=annottext>{v : GHC.Types.Bool | v == fastSpec x
+                      &amp;&amp; v == true}</span><span class='hs-varid'>fastSpec</span></a> <a class=annot href="#"><span class=annottext>{VV : a | VV == x}</span><span class='hs-varid'>x</span></a> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>()</span><span class='hs-varid'>toSMT</span></a> <a class=annot href="#"><span class=annottext>{v : GHC.Types.Bool | v == fastSpec x
+                      &amp;&amp; v == true}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>fastSpec</span> <a class=annot href="#"><span class=annottext>{VV : a | VV == x}</span><span class='hs-varid'>x</span></a><span class='hs-layout'>)</span> <a class=annot href="#"><span class=annottext>{v : GHC.Types.Bool | v == slowSpec x
+                      &amp;&amp; v == true}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>slowSpec</span> <a class=annot href="#"><span class=annottext>{VV : a | VV == x}</span><span class='hs-varid'>x</span></a><span class='hs-layout'>)</span> <a class=annot href="#"><span class=annottext>{v : (PropositionalEquality.EqT GHC.Types.Bool) | eqT (fastSpec x) (slowSpec x)
+                                                  &amp;&amp; v == unExt x pf}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>unExt</span> <a class=annot href="#"><span class=annottext>{VV : a | VV == x}</span><span class='hs-varid'>x</span></a> <a class=annot href="#"><span class=annottext>{v : (PropositionalEquality.EqT a -&gt; GHC.Types.Bool) | v == pf}</span><span class='hs-varid'>pf</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum>23: </span>            <span class='hs-keyword'>then</span> <a class=annot href="#"><span class=annottext>{VV : forall a .
+      x1:a -&gt; {v : (GHC.Maybe.Maybe a) | (isJust v &lt;=&gt; true)
+                                         &amp;&amp; fromJust v == x1
+                                         &amp;&amp; v == Just x1} | VV == Just}</span><span class='hs-conid'>Just</span></a> <a class=annot href="#"><span class=annottext>{VV : a | VV == critical x}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>critical</span> <a class=annot href="#"><span class=annottext>{VV : a | VV == x}</span><span class='hs-varid'>x</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum>24: </span>            <span class='hs-keyword'>else</span> <a class=annot href="#"><span class=annottext>{VV : forall a .
+      {v : (GHC.Maybe.Maybe a) | (isJust v &lt;=&gt; false)
+                                 &amp;&amp; v == Nothing} | VV == Nothing}</span><span class='hs-conid'>Nothing</span></a> 
+<span class=hs-linenum>25: </span>
+<span class=hs-linenum>26: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>unExt</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>x</span><span class='hs-conop'>:</span><span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>EqRT</span> <span class='hs-layout'>(</span><span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Bool</span><span class='hs-layout'>)</span> <span class='hs-keyword'>{fastSpec}</span> <span class='hs-keyword'>{slowSpec}</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>EqRT</span> <span class='hs-conid'>Bool</span> <span class='hs-keyword'>{fastSpec x}</span> <span class='hs-keyword'>{slowSpec x}</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>27: </span><span class='hs-definition'>unExt</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>EqT</span> <span class='hs-layout'>(</span><span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Bool</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>EqT</span> <span class='hs-conid'>Bool</span> 
+<span class=hs-linenum>28: </span><a class=annot href="#"><span class=annottext>forall a .
+x1:a -&gt; {VV : (PropositionalEquality.EqT (a -&gt; GHC.Types.Bool)) | eqT fastSpec slowSpec} -&gt; {VV : (PropositionalEquality.EqT GHC.Types.Bool) | eqT (fastSpec x1) (slowSpec x1)}</span><span class='hs-definition'>unExt</span></a> <a class=annot href="#"><span class=annottext>a</span><span class='hs-varid'>x</span></a> <a class=annot href="#"><span class=annottext>{VV : (PropositionalEquality.EqT a -&gt; GHC.Types.Bool) | eqT fastSpec slowSpec}</span><span class='hs-varid'>p</span></a> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>{v : (PropositionalEquality.EqT GHC.Types.Bool) | lqdc##$select v == p}</span><span class='hs-conid'>EqCtx</span></a> <a class=annot href="#"><span class=annottext>{VV : forall a .
+      x1:a -&gt; {v : GHC.Types.Bool | v == fastSpec x1
+                                    &amp;&amp; v == true} | VV == fastSpec}</span><span class='hs-varid'>fastSpec</span></a> <a class=annot href="#"><span class=annottext>{VV : forall a .
+      x1:a -&gt; {v : GHC.Types.Bool | v == slowSpec x1
+                                    &amp;&amp; v == true} | VV == slowSpec}</span><span class='hs-varid'>slowSpec</span></a> <a class=annot href="#"><span class=annottext>{v : (PropositionalEquality.EqT a -&gt; GHC.Types.Bool) | eqT fastSpec slowSpec
+                                                       &amp;&amp; v == p}</span><span class='hs-varid'>p</span></a> <a class=annot href="#"><span class=annottext>x1:(a -&gt; GHC.Types.Bool) -&gt; {v : GHC.Types.Bool | v == flip' x x1
+                                                  &amp;&amp; v == x1 x}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>flip'</span> <a class=annot href="#"><span class=annottext>{VV : a | VV == x}</span><span class='hs-varid'>x</span></a><span class='hs-layout'>)</span> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>GHC.Types.Bool</span><span class='hs-varid'>flip'</span></a> <a class=annot href="#"><span class=annottext>{VV : a | VV == x}</span><span class='hs-varid'>x</span></a> <a class=annot href="#"><span class=annottext>{VV : forall a .
+      x1:a -&gt; {v : GHC.Types.Bool | v == fastSpec x1
+                                    &amp;&amp; v == true} | VV == fastSpec}</span><span class='hs-varid'>fastSpec</span></a> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>GHC.Types.Bool</span><span class='hs-varid'>flip'</span></a> <a class=annot href="#"><span class=annottext>{VV : a | VV == x}</span><span class='hs-varid'>x</span></a> <a class=annot href="#"><span class=annottext>{VV : forall a .
+      x1:a -&gt; {v : GHC.Types.Bool | v == slowSpec x1
+                                    &amp;&amp; v == true} | VV == slowSpec}</span><span class='hs-varid'>slowSpec</span></a> 
+<span class=hs-linenum>29: </span>
+<span class=hs-linenum>30: </span>
+<span class=hs-linenum>31: </span>
+<span class=hs-linenum>32: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>reflect</span> <span class='hs-varid'>flip'</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>33: </span><span class='hs-definition'>flip'</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-layout'>(</span><span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>b</span>
+<span class=hs-linenum>34: </span><a class=annot href="#"><span class=annottext>forall a b .
+x1:a -&gt; x2:(a -&gt; b) -&gt; {VV : b | VV == flip' x1 x2
+                                 &amp;&amp; VV == x2 x1}</span><span class='hs-definition'>flip'</span></a> <a class=annot href="#"><span class=annottext>a</span><span class='hs-varid'>x</span></a> <a class=annot href="#"><span class=annottext>a -&gt; b</span><span class='hs-varid'>f</span></a> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>f</span> <a class=annot href="#"><span class=annottext>{VV : a | VV == x}</span><span class='hs-varid'>x</span></a>  
+<span class=hs-linenum>35: </span>
+<span class=hs-linenum>36: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>reflect</span> <span class='hs-varid'>fastSpec</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>37: </span><span class='hs-definition'>fastSpec</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Bool</span>
+<span class=hs-linenum>38: </span><a class=annot href="#"><span class=annottext>forall a .
+x1:a -&gt; {VV : GHC.Types.Bool | VV == fastSpec x1
+                               &amp;&amp; VV == true}</span><span class='hs-definition'>fastSpec</span></a> <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>True</span> 
+<span class=hs-linenum>39: </span>
+<span class=hs-linenum>40: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>reflect</span> <span class='hs-varid'>slowSpec</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>41: </span><span class='hs-definition'>slowSpec</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Bool</span>
+<span class=hs-linenum>42: </span><a class=annot href="#"><span class=annottext>forall a .
+x1:a -&gt; {VV : GHC.Types.Bool | VV == slowSpec x1
+                               &amp;&amp; VV == true}</span><span class='hs-definition'>slowSpec</span></a> <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>True</span>  </pre>
+</body>
+</html>

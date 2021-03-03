@@ -18,6 +18,7 @@ library
   hs-source-dirs: src
   exposed-modules:
     Equality,
+    EqualityMonadic,
     Function,
     -- PartitionArray,
     -- QuickSortArray,

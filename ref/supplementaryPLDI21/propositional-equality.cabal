@@ -1,0 +1,31 @@
+cabal-version: 1.12
+name:           propositional-equality
+version:        0.1.0.0
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+
+source-repository head
+  type: git
+
+library
+  exposed-modules:
+      PropositionalEquality
+  other-modules:
+      Unsoundness
+      Language.Haskell.Liquid.ProofCombinators
+      PEqProperties
+      Reverse
+      RefinedDomains
+      Map
+      Folds
+      RunTimeCheck
+      Readers
+      Endofunctors
+  hs-source-dirs:
+      code
+  ghc-options: -Wall -fplugin=LiquidHaskell
+  build-depends:
+      liquid-base
+    , liquidhaskell
+  default-language: Haskell2010
