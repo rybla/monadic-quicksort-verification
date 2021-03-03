@@ -36,11 +36,11 @@ import VOrdered
 --   VList a ->
 --   m VUnit
 -- iqsort_specification1 (iMonadArray, iMonadPlus, iOrdered) p i xs =
---   vbind_
+--   bind_
 --     (slowsort_ xs)
 --     (vwriteList_ i)
 --   where
---     vbind_ = vbind iMonad_
+--     bind_ = bind iMonad_
 --     slowsort_ = slowsort (iMonadPlus, iOrdered)
 --     vwriteList_ = vwriteList iMonadArray
 --     iMonad_ = VMonadPlus.iMonad iMonadPlus
@@ -77,10 +77,10 @@ import VOrdered
 --   VList a ->
 --   m VUnit
 -- iqsort_specification2 iMonadArrayPlusOrdered p i xs =
---   vbind_
---     (partl'_ p (Nil, Nil, xs))
+--   bind_
+--     (partl'_ p (VNil, VNil, xs))
 --     ( \(ys, zs) ->
---         ( vbind_
+--         ( bind_
 --             (permute_ ys)
 --             ( \ys' ->
 --                 vseq_
@@ -94,7 +94,7 @@ import VOrdered
 --     )
 --   where
 --     partl'_ = partl' (iMonadPlus, iOrdered)
---     vbind_ = vbind iMonad_
+--     bind_ = bind iMonad_
 --     slowsort_ = slowsort (iMonadPlus, iOrdered)
 --     vwriteList_ = vwriteList iMonadArray
 --     iMonad_ = VMonadPlus.iMonad iMonadPlus
@@ -126,13 +126,13 @@ import VOrdered
 --   VList a ->
 --   m VUnit
 -- refinement13_greater iMonadArrayPlusOrdered p i ys =
---   vbind_
+--   bind_
 --     (permute_ ys)
 --     ( \ys' ->
 --         (vwriteList_ i (vappend ys' (vsingleton p)))
 --     )
 --   where
---     vbind_ = vbind iMonad_
+--     bind_ = bind iMonad_
 --     permute_ = permute iMonadPlus
 --     vwriteList_ = vwriteList iMonadArray
 --     iMonad_ = VMonadPlus.iMonad iMonadPlus
@@ -188,8 +188,8 @@ import VOrdered
 --   m VUnit
 -- iqsort_specification3 (iMonadArray, iMonadPlus, iOrdered) p i xs =
 --   vseq_
---     (vwriteList_ i (Cons p xs))
---     ( vbind_
+--     (vwriteList_ i (VCons p xs))
+--     ( bind_
 --         (ipartl_ p (Suc i) (Zero, Zero, xs_l))
 --         ( \(ys_l, zs_l) ->
 --             vseq_
@@ -203,7 +203,7 @@ import VOrdered
 --   where
 --     vseq_ = vseq iMonad_
 --     vwriteList_ = vwriteList iMonadArray
---     vbind_ = vbind iMonad_
+--     bind_ = bind iMonad_
 --     vread_ = vread iMonadArray
 --     ipartl_ = ipartl (iMonadArray, iMonadPlus, iOrdered)
 --     iqsort_ = iqsort (iMonadArray, iMonadPlus, iOrdered)
@@ -231,15 +231,15 @@ import VOrdered
 
 -- -- Function. Quicksort (in place) array from position `i` to `i + n`.
 -- iqsort :: forall m a. VMonadArrayPlusOrdered m a -> VNat -> m VUnit
--- iqsort (iMonadArray, iMonadPlus, iOrdered) p Zero = vlift_ vunit
+-- iqsort (iMonadArray, iMonadPlus, iOrdered) p Zero = lift_ vunit
 --   where
---     vlift_ = vlift iMonad_
+--     lift_ = lift iMonad_
 --     iMonad_ = VMonadPlus.iMonad iMonadPlus
 -- iqsort (iMonadArray, iMonadPlus, iOrdered) i (Suc n) =
---   vbind_
+--   bind_
 --     (vread_ i)
 --     ( \p ->
---         ( vbind_
+--         ( bind_
 --             (ipartl_ p (Suc i) (0, 0, n))
 --             ( \(ys_l, zs_l) ->
 --                 ( vseq_
@@ -253,7 +253,7 @@ import VOrdered
 --         )
 --     )
 --   where
---     vbind_ = vbind iMonad_
+--     bind_ = bind iMonad_
 --     vseq_ = vseq iMonad_
 --     vread_ = vread iMonadArray
 --     ipartl_ = ipartl (iMonadArray, iMonadPlus, iOrdered)

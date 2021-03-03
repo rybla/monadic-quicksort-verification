@@ -21,7 +21,7 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
     - [x] plus-monadic refinement (`RefinesPlusMonadic` and
           `RefinesPlusMonadicF`)
     - [x] plus-monadic refinement is monotic in monadic binding
-          (`vbind_monotonic_refinement`)
+          (`bind_monotonic_refinement`)
     - [x] guarding monad-commutes with other monad elements (that have just
           (monadic) effect) (`guard_isCommutativeMonadic`)
     - [ ] guarding a conjunction is the same as the sequence of guarding each
