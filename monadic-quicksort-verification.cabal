@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1aa04343a2b00f55b0ec9f17fe71b03570abf7d9ab84673e89422aa8cc8b1e1e
+-- hash: 47e975eb9f369673346d7f51dd9bf6757dab589811ef02d4f5251f303dfab76f
 
 name:           monadic-quicksort-verification
 version:        0.1.0.0
@@ -25,6 +25,10 @@ source-repository head
   location: https://github.com/githubuser/monadic-quicksort-verification
 
 library
+  exposed-modules:
+      Control.Monad.Refined
+      Function
+      Relation.Equality.Prop
   other-modules:
       Paths_monadic_quicksort_verification
   hs-source-dirs:
