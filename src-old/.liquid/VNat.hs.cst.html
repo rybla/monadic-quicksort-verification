@@ -1,0 +1,463 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>src/VNat.hs</title>
+</head>
+<head>
+<link type='text/css' rel='stylesheet' href='liquid.css' />
+</head>
+
+<body>
+<hr>
+Put mouse over identifiers to see inferred types
+<pre><span class=hs-linenum>  1: </span><a class=annot href="#"><span class=annottext>{VV##2013 : GHC.Types.Module | $k_##2014}</span><span class='hs-keyword'>module</span></a> <span class='hs-conid'>VNat</span> <span class='hs-keyword'>where</span>
+<span class=hs-linenum>  2: </span>
+<span class=hs-linenum>  3: </span><span class='hs-keyword'>import</span> <span class='hs-conid'>Function</span>
+<span class=hs-linenum>  4: </span><span class='hs-keyword'>import</span> <span class='hs-conid'>Language.Haskell.Liquid.ProofCombinators</span>
+<span class=hs-linenum>  5: </span>
+<span class=hs-linenum>  6: </span><span class='hs-comment'>-- Data. The natural numbers.</span>
+<span class=hs-linenum>  7: </span><span class='hs-keyword'>{-@</span>
+<span class=hs-linenum>  8: </span><span class='hs-keyword'>data</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Zero</span> <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Suc</span> <span class='hs-conid'>VNat</span>
+<span class=hs-linenum>  9: </span><span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 10: </span><span class='hs-keyword'>data</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Zero</span> <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Suc</span> <span class='hs-conid'>VNat</span>
+<span class=hs-linenum> 11: </span>
+<span class=hs-linenum> 12: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>inline</span> <span class='hs-varid'>vzero</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 13: </span><span class='hs-definition'>vzero</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>VNat</span>
+<span class=hs-linenum> 14: </span><a class=annot href="#"><span class=annottext>{VV : VNat.VNat | VV == VNat.Zero}</span><span class='hs-definition'>vzero</span></a> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Zero</span>
+<span class=hs-linenum> 15: </span>
+<span class=hs-linenum> 16: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>inline</span> <span class='hs-varid'>vone</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 17: </span><span class='hs-definition'>vone</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>VNat</span>
+<span class=hs-linenum> 18: </span><a class=annot href="#"><span class=annottext>{VV : VNat.VNat | VV == VNat.Suc VNat.Zero}</span><span class='hs-definition'>vone</span></a> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##554 : VNat.VNat | (is$VNat.Zero lq_tmp$x##554 &lt;=&gt; true)
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##554 &lt;=&gt; false)
+                             &amp;&amp; lq_tmp$x##554 == VNat.Zero
+                             &amp;&amp; lq_tmp$x##554 == VNat.Zero}</span><span class='hs-conid'>Zero</span></a>
+<span class=hs-linenum> 19: </span>
+<span class=hs-linenum> 20: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>inline</span> <span class='hs-varid'>vtwo</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 21: </span><span class='hs-definition'>vtwo</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>VNat</span>
+<span class=hs-linenum> 22: </span><a class=annot href="#"><span class=annottext>{VV : VNat.VNat | VV == VNat.Suc (VNat.Suc VNat.Zero)}</span><span class='hs-definition'>vtwo</span></a> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##560 : VNat.VNat | lq_tmp$x##560 == VNat.Suc VNat.Zero
+                             &amp;&amp; lq_tmp$x##560 == VNat.Suc VNat.Zero
+                             &amp;&amp; lq_tmp$x##560 == VNat.vone}</span><span class='hs-varid'>vone</span></a>
+<span class=hs-linenum> 23: </span>
+<span class=hs-linenum> 24: </span><span class='hs-comment'>-- Function. Addition.</span>
+<span class=hs-linenum> 25: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>reflect</span> <span class='hs-varid'>vadd</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 26: </span><span class='hs-definition'>vadd</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Op2</span> <span class='hs-conid'>VNat</span>
+<span class=hs-linenum> 27: </span><a class=annot href="#"><span class=annottext>lq_tmp$x##562:VNat.VNat -&gt; lq_tmp$x##563:VNat.VNat -&gt; {VV : VNat.VNat | VV == VNat.vadd lq_tmp$x##562 lq_tmp$x##563
+                                                                        &amp;&amp; VV == (if is$VNat.Zero lq_tmp$x##562 then lq_tmp$x##563 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 lq_tmp$x##562) lq_tmp$x##563))}</span><span class='hs-definition'>vadd</span></a> <span class='hs-conid'>Zero</span> <a class=annot href="#"><span class=annottext>VNat.VNat</span><span class='hs-varid'>n</span></a> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##576 : VNat.VNat | lq_tmp$x##576 == n##a3NQ}</span><span class='hs-varid'>n</span></a>
+<span class=hs-linenum> 28: </span><span class='hs-definition'>vadd</span> <span class='hs-layout'>(</span><span class='hs-conid'>Suc</span> <span class='hs-varid'>m</span><span class='hs-layout'>)</span> <span class='hs-varid'>n</span> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>lq_tmp$x##601:VNat.VNat -&gt; {lq_tmp$x##599 : VNat.VNat | (is$VNat.Zero lq_tmp$x##599 &lt;=&gt; false)
+                                                        &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##599 == lq_tmp$x##601
+                                                        &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##599 == lq_tmp$x##601
+                                                        &amp;&amp; (is$VNat.Suc lq_tmp$x##599 &lt;=&gt; true)
+                                                        &amp;&amp; lq_tmp$x##599 == VNat.Suc lq_tmp$x##601}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##590 : VNat.VNat | lq_tmp$x##590 == VNat.vadd m##a3NR n##a3NQ
+                             &amp;&amp; lq_tmp$x##590 == (if is$VNat.Zero m##a3NR then n##a3NQ else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 m##a3NR) n##a3NQ))
+                             &amp;&amp; lq_tmp$x##590 == VNat.vadd m##a3NR n##a3NQ}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##595 : VNat.VNat | lq_tmp$x##595 == m##a3NR}</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##596 : VNat.VNat | lq_tmp$x##596 == n##a3NQ}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum> 29: </span>
+<span class=hs-linenum> 30: </span><span class='hs-comment'>-- Lemma. Additive right-identity i.e. n + 0 = n.</span>
+<span class=hs-linenum> 31: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>automatic</span><span class='hs-comment'>-</span><span class='hs-varid'>instances</span> <span class='hs-varid'>vadd_identity_right</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 32: </span><span class='hs-keyword'>{-@</span>
+<span class=hs-linenum> 33: </span><span class='hs-definition'>vadd_identity_right</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>n</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>{vadd n Zero = n}</span>
+<span class=hs-linenum> 34: </span><span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 35: </span><span class='hs-definition'>vadd_identity_right</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Proof</span>
+<span class=hs-linenum> 36: </span><a class=annot href="#"><span class=annottext>lq_tmp$x##604:VNat.VNat -&gt; {VV : () | VNat.vadd lq_tmp$x##604 VNat.Zero == lq_tmp$x##604}</span><span class='hs-definition'>vadd_identity_right</span></a> <span class='hs-conid'>Zero</span> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##614 : () | lq_tmp$x##614 == GHC.Tuple.()
+                      &amp;&amp; lq_tmp$x##614 == GHC.Tuple.()}</span><span class='hs-conid'>()</span></a>
+<span class=hs-linenum> 37: </span><span class='hs-comment'>-- vadd Zero Zero</span>
+<span class=hs-linenum> 38: </span><span class='hs-comment'>--   === Zero</span>
+<span class=hs-linenum> 39: </span><span class='hs-comment'>--   *** QED</span>
+<span class=hs-linenum> 40: </span><span class='hs-definition'>vadd_identity_right</span> <span class='hs-layout'>(</span><span class='hs-conid'>Suc</span> <span class='hs-varid'>n</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span>
+<span class=hs-linenum> 41: </span>  <a class=annot href="#"><span class=annottext>{lq_tmp$x##634 : VNat.VNat | lq_tmp$x##634 == VNat.vadd lq_anf$##7205759403792808533##d3SR VNat.Zero
+                             &amp;&amp; lq_tmp$x##634 == (if is$VNat.Zero lq_anf$##7205759403792808533##d3SR then VNat.Zero else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 lq_anf$##7205759403792808533##d3SR) VNat.Zero))
+                             &amp;&amp; lq_tmp$x##634 == VNat.vadd lq_anf$##7205759403792808533##d3SR VNat.Zero}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##627 : VNat.VNat | (is$VNat.Zero lq_tmp$x##627 &lt;=&gt; false)
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##627 == n##a3NT
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##627 == n##a3NT
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##627 &lt;=&gt; true)
+                             &amp;&amp; lq_tmp$x##627 == VNat.Suc n##a3NT
+                             &amp;&amp; lq_tmp$x##627 == VNat.Suc n##a3NT}</span><span class='hs-layout'>(</span></a><span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##630 : VNat.VNat | lq_tmp$x##630 == n##a3NT}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##640 : VNat.VNat | (is$VNat.Zero lq_tmp$x##640 &lt;=&gt; true)
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##640 &lt;=&gt; false)
+                             &amp;&amp; lq_tmp$x##640 == VNat.Zero
+                             &amp;&amp; lq_tmp$x##640 == VNat.Zero}</span><span class='hs-conid'>Zero</span></a>
+<span class=hs-linenum> 42: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##653 : VNat.VNat | (is$VNat.Zero lq_tmp$x##653 &lt;=&gt; false)
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##653 == lq_anf$##7205759403792808535##d3ST
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##653 == lq_anf$##7205759403792808535##d3ST
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##653 &lt;=&gt; true)
+                             &amp;&amp; lq_tmp$x##653 == VNat.Suc lq_anf$##7205759403792808535##d3ST
+                             &amp;&amp; lq_tmp$x##653 == VNat.Suc lq_anf$##7205759403792808535##d3ST}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##644 : VNat.VNat | lq_tmp$x##644 == VNat.vadd n##a3NT VNat.Zero
+                             &amp;&amp; lq_tmp$x##644 == (if is$VNat.Zero n##a3NT then VNat.Zero else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 n##a3NT) VNat.Zero))
+                             &amp;&amp; lq_tmp$x##644 == VNat.vadd n##a3NT VNat.Zero}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##649 : VNat.VNat | lq_tmp$x##649 == n##a3NT}</span><span class='hs-varid'>n</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##650 : VNat.VNat | (is$VNat.Zero lq_tmp$x##650 &lt;=&gt; true)
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##650 &lt;=&gt; false)
+                             &amp;&amp; lq_tmp$x##650 == VNat.Zero
+                             &amp;&amp; lq_tmp$x##650 == VNat.Zero}</span><span class='hs-conid'>Zero</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum> 43: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##692 : VNat.VNat | $k_##691[VV##690:=lq_tmp$x##692][lq_tmp$x##688:=lq_anf$##7205759403792808538##d3SW][lq_tmp$x##689:=lq_anf$##7205759403792808539##d3SX]
+                             &amp;&amp; $k_##699[VV##698:=lq_tmp$x##692][lq_tmp$x##688:=lq_anf$##7205759403792808538##d3SW][lq_tmp$x##689:=lq_anf$##7205759403792808539##d3SX]
+                             &amp;&amp; lq_tmp$x##692 == Language.Haskell.Liquid.ProofCombinators.? lq_anf$##7205759403792808538##d3SW lq_anf$##7205759403792808539##d3SX}</span><span class='hs-layout'>(</span></a><a class=annot href="#"><span class=annottext>{lq_tmp$x##672 : VNat.VNat | (is$VNat.Zero lq_tmp$x##672 &lt;=&gt; false)
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##672 == n##a3NT
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##672 == n##a3NT
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##672 &lt;=&gt; true)
+                             &amp;&amp; lq_tmp$x##672 == VNat.Suc n##a3NT
+                             &amp;&amp; lq_tmp$x##672 == VNat.Suc n##a3NT}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##675 : VNat.VNat | lq_tmp$x##675 == n##a3NT}</span><span class='hs-varid'>n</span></a> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##678 : () | VNat.vadd n##a3NT VNat.Zero == n##a3NT
+                      &amp;&amp; lq_tmp$x##678 == VNat.vadd_identity_right n##a3NT}</span><span class='hs-varid'>vadd_identity_right</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##681 : VNat.VNat | lq_tmp$x##681 == n##a3NT}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum> 44: </span>    <span class='hs-varop'>***</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##727 : Language.Haskell.Liquid.ProofCombinators.QED | lq_tmp$x##727 == Language.Haskell.Liquid.ProofCombinators.QED
+                                                                &amp;&amp; lq_tmp$x##727 == Language.Haskell.Liquid.ProofCombinators.QED}</span><span class='hs-conid'>QED</span></a>
+<span class=hs-linenum> 45: </span>
+<span class=hs-linenum> 46: </span><span class='hs-comment'>-- Lemma. Addition with successor on the right i.e. m + S n = S (m + n).</span>
+<span class=hs-linenum> 47: </span><span class='hs-keyword'>{-@</span>
+<span class=hs-linenum> 48: </span><span class='hs-definition'>vadd_Suc_right</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>m</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>n</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>{vadd m (Suc n) = Suc (vadd m n)}</span>
+<span class=hs-linenum> 49: </span><span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 50: </span><span class='hs-definition'>vadd_Suc_right</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Proof</span>
+<span class=hs-linenum> 51: </span><a class=annot href="#"><span class=annottext>lq_tmp$x##736:VNat.VNat -&gt; lq_tmp$x##737:VNat.VNat -&gt; {VV : () | VNat.vadd lq_tmp$x##736 (VNat.Suc lq_tmp$x##737) == VNat.Suc (VNat.vadd lq_tmp$x##736 lq_tmp$x##737)}</span><span class='hs-definition'>vadd_Suc_right</span></a> <span class='hs-conid'>Zero</span> <a class=annot href="#"><span class=annottext>VNat.VNat</span><span class='hs-varid'>n</span></a> <span class='hs-keyglyph'>=</span>
+<span class=hs-linenum> 52: </span>  <a class=annot href="#"><span class=annottext>{lq_tmp$x##756 : VNat.VNat | lq_tmp$x##756 == VNat.vadd VNat.Zero lq_anf$##7205759403792808543##d3T1
+                             &amp;&amp; lq_tmp$x##756 == (if is$VNat.Zero VNat.Zero then lq_anf$##7205759403792808543##d3T1 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 VNat.Zero) lq_anf$##7205759403792808543##d3T1))
+                             &amp;&amp; lq_tmp$x##756 == VNat.vadd VNat.Zero lq_anf$##7205759403792808543##d3T1}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##761 : VNat.VNat | (is$VNat.Zero lq_tmp$x##761 &lt;=&gt; true)
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##761 &lt;=&gt; false)
+                             &amp;&amp; lq_tmp$x##761 == VNat.Zero
+                             &amp;&amp; lq_tmp$x##761 == VNat.Zero}</span><span class='hs-conid'>Zero</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##749 : VNat.VNat | (is$VNat.Zero lq_tmp$x##749 &lt;=&gt; false)
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##749 == n##a3NU
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##749 == n##a3NU
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##749 &lt;=&gt; true)
+                             &amp;&amp; lq_tmp$x##749 == VNat.Suc n##a3NU
+                             &amp;&amp; lq_tmp$x##749 == VNat.Suc n##a3NU}</span><span class='hs-layout'>(</span></a><span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##752 : VNat.VNat | lq_tmp$x##752 == n##a3NU}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum> 53: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##765 : VNat.VNat | (is$VNat.Zero lq_tmp$x##765 &lt;=&gt; false)
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##765 == n##a3NU
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##765 == n##a3NU
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##765 &lt;=&gt; true)
+                             &amp;&amp; lq_tmp$x##765 == VNat.Suc n##a3NU
+                             &amp;&amp; lq_tmp$x##765 == VNat.Suc n##a3NU}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##768 : VNat.VNat | lq_tmp$x##768 == n##a3NU}</span><span class='hs-varid'>n</span></a> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##790 : () | VNat.vadd lq_anf$##7205759403792808547##d3T5 VNat.Zero == lq_anf$##7205759403792808547##d3T5
+                      &amp;&amp; lq_tmp$x##790 == VNat.vadd_identity_right lq_anf$##7205759403792808547##d3T5}</span><span class='hs-varid'>vadd_identity_right</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##784 : VNat.VNat | (is$VNat.Zero lq_tmp$x##784 &lt;=&gt; false)
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##784 == n##a3NU
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##784 == n##a3NU
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##784 &lt;=&gt; true)
+                             &amp;&amp; lq_tmp$x##784 == VNat.Suc n##a3NU
+                             &amp;&amp; lq_tmp$x##784 == VNat.Suc n##a3NU}</span><span class='hs-layout'>(</span></a><span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##787 : VNat.VNat | lq_tmp$x##787 == n##a3NU}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum> 54: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##846 : VNat.VNat | $k_##845[VV##844:=lq_tmp$x##846][lq_tmp$x##842:=lq_anf$##7205759403792808551##d3T9][lq_tmp$x##843:=lq_anf$##7205759403792808552##d3Ta]
+                             &amp;&amp; $k_##853[VV##852:=lq_tmp$x##846][lq_tmp$x##842:=lq_anf$##7205759403792808551##d3T9][lq_tmp$x##843:=lq_anf$##7205759403792808552##d3Ta]
+                             &amp;&amp; lq_tmp$x##846 == Language.Haskell.Liquid.ProofCombinators.? lq_anf$##7205759403792808551##d3T9 lq_anf$##7205759403792808552##d3Ta}</span><span class='hs-layout'>(</span></a><a class=annot href="#"><span class=annottext>{lq_tmp$x##826 : VNat.VNat | (is$VNat.Zero lq_tmp$x##826 &lt;=&gt; false)
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##826 == lq_anf$##7205759403792808550##d3T8
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##826 == lq_anf$##7205759403792808550##d3T8
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##826 &lt;=&gt; true)
+                             &amp;&amp; lq_tmp$x##826 == VNat.Suc lq_anf$##7205759403792808550##d3T8
+                             &amp;&amp; lq_tmp$x##826 == VNat.Suc lq_anf$##7205759403792808550##d3T8}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##817 : VNat.VNat | lq_tmp$x##817 == VNat.vadd VNat.Zero n##a3NU
+                             &amp;&amp; lq_tmp$x##817 == (if is$VNat.Zero VNat.Zero then n##a3NU else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 VNat.Zero) n##a3NU))
+                             &amp;&amp; lq_tmp$x##817 == VNat.vadd VNat.Zero n##a3NU}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##822 : VNat.VNat | (is$VNat.Zero lq_tmp$x##822 &lt;=&gt; true)
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##822 &lt;=&gt; false)
+                             &amp;&amp; lq_tmp$x##822 == VNat.Zero
+                             &amp;&amp; lq_tmp$x##822 == VNat.Zero}</span><span class='hs-conid'>Zero</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##823 : VNat.VNat | lq_tmp$x##823 == n##a3NU}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##832 : () | VNat.vadd n##a3NU VNat.Zero == n##a3NU
+                      &amp;&amp; lq_tmp$x##832 == VNat.vadd_identity_right n##a3NU}</span><span class='hs-varid'>vadd_identity_right</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##835 : VNat.VNat | lq_tmp$x##835 == n##a3NU}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum> 55: </span>    <span class='hs-varop'>***</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##881 : Language.Haskell.Liquid.ProofCombinators.QED | lq_tmp$x##881 == Language.Haskell.Liquid.ProofCombinators.QED
+                                                                &amp;&amp; lq_tmp$x##881 == Language.Haskell.Liquid.ProofCombinators.QED}</span><span class='hs-conid'>QED</span></a>
+<span class=hs-linenum> 56: </span><span class='hs-definition'>vadd_Suc_right</span> <span class='hs-layout'>(</span><span class='hs-conid'>Suc</span> <span class='hs-varid'>m</span><span class='hs-layout'>)</span> <span class='hs-varid'>n</span> <span class='hs-keyglyph'>=</span>
+<span class=hs-linenum> 57: </span>  <a class=annot href="#"><span class=annottext>{lq_tmp$x##907 : VNat.VNat | lq_tmp$x##907 == VNat.vadd lq_anf$##7205759403792808555##d3Td lq_anf$##7205759403792808556##d3Te
+                             &amp;&amp; lq_tmp$x##907 == (if is$VNat.Zero lq_anf$##7205759403792808555##d3Td then lq_anf$##7205759403792808556##d3Te else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 lq_anf$##7205759403792808555##d3Td) lq_anf$##7205759403792808556##d3Te))
+                             &amp;&amp; lq_tmp$x##907 == VNat.vadd lq_anf$##7205759403792808555##d3Td lq_anf$##7205759403792808556##d3Te}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##894 : VNat.VNat | (is$VNat.Zero lq_tmp$x##894 &lt;=&gt; false)
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##894 == m##a3NV
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##894 == m##a3NV
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##894 &lt;=&gt; true)
+                             &amp;&amp; lq_tmp$x##894 == VNat.Suc m##a3NV
+                             &amp;&amp; lq_tmp$x##894 == VNat.Suc m##a3NV}</span><span class='hs-layout'>(</span></a><span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##897 : VNat.VNat | lq_tmp$x##897 == m##a3NV}</span><span class='hs-varid'>m</span></a><span class='hs-layout'>)</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##900 : VNat.VNat | (is$VNat.Zero lq_tmp$x##900 &lt;=&gt; false)
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##900 == n##a3NU
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##900 == n##a3NU
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##900 &lt;=&gt; true)
+                             &amp;&amp; lq_tmp$x##900 == VNat.Suc n##a3NU
+                             &amp;&amp; lq_tmp$x##900 == VNat.Suc n##a3NU}</span><span class='hs-layout'>(</span></a><span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##903 : VNat.VNat | lq_tmp$x##903 == n##a3NU}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum> 58: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##932 : VNat.VNat | (is$VNat.Zero lq_tmp$x##932 &lt;=&gt; false)
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##932 == lq_anf$##7205759403792808559##d3Th
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##932 == lq_anf$##7205759403792808559##d3Th
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##932 &lt;=&gt; true)
+                             &amp;&amp; lq_tmp$x##932 == VNat.Suc lq_anf$##7205759403792808559##d3Th
+                             &amp;&amp; lq_tmp$x##932 == VNat.Suc lq_anf$##7205759403792808559##d3Th}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##923 : VNat.VNat | lq_tmp$x##923 == VNat.vadd m##a3NV lq_anf$##7205759403792808558##d3Tg
+                             &amp;&amp; lq_tmp$x##923 == (if is$VNat.Zero m##a3NV then lq_anf$##7205759403792808558##d3Tg else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 m##a3NV) lq_anf$##7205759403792808558##d3Tg))
+                             &amp;&amp; lq_tmp$x##923 == VNat.vadd m##a3NV lq_anf$##7205759403792808558##d3Tg}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##928 : VNat.VNat | lq_tmp$x##928 == m##a3NV}</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##916 : VNat.VNat | (is$VNat.Zero lq_tmp$x##916 &lt;=&gt; false)
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##916 == n##a3NU
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##916 == n##a3NU
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##916 &lt;=&gt; true)
+                             &amp;&amp; lq_tmp$x##916 == VNat.Suc n##a3NU
+                             &amp;&amp; lq_tmp$x##916 == VNat.Suc n##a3NU}</span><span class='hs-layout'>(</span></a><span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##919 : VNat.VNat | lq_tmp$x##919 == n##a3NU}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span><span class='hs-layout'>)</span>
+<span class=hs-linenum> 59: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##991 : VNat.VNat | $k_##990[VV##989:=lq_tmp$x##991][lq_tmp$x##987:=lq_anf$##7205759403792808564##d3Tm][lq_tmp$x##988:=lq_anf$##7205759403792808565##d3Tn]
+                             &amp;&amp; $k_##998[VV##997:=lq_tmp$x##991][lq_tmp$x##987:=lq_anf$##7205759403792808564##d3Tm][lq_tmp$x##988:=lq_anf$##7205759403792808565##d3Tn]
+                             &amp;&amp; lq_tmp$x##991 == Language.Haskell.Liquid.ProofCombinators.? lq_anf$##7205759403792808564##d3Tm lq_anf$##7205759403792808565##d3Tn}</span><span class='hs-layout'>(</span></a><a class=annot href="#"><span class=annottext>{lq_tmp$x##967 : VNat.VNat | (is$VNat.Zero lq_tmp$x##967 &lt;=&gt; false)
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##967 == lq_anf$##7205759403792808563##d3Tl
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##967 == lq_anf$##7205759403792808563##d3Tl
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##967 &lt;=&gt; true)
+                             &amp;&amp; lq_tmp$x##967 == VNat.Suc lq_anf$##7205759403792808563##d3Tl
+                             &amp;&amp; lq_tmp$x##967 == VNat.Suc lq_anf$##7205759403792808563##d3Tl}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##961 : VNat.VNat | (is$VNat.Zero lq_tmp$x##961 &lt;=&gt; false)
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##961 == lq_anf$##7205759403792808562##d3Tk
+                             &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##961 == lq_anf$##7205759403792808562##d3Tk
+                             &amp;&amp; (is$VNat.Suc lq_tmp$x##961 &lt;=&gt; true)
+                             &amp;&amp; lq_tmp$x##961 == VNat.Suc lq_anf$##7205759403792808562##d3Tk
+                             &amp;&amp; lq_tmp$x##961 == VNat.Suc lq_anf$##7205759403792808562##d3Tk}</span><span class='hs-layout'>(</span></a><span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##952 : VNat.VNat | lq_tmp$x##952 == VNat.vadd m##a3NV n##a3NU
+                             &amp;&amp; lq_tmp$x##952 == (if is$VNat.Zero m##a3NV then n##a3NU else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 m##a3NV) n##a3NU))
+                             &amp;&amp; lq_tmp$x##952 == VNat.vadd m##a3NV n##a3NU}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##957 : VNat.VNat | lq_tmp$x##957 == m##a3NV}</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##958 : VNat.VNat | lq_tmp$x##958 == n##a3NU}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span><span class='hs-layout'>)</span> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##974 : () | VNat.vadd m##a3NV (VNat.Suc n##a3NU) == VNat.Suc (VNat.vadd m##a3NV n##a3NU)
+                      &amp;&amp; lq_tmp$x##974 == VNat.vadd_Suc_right m##a3NV n##a3NU}</span><span class='hs-varid'>vadd_Suc_right</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##979 : VNat.VNat | lq_tmp$x##979 == m##a3NV}</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##980 : VNat.VNat | lq_tmp$x##980 == n##a3NU}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum> 60: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1032 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1032 &lt;=&gt; false)
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1032 == lq_anf$##7205759403792808569##d3Tr
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1032 == lq_anf$##7205759403792808569##d3Tr
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1032 &lt;=&gt; true)
+                              &amp;&amp; lq_tmp$x##1032 == VNat.Suc lq_anf$##7205759403792808569##d3Tr
+                              &amp;&amp; lq_tmp$x##1032 == VNat.Suc lq_anf$##7205759403792808569##d3Tr}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1023 : VNat.VNat | lq_tmp$x##1023 == VNat.vadd lq_anf$##7205759403792808568##d3Tq n##a3NU
+                              &amp;&amp; lq_tmp$x##1023 == (if is$VNat.Zero lq_anf$##7205759403792808568##d3Tq then n##a3NU else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 lq_anf$##7205759403792808568##d3Tq) n##a3NU))
+                              &amp;&amp; lq_tmp$x##1023 == VNat.vadd lq_anf$##7205759403792808568##d3Tq n##a3NU}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1016 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1016 &lt;=&gt; false)
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1016 == m##a3NV
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1016 == m##a3NV
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1016 &lt;=&gt; true)
+                              &amp;&amp; lq_tmp$x##1016 == VNat.Suc m##a3NV
+                              &amp;&amp; lq_tmp$x##1016 == VNat.Suc m##a3NV}</span><span class='hs-layout'>(</span></a><span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1019 : VNat.VNat | lq_tmp$x##1019 == m##a3NV}</span><span class='hs-varid'>m</span></a><span class='hs-layout'>)</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1029 : VNat.VNat | lq_tmp$x##1029 == n##a3NU}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum> 61: </span>    <span class='hs-varop'>***</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1061 : Language.Haskell.Liquid.ProofCombinators.QED | lq_tmp$x##1061 == Language.Haskell.Liquid.ProofCombinators.QED
+                                                                 &amp;&amp; lq_tmp$x##1061 == Language.Haskell.Liquid.ProofCombinators.QED}</span><span class='hs-conid'>QED</span></a>
+<span class=hs-linenum> 62: </span>
+<span class=hs-linenum> 63: </span><span class='hs-comment'>-- Lemma. Additive left-identity i.e. 0 + n = n.</span>
+<span class=hs-linenum> 64: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>automatic</span><span class='hs-comment'>-</span><span class='hs-varid'>instances</span> <span class='hs-varid'>vadd_identity_left</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 65: </span><span class='hs-keyword'>{-@</span>
+<span class=hs-linenum> 66: </span><span class='hs-definition'>vadd_identity_left</span><span class='hs-keyglyph'>::</span> <span class='hs-varid'>n</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>{IsIdentityLeft vadd Zero n}</span>
+<span class=hs-linenum> 67: </span><span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 68: </span><span class='hs-definition'>vadd_identity_left</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Proof</span>
+<span class=hs-linenum> 69: </span><a class=annot href="#"><span class=annottext>lq_tmp$x##1824:VNat.VNat -&gt; {VV : () | VNat.vadd VNat.Zero lq_tmp$x##1824 == lq_tmp$x##1824}</span><span class='hs-definition'>vadd_identity_left</span></a> <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>()</span>
+<span class=hs-linenum> 70: </span>
+<span class=hs-linenum> 71: </span><span class='hs-comment'>-- Lemma. Additive identity i.e. n + 0 = 0 + n = n.</span>
+<span class=hs-linenum> 72: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>automatic</span><span class='hs-comment'>-</span><span class='hs-varid'>instances</span> <span class='hs-varid'>vadd_identity</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 73: </span><span class='hs-keyword'>{-@</span>
+<span class=hs-linenum> 74: </span><span class='hs-definition'>vadd_identity</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>n</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>{IsIdentity vadd Zero n}</span>
+<span class=hs-linenum> 75: </span><span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 76: </span><span class='hs-definition'>vadd_identity</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Proof</span>
+<span class=hs-linenum> 77: </span><a class=annot href="#"><span class=annottext>lq_tmp$x##728:VNat.VNat -&gt; {VV : () | VNat.vadd VNat.Zero lq_tmp$x##728 == lq_tmp$x##728
+                                      &amp;&amp; VNat.vadd lq_tmp$x##728 VNat.Zero == lq_tmp$x##728}</span><span class='hs-definition'>vadd_identity</span></a> <a class=annot href="#"><span class=annottext>VNat.VNat</span><span class='hs-varid'>n</span></a> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>vadd_identity_right</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##734 : VNat.VNat | lq_tmp$x##734 == n##a3NX}</span><span class='hs-varid'>n</span></a>
+<span class=hs-linenum> 78: </span>
+<span class=hs-linenum> 79: </span><span class='hs-comment'>-- Lemma. Addition is commutative i.e. m + n = n + m.</span>
+<span class=hs-linenum> 80: </span><span class='hs-keyword'>{-@</span>
+<span class=hs-linenum> 81: </span><span class='hs-definition'>vadd_commutative</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>m</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>n</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>{IsCommutative vadd m n}</span>
+<span class=hs-linenum> 82: </span><span class='hs-keyword'>@-}</span>
+<span class=hs-linenum> 83: </span><span class='hs-definition'>vadd_commutative</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Proof</span>
+<span class=hs-linenum> 84: </span><a class=annot href="#"><span class=annottext>lq_tmp$x##1063:VNat.VNat -&gt; lq_tmp$x##1064:VNat.VNat -&gt; {VV : () | VNat.vadd lq_tmp$x##1063 lq_tmp$x##1064 == VNat.vadd lq_tmp$x##1064 lq_tmp$x##1063}</span><span class='hs-definition'>vadd_commutative</span></a> <span class='hs-conid'>Zero</span> <a class=annot href="#"><span class=annottext>VNat.VNat</span><span class='hs-varid'>n</span></a> <span class='hs-keyglyph'>=</span>
+<span class=hs-linenum> 85: </span>  <a class=annot href="#"><span class=annottext>{lq_tmp$x##1077 : VNat.VNat | lq_tmp$x##1077 == VNat.vadd VNat.Zero n##a3NY
+                              &amp;&amp; lq_tmp$x##1077 == (if is$VNat.Zero VNat.Zero then n##a3NY else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 VNat.Zero) n##a3NY))
+                              &amp;&amp; lq_tmp$x##1077 == VNat.vadd VNat.Zero n##a3NY}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1082 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1082 &lt;=&gt; true)
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1082 &lt;=&gt; false)
+                              &amp;&amp; lq_tmp$x##1082 == VNat.Zero
+                              &amp;&amp; lq_tmp$x##1082 == VNat.Zero}</span><span class='hs-conid'>Zero</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1083 : VNat.VNat | lq_tmp$x##1083 == n##a3NY}</span><span class='hs-varid'>n</span></a>
+<span class=hs-linenum> 86: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1096 : VNat.VNat | lq_tmp$x##1096 == n##a3NY}</span><span class='hs-varid'>n</span></a> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1099 : () | VNat.vadd VNat.Zero n##a3NY == n##a3NY
+                       &amp;&amp; VNat.vadd n##a3NY VNat.Zero == n##a3NY
+                       &amp;&amp; lq_tmp$x##1099 == VNat.vadd_identity n##a3NY}</span><span class='hs-varid'>vadd_identity</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1102 : VNat.VNat | lq_tmp$x##1102 == n##a3NY}</span><span class='hs-varid'>n</span></a>
+<span class=hs-linenum> 87: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1126 : VNat.VNat | lq_tmp$x##1126 == VNat.vadd n##a3NY VNat.Zero
+                              &amp;&amp; lq_tmp$x##1126 == (if is$VNat.Zero n##a3NY then VNat.Zero else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 n##a3NY) VNat.Zero))
+                              &amp;&amp; lq_tmp$x##1126 == VNat.vadd n##a3NY VNat.Zero}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1131 : VNat.VNat | lq_tmp$x##1131 == n##a3NY}</span><span class='hs-varid'>n</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1132 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1132 &lt;=&gt; true)
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1132 &lt;=&gt; false)
+                              &amp;&amp; lq_tmp$x##1132 == VNat.Zero
+                              &amp;&amp; lq_tmp$x##1132 == VNat.Zero}</span><span class='hs-conid'>Zero</span></a> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1148 : () | VNat.vadd VNat.Zero n##a3NY == n##a3NY
+                       &amp;&amp; VNat.vadd n##a3NY VNat.Zero == n##a3NY
+                       &amp;&amp; lq_tmp$x##1148 == VNat.vadd_identity n##a3NY}</span><span class='hs-varid'>vadd_identity</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1151 : VNat.VNat | lq_tmp$x##1151 == n##a3NY}</span><span class='hs-varid'>n</span></a>
+<span class=hs-linenum> 88: </span>    <span class='hs-varop'>***</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1184 : Language.Haskell.Liquid.ProofCombinators.QED | lq_tmp$x##1184 == Language.Haskell.Liquid.ProofCombinators.QED
+                                                                 &amp;&amp; lq_tmp$x##1184 == Language.Haskell.Liquid.ProofCombinators.QED}</span><span class='hs-conid'>QED</span></a>
+<span class=hs-linenum> 89: </span><span class='hs-definition'>vadd_commutative</span> <span class='hs-layout'>(</span><span class='hs-conid'>Suc</span> <span class='hs-varid'>m</span><span class='hs-layout'>)</span> <span class='hs-varid'>n</span> <span class='hs-keyglyph'>=</span>
+<span class=hs-linenum> 90: </span>  <a class=annot href="#"><span class=annottext>{lq_tmp$x##1204 : VNat.VNat | lq_tmp$x##1204 == VNat.vadd lq_anf$##7205759403792808581##d3TD n##a3NY
+                              &amp;&amp; lq_tmp$x##1204 == (if is$VNat.Zero lq_anf$##7205759403792808581##d3TD then n##a3NY else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 lq_anf$##7205759403792808581##d3TD) n##a3NY))
+                              &amp;&amp; lq_tmp$x##1204 == VNat.vadd lq_anf$##7205759403792808581##d3TD n##a3NY}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1197 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1197 &lt;=&gt; false)
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1197 == m##a3NZ
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1197 == m##a3NZ
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1197 &lt;=&gt; true)
+                              &amp;&amp; lq_tmp$x##1197 == VNat.Suc m##a3NZ
+                              &amp;&amp; lq_tmp$x##1197 == VNat.Suc m##a3NZ}</span><span class='hs-layout'>(</span></a><span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1200 : VNat.VNat | lq_tmp$x##1200 == m##a3NZ}</span><span class='hs-varid'>m</span></a><span class='hs-layout'>)</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1210 : VNat.VNat | lq_tmp$x##1210 == n##a3NY}</span><span class='hs-varid'>n</span></a>
+<span class=hs-linenum> 91: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1223 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1223 &lt;=&gt; false)
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1223 == lq_anf$##7205759403792808583##d3TF
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1223 == lq_anf$##7205759403792808583##d3TF
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1223 &lt;=&gt; true)
+                              &amp;&amp; lq_tmp$x##1223 == VNat.Suc lq_anf$##7205759403792808583##d3TF
+                              &amp;&amp; lq_tmp$x##1223 == VNat.Suc lq_anf$##7205759403792808583##d3TF}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1214 : VNat.VNat | lq_tmp$x##1214 == VNat.vadd m##a3NZ n##a3NY
+                              &amp;&amp; lq_tmp$x##1214 == (if is$VNat.Zero m##a3NZ then n##a3NY else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 m##a3NZ) n##a3NY))
+                              &amp;&amp; lq_tmp$x##1214 == VNat.vadd m##a3NZ n##a3NY}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1219 : VNat.VNat | lq_tmp$x##1219 == m##a3NZ}</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1220 : VNat.VNat | lq_tmp$x##1220 == n##a3NY}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum> 92: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1276 : VNat.VNat | $k_##1275[VV##1274:=lq_tmp$x##1276][lq_tmp$x##1272:=lq_anf$##7205759403792808587##d3TJ][lq_tmp$x##1273:=lq_anf$##7205759403792808588##d3TK]
+                              &amp;&amp; $k_##1283[VV##1282:=lq_tmp$x##1276][lq_tmp$x##1272:=lq_anf$##7205759403792808587##d3TJ][lq_tmp$x##1273:=lq_anf$##7205759403792808588##d3TK]
+                              &amp;&amp; lq_tmp$x##1276 == Language.Haskell.Liquid.ProofCombinators.? lq_anf$##7205759403792808587##d3TJ lq_anf$##7205759403792808588##d3TK}</span><span class='hs-layout'>(</span></a><a class=annot href="#"><span class=annottext>{lq_tmp$x##1252 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1252 &lt;=&gt; false)
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1252 == lq_anf$##7205759403792808586##d3TI
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1252 == lq_anf$##7205759403792808586##d3TI
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1252 &lt;=&gt; true)
+                              &amp;&amp; lq_tmp$x##1252 == VNat.Suc lq_anf$##7205759403792808586##d3TI
+                              &amp;&amp; lq_tmp$x##1252 == VNat.Suc lq_anf$##7205759403792808586##d3TI}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1243 : VNat.VNat | lq_tmp$x##1243 == VNat.vadd n##a3NY m##a3NZ
+                              &amp;&amp; lq_tmp$x##1243 == (if is$VNat.Zero n##a3NY then m##a3NZ else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 n##a3NY) m##a3NZ))
+                              &amp;&amp; lq_tmp$x##1243 == VNat.vadd n##a3NY m##a3NZ}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1248 : VNat.VNat | lq_tmp$x##1248 == n##a3NY}</span><span class='hs-varid'>n</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1249 : VNat.VNat | lq_tmp$x##1249 == m##a3NZ}</span><span class='hs-varid'>m</span></a><span class='hs-layout'>)</span> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1259 : () | VNat.vadd m##a3NZ n##a3NY == VNat.vadd n##a3NY m##a3NZ
+                       &amp;&amp; lq_tmp$x##1259 == VNat.vadd_commutative m##a3NZ n##a3NY}</span><span class='hs-varid'>vadd_commutative</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1264 : VNat.VNat | lq_tmp$x##1264 == m##a3NZ}</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1265 : VNat.VNat | lq_tmp$x##1265 == n##a3NY}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum> 93: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1335 : VNat.VNat | $k_##1334[VV##1333:=lq_tmp$x##1335][lq_tmp$x##1331:=lq_anf$##7205759403792808592##d3TO][lq_tmp$x##1332:=lq_anf$##7205759403792808593##d3TP]
+                              &amp;&amp; $k_##1342[VV##1341:=lq_tmp$x##1335][lq_tmp$x##1331:=lq_anf$##7205759403792808592##d3TO][lq_tmp$x##1332:=lq_anf$##7205759403792808593##d3TP]
+                              &amp;&amp; lq_tmp$x##1335 == Language.Haskell.Liquid.ProofCombinators.? lq_anf$##7205759403792808592##d3TO lq_anf$##7205759403792808593##d3TP}</span><span class='hs-layout'>(</span></a><a class=annot href="#"><span class=annottext>{lq_tmp$x##1308 : VNat.VNat | lq_tmp$x##1308 == VNat.vadd n##a3NY lq_anf$##7205759403792808591##d3TN
+                              &amp;&amp; lq_tmp$x##1308 == (if is$VNat.Zero n##a3NY then lq_anf$##7205759403792808591##d3TN else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 n##a3NY) lq_anf$##7205759403792808591##d3TN))
+                              &amp;&amp; lq_tmp$x##1308 == VNat.vadd n##a3NY lq_anf$##7205759403792808591##d3TN}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1313 : VNat.VNat | lq_tmp$x##1313 == n##a3NY}</span><span class='hs-varid'>n</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1301 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1301 &lt;=&gt; false)
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1301 == m##a3NZ
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1301 == m##a3NZ
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1301 &lt;=&gt; true)
+                              &amp;&amp; lq_tmp$x##1301 == VNat.Suc m##a3NZ
+                              &amp;&amp; lq_tmp$x##1301 == VNat.Suc m##a3NZ}</span><span class='hs-layout'>(</span></a><span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1304 : VNat.VNat | lq_tmp$x##1304 == m##a3NZ}</span><span class='hs-varid'>m</span></a><span class='hs-layout'>)</span> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1318 : () | VNat.vadd n##a3NY (VNat.Suc m##a3NZ) == VNat.Suc (VNat.vadd n##a3NY m##a3NZ)
+                       &amp;&amp; lq_tmp$x##1318 == VNat.vadd_Suc_right n##a3NY m##a3NZ}</span><span class='hs-varid'>vadd_Suc_right</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1323 : VNat.VNat | lq_tmp$x##1323 == n##a3NY}</span><span class='hs-varid'>n</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1324 : VNat.VNat | lq_tmp$x##1324 == m##a3NZ}</span><span class='hs-varid'>m</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum> 94: </span>    <span class='hs-varop'>***</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1370 : Language.Haskell.Liquid.ProofCombinators.QED | lq_tmp$x##1370 == Language.Haskell.Liquid.ProofCombinators.QED
+                                                                 &amp;&amp; lq_tmp$x##1370 == Language.Haskell.Liquid.ProofCombinators.QED}</span><span class='hs-conid'>QED</span></a>
+<span class=hs-linenum> 95: </span>
+<span class=hs-linenum> 96: </span><span class='hs-comment'>-- Lemma. Addition is associative i.e. l + (m + n) = (l + m) + n.</span>
+<span class=hs-linenum> 97: </span><span class='hs-keyword'>{-@</span>
+<span class=hs-linenum> 98: </span><span class='hs-definition'>vadd_associative</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>l</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>m</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>n</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>{IsAssociative vadd l m n}</span>
+<span class=hs-linenum> 99: </span><span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>100: </span><span class='hs-definition'>vadd_associative</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Proof</span>
+<span class=hs-linenum>101: </span><a class=annot href="#"><span class=annottext>lq_tmp$x##1372:VNat.VNat -&gt; lq_tmp$x##1373:VNat.VNat -&gt; lq_tmp$x##1374:VNat.VNat -&gt; {VV : () | VNat.vadd lq_tmp$x##1372 (VNat.vadd lq_tmp$x##1373 lq_tmp$x##1374) == VNat.vadd (VNat.vadd lq_tmp$x##1372 lq_tmp$x##1373) lq_tmp$x##1374}</span><span class='hs-definition'>vadd_associative</span></a> <span class='hs-conid'>Zero</span> <a class=annot href="#"><span class=annottext>VNat.VNat</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>VNat.VNat</span><span class='hs-varid'>n</span></a> <span class='hs-keyglyph'>=</span>
+<span class=hs-linenum>102: </span>  <a class=annot href="#"><span class=annottext>{lq_tmp$x##1398 : VNat.VNat | lq_tmp$x##1398 == VNat.vadd VNat.Zero lq_anf$##7205759403792808597##d3TT
+                              &amp;&amp; lq_tmp$x##1398 == (if is$VNat.Zero VNat.Zero then lq_anf$##7205759403792808597##d3TT else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 VNat.Zero) lq_anf$##7205759403792808597##d3TT))
+                              &amp;&amp; lq_tmp$x##1398 == VNat.vadd VNat.Zero lq_anf$##7205759403792808597##d3TT}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1403 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1403 &lt;=&gt; true)
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1403 &lt;=&gt; false)
+                              &amp;&amp; lq_tmp$x##1403 == VNat.Zero
+                              &amp;&amp; lq_tmp$x##1403 == VNat.Zero}</span><span class='hs-conid'>Zero</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1388 : VNat.VNat | lq_tmp$x##1388 == VNat.vadd m##a3O1 n##a3O2
+                              &amp;&amp; lq_tmp$x##1388 == (if is$VNat.Zero m##a3O1 then n##a3O2 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 m##a3O1) n##a3O2))
+                              &amp;&amp; lq_tmp$x##1388 == VNat.vadd m##a3O1 n##a3O2}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1393 : VNat.VNat | lq_tmp$x##1393 == m##a3O1}</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1394 : VNat.VNat | lq_tmp$x##1394 == n##a3O2}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum>103: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1441 : VNat.VNat | $k_##1440[VV##1439:=lq_tmp$x##1441][lq_tmp$x##1437:=lq_anf$##7205759403792808599##d3TV][lq_tmp$x##1438:=lq_anf$##7205759403792808601##d3TX]
+                              &amp;&amp; $k_##1448[VV##1447:=lq_tmp$x##1441][lq_tmp$x##1437:=lq_anf$##7205759403792808599##d3TV][lq_tmp$x##1438:=lq_anf$##7205759403792808601##d3TX]
+                              &amp;&amp; lq_tmp$x##1441 == Language.Haskell.Liquid.ProofCombinators.? lq_anf$##7205759403792808599##d3TV lq_anf$##7205759403792808601##d3TX}</span><span class='hs-layout'>(</span></a><a class=annot href="#"><span class=annottext>{lq_tmp$x##1408 : VNat.VNat | lq_tmp$x##1408 == VNat.vadd m##a3O1 n##a3O2
+                              &amp;&amp; lq_tmp$x##1408 == (if is$VNat.Zero m##a3O1 then n##a3O2 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 m##a3O1) n##a3O2))
+                              &amp;&amp; lq_tmp$x##1408 == VNat.vadd m##a3O1 n##a3O2}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1413 : VNat.VNat | lq_tmp$x##1413 == m##a3O1}</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1414 : VNat.VNat | lq_tmp$x##1414 == n##a3O2}</span><span class='hs-varid'>n</span></a> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1427 : () | VNat.vadd VNat.Zero lq_anf$##7205759403792808600##d3TW == lq_anf$##7205759403792808600##d3TW
+                       &amp;&amp; VNat.vadd lq_anf$##7205759403792808600##d3TW VNat.Zero == lq_anf$##7205759403792808600##d3TW
+                       &amp;&amp; lq_tmp$x##1427 == VNat.vadd_identity lq_anf$##7205759403792808600##d3TW}</span><span class='hs-varid'>vadd_identity</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1418 : VNat.VNat | lq_tmp$x##1418 == VNat.vadd m##a3O1 n##a3O2
+                              &amp;&amp; lq_tmp$x##1418 == (if is$VNat.Zero m##a3O1 then n##a3O2 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 m##a3O1) n##a3O2))
+                              &amp;&amp; lq_tmp$x##1418 == VNat.vadd m##a3O1 n##a3O2}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1423 : VNat.VNat | lq_tmp$x##1423 == m##a3O1}</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1424 : VNat.VNat | lq_tmp$x##1424 == n##a3O2}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span><span class='hs-layout'>)</span>
+<span class=hs-linenum>104: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1500 : VNat.VNat | $k_##1499[VV##1498:=lq_tmp$x##1500][lq_tmp$x##1496:=lq_anf$##7205759403792808605##d3U1][lq_tmp$x##1497:=lq_anf$##7205759403792808606##d3U2]
+                              &amp;&amp; $k_##1507[VV##1506:=lq_tmp$x##1500][lq_tmp$x##1496:=lq_anf$##7205759403792808605##d3U1][lq_tmp$x##1497:=lq_anf$##7205759403792808606##d3U2]
+                              &amp;&amp; lq_tmp$x##1500 == Language.Haskell.Liquid.ProofCombinators.? lq_anf$##7205759403792808605##d3U1 lq_anf$##7205759403792808606##d3U2}</span><span class='hs-layout'>(</span></a><a class=annot href="#"><span class=annottext>{lq_tmp$x##1477 : VNat.VNat | lq_tmp$x##1477 == VNat.vadd lq_anf$##7205759403792808604##d3U0 n##a3O2
+                              &amp;&amp; lq_tmp$x##1477 == (if is$VNat.Zero lq_anf$##7205759403792808604##d3U0 then n##a3O2 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 lq_anf$##7205759403792808604##d3U0) n##a3O2))
+                              &amp;&amp; lq_tmp$x##1477 == VNat.vadd lq_anf$##7205759403792808604##d3U0 n##a3O2}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1467 : VNat.VNat | lq_tmp$x##1467 == VNat.vadd VNat.Zero m##a3O1
+                              &amp;&amp; lq_tmp$x##1467 == (if is$VNat.Zero VNat.Zero then m##a3O1 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 VNat.Zero) m##a3O1))
+                              &amp;&amp; lq_tmp$x##1467 == VNat.vadd VNat.Zero m##a3O1}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1472 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1472 &lt;=&gt; true)
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1472 &lt;=&gt; false)
+                              &amp;&amp; lq_tmp$x##1472 == VNat.Zero
+                              &amp;&amp; lq_tmp$x##1472 == VNat.Zero}</span><span class='hs-conid'>Zero</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1473 : VNat.VNat | lq_tmp$x##1473 == m##a3O1}</span><span class='hs-varid'>m</span></a><span class='hs-layout'>)</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1483 : VNat.VNat | lq_tmp$x##1483 == n##a3O2}</span><span class='hs-varid'>n</span></a> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1486 : () | VNat.vadd VNat.Zero m##a3O1 == m##a3O1
+                       &amp;&amp; VNat.vadd m##a3O1 VNat.Zero == m##a3O1
+                       &amp;&amp; lq_tmp$x##1486 == VNat.vadd_identity m##a3O1}</span><span class='hs-varid'>vadd_identity</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1489 : VNat.VNat | lq_tmp$x##1489 == m##a3O1}</span><span class='hs-varid'>m</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum>105: </span>    <span class='hs-varop'>***</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1535 : Language.Haskell.Liquid.ProofCombinators.QED | lq_tmp$x##1535 == Language.Haskell.Liquid.ProofCombinators.QED
+                                                                 &amp;&amp; lq_tmp$x##1535 == Language.Haskell.Liquid.ProofCombinators.QED}</span><span class='hs-conid'>QED</span></a>
+<span class=hs-linenum>106: </span><span class='hs-definition'>vadd_associative</span> <span class='hs-layout'>(</span><span class='hs-conid'>Suc</span> <span class='hs-varid'>l</span><span class='hs-layout'>)</span> <span class='hs-varid'>m</span> <span class='hs-varid'>n</span> <span class='hs-keyglyph'>=</span>
+<span class=hs-linenum>107: </span>  <a class=annot href="#"><span class=annottext>{lq_tmp$x##1565 : VNat.VNat | lq_tmp$x##1565 == VNat.vadd lq_anf$##7205759403792808609##d3U5 lq_anf$##7205759403792808610##d3U6
+                              &amp;&amp; lq_tmp$x##1565 == (if is$VNat.Zero lq_anf$##7205759403792808609##d3U5 then lq_anf$##7205759403792808610##d3U6 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 lq_anf$##7205759403792808609##d3U5) lq_anf$##7205759403792808610##d3U6))
+                              &amp;&amp; lq_tmp$x##1565 == VNat.vadd lq_anf$##7205759403792808609##d3U5 lq_anf$##7205759403792808610##d3U6}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1548 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1548 &lt;=&gt; false)
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1548 == l##a3O3
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1548 == l##a3O3
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1548 &lt;=&gt; true)
+                              &amp;&amp; lq_tmp$x##1548 == VNat.Suc l##a3O3
+                              &amp;&amp; lq_tmp$x##1548 == VNat.Suc l##a3O3}</span><span class='hs-layout'>(</span></a><span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1551 : VNat.VNat | lq_tmp$x##1551 == l##a3O3}</span><span class='hs-varid'>l</span></a><span class='hs-layout'>)</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1555 : VNat.VNat | lq_tmp$x##1555 == VNat.vadd m##a3O1 n##a3O2
+                              &amp;&amp; lq_tmp$x##1555 == (if is$VNat.Zero m##a3O1 then n##a3O2 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 m##a3O1) n##a3O2))
+                              &amp;&amp; lq_tmp$x##1555 == VNat.vadd m##a3O1 n##a3O2}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1560 : VNat.VNat | lq_tmp$x##1560 == m##a3O1}</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1561 : VNat.VNat | lq_tmp$x##1561 == n##a3O2}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum>108: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1594 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1594 &lt;=&gt; false)
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1594 == lq_anf$##7205759403792808613##d3U9
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1594 == lq_anf$##7205759403792808613##d3U9
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1594 &lt;=&gt; true)
+                              &amp;&amp; lq_tmp$x##1594 == VNat.Suc lq_anf$##7205759403792808613##d3U9
+                              &amp;&amp; lq_tmp$x##1594 == VNat.Suc lq_anf$##7205759403792808613##d3U9}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1585 : VNat.VNat | lq_tmp$x##1585 == VNat.vadd l##a3O3 lq_anf$##7205759403792808612##d3U8
+                              &amp;&amp; lq_tmp$x##1585 == (if is$VNat.Zero l##a3O3 then lq_anf$##7205759403792808612##d3U8 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 l##a3O3) lq_anf$##7205759403792808612##d3U8))
+                              &amp;&amp; lq_tmp$x##1585 == VNat.vadd l##a3O3 lq_anf$##7205759403792808612##d3U8}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1590 : VNat.VNat | lq_tmp$x##1590 == l##a3O3}</span><span class='hs-varid'>l</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1575 : VNat.VNat | lq_tmp$x##1575 == VNat.vadd m##a3O1 n##a3O2
+                              &amp;&amp; lq_tmp$x##1575 == (if is$VNat.Zero m##a3O1 then n##a3O2 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 m##a3O1) n##a3O2))
+                              &amp;&amp; lq_tmp$x##1575 == VNat.vadd m##a3O1 n##a3O2}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1580 : VNat.VNat | lq_tmp$x##1580 == m##a3O1}</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1581 : VNat.VNat | lq_tmp$x##1581 == n##a3O2}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span><span class='hs-layout'>)</span>
+<span class=hs-linenum>109: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1661 : VNat.VNat | $k_##1660[VV##1659:=lq_tmp$x##1661][lq_tmp$x##1657:=lq_anf$##7205759403792808618##d3Ue][lq_tmp$x##1658:=lq_anf$##7205759403792808619##d3Uf]
+                              &amp;&amp; $k_##1668[VV##1667:=lq_tmp$x##1661][lq_tmp$x##1657:=lq_anf$##7205759403792808618##d3Ue][lq_tmp$x##1658:=lq_anf$##7205759403792808619##d3Uf]
+                              &amp;&amp; lq_tmp$x##1661 == Language.Haskell.Liquid.ProofCombinators.? lq_anf$##7205759403792808618##d3Ue lq_anf$##7205759403792808619##d3Uf}</span><span class='hs-layout'>(</span></a><a class=annot href="#"><span class=annottext>{lq_tmp$x##1633 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1633 &lt;=&gt; false)
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1633 == lq_anf$##7205759403792808617##d3Ud
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1633 == lq_anf$##7205759403792808617##d3Ud
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1633 &lt;=&gt; true)
+                              &amp;&amp; lq_tmp$x##1633 == VNat.Suc lq_anf$##7205759403792808617##d3Ud
+                              &amp;&amp; lq_tmp$x##1633 == VNat.Suc lq_anf$##7205759403792808617##d3Ud}</span><span class='hs-conid'>Suc</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1624 : VNat.VNat | lq_tmp$x##1624 == VNat.vadd lq_anf$##7205759403792808616##d3Uc n##a3O2
+                              &amp;&amp; lq_tmp$x##1624 == (if is$VNat.Zero lq_anf$##7205759403792808616##d3Uc then n##a3O2 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 lq_anf$##7205759403792808616##d3Uc) n##a3O2))
+                              &amp;&amp; lq_tmp$x##1624 == VNat.vadd lq_anf$##7205759403792808616##d3Uc n##a3O2}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1614 : VNat.VNat | lq_tmp$x##1614 == VNat.vadd l##a3O3 m##a3O1
+                              &amp;&amp; lq_tmp$x##1614 == (if is$VNat.Zero l##a3O3 then m##a3O1 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 l##a3O3) m##a3O1))
+                              &amp;&amp; lq_tmp$x##1614 == VNat.vadd l##a3O3 m##a3O1}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1619 : VNat.VNat | lq_tmp$x##1619 == l##a3O3}</span><span class='hs-varid'>l</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1620 : VNat.VNat | lq_tmp$x##1620 == m##a3O1}</span><span class='hs-varid'>m</span></a><span class='hs-layout'>)</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1630 : VNat.VNat | lq_tmp$x##1630 == n##a3O2}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span> <span class='hs-varop'>?</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1641 : () | VNat.vadd l##a3O3 (VNat.vadd m##a3O1 n##a3O2) == VNat.vadd (VNat.vadd l##a3O3 m##a3O1) n##a3O2
+                       &amp;&amp; lq_tmp$x##1641 == VNat.vadd_associative l##a3O3 m##a3O1 n##a3O2}</span><span class='hs-varid'>vadd_associative</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1648 : VNat.VNat | lq_tmp$x##1648 == l##a3O3}</span><span class='hs-varid'>l</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1649 : VNat.VNat | lq_tmp$x##1649 == m##a3O1}</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1650 : VNat.VNat | lq_tmp$x##1650 == n##a3O2}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum>110: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1703 : VNat.VNat | lq_tmp$x##1703 == VNat.vadd lq_anf$##7205759403792808623##d3Uj n##a3O2
+                              &amp;&amp; lq_tmp$x##1703 == (if is$VNat.Zero lq_anf$##7205759403792808623##d3Uj then n##a3O2 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 lq_anf$##7205759403792808623##d3Uj) n##a3O2))
+                              &amp;&amp; lq_tmp$x##1703 == VNat.vadd lq_anf$##7205759403792808623##d3Uj n##a3O2}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1696 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1696 &lt;=&gt; false)
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1696 == lq_anf$##7205759403792808622##d3Ui
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1696 == lq_anf$##7205759403792808622##d3Ui
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1696 &lt;=&gt; true)
+                              &amp;&amp; lq_tmp$x##1696 == VNat.Suc lq_anf$##7205759403792808622##d3Ui
+                              &amp;&amp; lq_tmp$x##1696 == VNat.Suc lq_anf$##7205759403792808622##d3Ui}</span><span class='hs-layout'>(</span></a><span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1687 : VNat.VNat | lq_tmp$x##1687 == VNat.vadd l##a3O3 m##a3O1
+                              &amp;&amp; lq_tmp$x##1687 == (if is$VNat.Zero l##a3O3 then m##a3O1 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 l##a3O3) m##a3O1))
+                              &amp;&amp; lq_tmp$x##1687 == VNat.vadd l##a3O3 m##a3O1}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1692 : VNat.VNat | lq_tmp$x##1692 == l##a3O3}</span><span class='hs-varid'>l</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1693 : VNat.VNat | lq_tmp$x##1693 == m##a3O1}</span><span class='hs-varid'>m</span></a><span class='hs-layout'>)</span><span class='hs-layout'>)</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1709 : VNat.VNat | lq_tmp$x##1709 == n##a3O2}</span><span class='hs-varid'>n</span></a>
+<span class=hs-linenum>111: </span>    <span class='hs-varop'>===</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1742 : VNat.VNat | lq_tmp$x##1742 == VNat.vadd lq_anf$##7205759403792808627##d3Un n##a3O2
+                              &amp;&amp; lq_tmp$x##1742 == (if is$VNat.Zero lq_anf$##7205759403792808627##d3Un then n##a3O2 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 lq_anf$##7205759403792808627##d3Un) n##a3O2))
+                              &amp;&amp; lq_tmp$x##1742 == VNat.vadd lq_anf$##7205759403792808627##d3Un n##a3O2}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1732 : VNat.VNat | lq_tmp$x##1732 == VNat.vadd lq_anf$##7205759403792808626##d3Um m##a3O1
+                              &amp;&amp; lq_tmp$x##1732 == (if is$VNat.Zero lq_anf$##7205759403792808626##d3Um then m##a3O1 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 lq_anf$##7205759403792808626##d3Um) m##a3O1))
+                              &amp;&amp; lq_tmp$x##1732 == VNat.vadd lq_anf$##7205759403792808626##d3Um m##a3O1}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vadd</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1725 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1725 &lt;=&gt; false)
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1725 == l##a3O3
+                              &amp;&amp; lqdc##$select##VNat.Suc##1 lq_tmp$x##1725 == l##a3O3
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1725 &lt;=&gt; true)
+                              &amp;&amp; lq_tmp$x##1725 == VNat.Suc l##a3O3
+                              &amp;&amp; lq_tmp$x##1725 == VNat.Suc l##a3O3}</span><span class='hs-layout'>(</span></a><span class='hs-conid'>Suc</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1728 : VNat.VNat | lq_tmp$x##1728 == l##a3O3}</span><span class='hs-varid'>l</span></a><span class='hs-layout'>)</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1738 : VNat.VNat | lq_tmp$x##1738 == m##a3O1}</span><span class='hs-varid'>m</span></a><span class='hs-layout'>)</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1748 : VNat.VNat | lq_tmp$x##1748 == n##a3O2}</span><span class='hs-varid'>n</span></a>
+<span class=hs-linenum>112: </span>    <span class='hs-varop'>***</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1774 : Language.Haskell.Liquid.ProofCombinators.QED | lq_tmp$x##1774 == Language.Haskell.Liquid.ProofCombinators.QED
+                                                                 &amp;&amp; lq_tmp$x##1774 == Language.Haskell.Liquid.ProofCombinators.QED}</span><span class='hs-conid'>QED</span></a>
+<span class=hs-linenum>113: </span>
+<span class=hs-linenum>114: </span><span class='hs-comment'>-- Function. Multiplication</span>
+<span class=hs-linenum>115: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>reflect</span> <span class='hs-varid'>vmul</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>116: </span><span class='hs-definition'>vmul</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Op2</span> <span class='hs-conid'>VNat</span>
+<span class=hs-linenum>117: </span><a class=annot href="#"><span class=annottext>lq_tmp$x##1778:VNat.VNat -&gt; lq_tmp$x##1779:VNat.VNat -&gt; {VV : VNat.VNat | VV == VNat.vmul lq_tmp$x##1778 lq_tmp$x##1779
+                                                                          &amp;&amp; VV == (if is$VNat.Zero lq_tmp$x##1778 then VNat.Zero else VNat.vadd lq_tmp$x##1779 (VNat.vmul (lqdc##$select##VNat.Suc##1 lq_tmp$x##1778) lq_tmp$x##1779))}</span><span class='hs-definition'>vmul</span></a> <span class='hs-conid'>Zero</span> <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1792 : VNat.VNat | (is$VNat.Zero lq_tmp$x##1792 &lt;=&gt; true)
+                              &amp;&amp; (is$VNat.Suc lq_tmp$x##1792 &lt;=&gt; false)
+                              &amp;&amp; lq_tmp$x##1792 == VNat.Zero
+                              &amp;&amp; lq_tmp$x##1792 == VNat.Zero}</span><span class='hs-conid'>Zero</span></a>
+<span class=hs-linenum>118: </span><span class='hs-definition'>vmul</span> <span class='hs-layout'>(</span><span class='hs-conid'>Suc</span> <span class='hs-varid'>m</span><span class='hs-layout'>)</span> <span class='hs-varid'>n</span> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>lq_tmp$x##562:VNat.VNat -&gt; lq_tmp$x##563:VNat.VNat -&gt; {VV : VNat.VNat | VV == VNat.vadd lq_tmp$x##562 lq_tmp$x##563
+                                                                        &amp;&amp; VV == (if is$VNat.Zero lq_tmp$x##562 then lq_tmp$x##563 else VNat.Suc (VNat.vadd (lqdc##$select##VNat.Suc##1 lq_tmp$x##562) lq_tmp$x##563))}</span><span class='hs-varid'>vadd</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1821 : VNat.VNat | lq_tmp$x##1821 == ds_d3SE}</span><span class='hs-varid'>n</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1806 : VNat.VNat | lq_tmp$x##1806 == VNat.vmul m##a3O6 ds_d3SE
+                              &amp;&amp; lq_tmp$x##1806 == (if is$VNat.Zero m##a3O6 then VNat.Zero else VNat.vadd ds_d3SE (VNat.vmul (lqdc##$select##VNat.Suc##1 m##a3O6) ds_d3SE))
+                              &amp;&amp; lq_tmp$x##1806 == VNat.vmul m##a3O6 ds_d3SE}</span><span class='hs-layout'>(</span></a><span class='hs-varid'>vmul</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1811 : VNat.VNat | lq_tmp$x##1811 == m##a3O6}</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1812 : VNat.VNat | lq_tmp$x##1812 == ds_d3SE}</span><span class='hs-varid'>n</span></a><span class='hs-layout'>)</span>
+<span class=hs-linenum>119: </span>
+<span class=hs-linenum>120: </span><span class='hs-comment'>-- Lemma. Multiplicative identity i.e. 1 * n = n.</span>
+<span class=hs-linenum>121: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>automatic</span><span class='hs-comment'>-</span><span class='hs-varid'>instances</span> <span class='hs-varid'>vmul_identity</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>122: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>vmul_identity</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>n</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>{IsIdentity vmul vone n}</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>123: </span><span class='hs-definition'>vmul_identity</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Proof</span>
+<span class=hs-linenum>124: </span><a class=annot href="#"><span class=annottext>lq_tmp$x##1828:VNat.VNat -&gt; {VV : () | VNat.vmul (VNat.Suc VNat.Zero) lq_tmp$x##1828 == lq_tmp$x##1828
+                                       &amp;&amp; VNat.vmul lq_tmp$x##1828 (VNat.Suc VNat.Zero) == lq_tmp$x##1828}</span><span class='hs-definition'>vmul_identity</span></a> <span class='hs-conid'>Zero</span> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1838 : () | lq_tmp$x##1838 == Language.Haskell.Liquid.ProofCombinators.trivial}</span><span class='hs-varid'>trivial</span></a>
+<span class=hs-linenum>125: </span><span class='hs-definition'>vmul_identity</span> <span class='hs-layout'>(</span><span class='hs-conid'>Suc</span> <span class='hs-varid'>n</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>lq_tmp$x##1828:VNat.VNat -&gt; {VV : () | VNat.vmul (VNat.Suc VNat.Zero) lq_tmp$x##1828 == lq_tmp$x##1828
+                                       &amp;&amp; VNat.vmul lq_tmp$x##1828 (VNat.Suc VNat.Zero) == lq_tmp$x##1828}</span><span class='hs-varid'>vmul_identity</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1854 : VNat.VNat | lq_tmp$x##1854 == n##a3O8}</span><span class='hs-varid'>n</span></a>
+<span class=hs-linenum>126: </span>
+<span class=hs-linenum>127: </span><span class='hs-comment'>-- Lemma. Multiplicative zero i.e. 0 * n = n * 0 = 0.</span>
+<span class=hs-linenum>128: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>automatic</span><span class='hs-comment'>-</span><span class='hs-varid'>instances</span> <span class='hs-varid'>vmul_zero</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>129: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>vmul_zero</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>n</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>{IsZero vmul Zero n}</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>130: </span><span class='hs-definition'>vmul_zero</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Proof</span>
+<span class=hs-linenum>131: </span><a class=annot href="#"><span class=annottext>lq_tmp$x##1855:VNat.VNat -&gt; {VV : () | VNat.vmul VNat.Zero lq_tmp$x##1855 == VNat.Zero
+                                       &amp;&amp; VNat.vmul lq_tmp$x##1855 VNat.Zero == VNat.Zero}</span><span class='hs-definition'>vmul_zero</span></a> <span class='hs-conid'>Zero</span> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1865 : () | lq_tmp$x##1865 == GHC.Tuple.()
+                       &amp;&amp; lq_tmp$x##1865 == GHC.Tuple.()}</span><span class='hs-conid'>()</span></a>
+<span class=hs-linenum>132: </span><span class='hs-definition'>vmul_zero</span> <span class='hs-layout'>(</span><span class='hs-conid'>Suc</span> <span class='hs-varid'>n</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>lq_tmp$x##1855:VNat.VNat -&gt; {VV : () | VNat.vmul VNat.Zero lq_tmp$x##1855 == VNat.Zero
+                                       &amp;&amp; VNat.vmul lq_tmp$x##1855 VNat.Zero == VNat.Zero}</span><span class='hs-varid'>vmul_zero</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1881 : VNat.VNat | lq_tmp$x##1881 == n##a3O9}</span><span class='hs-varid'>n</span></a>
+<span class=hs-linenum>133: </span>
+<span class=hs-linenum>134: </span><span class='hs-comment'>-- TODO: prove</span>
+<span class=hs-linenum>135: </span><span class='hs-comment'>-- Lemma. Multiplicative commutativity i.e. m * n = n * m.</span>
+<span class=hs-linenum>136: </span><span class='hs-keyword'>{-@</span>
+<span class=hs-linenum>137: </span><span class='hs-definition'>assume</span> <span class='hs-varid'>vmul_commutative</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>m</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>n</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span>
+<span class=hs-linenum>138: </span>  <span class='hs-keyword'>{IsCommutative vmul m n}</span>
+<span class=hs-linenum>139: </span><span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>140: </span><span class='hs-definition'>vmul_commutative</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Proof</span>
+<span class=hs-linenum>141: </span><a class=annot href="#"><span class=annottext>lq_tmp$x##1882:VNat.VNat -&gt; lq_tmp$x##1883:VNat.VNat -&gt; {VV : () | VNat.vmul lq_tmp$x##1882 lq_tmp$x##1883 == VNat.vmul lq_tmp$x##1883 lq_tmp$x##1882}</span><span class='hs-definition'>vmul_commutative</span></a> <span class='hs-conid'>Zero</span> <a class=annot href="#"><span class=annottext>VNat.VNat</span><span class='hs-varid'>n</span></a> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>lq_tmp$x##1855:VNat.VNat -&gt; {VV : () | VNat.vmul VNat.Zero lq_tmp$x##1855 == VNat.Zero
+                                       &amp;&amp; VNat.vmul lq_tmp$x##1855 VNat.Zero == VNat.Zero}</span><span class='hs-varid'>vmul_zero</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1899 : VNat.VNat | lq_tmp$x##1899 == n##a3Oa}</span><span class='hs-varid'>n</span></a>
+<span class=hs-linenum>142: </span><span class='hs-definition'>vmul_commutative</span> <span class='hs-varid'>m</span> <span class='hs-conid'>Zero</span> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>lq_tmp$x##1855:VNat.VNat -&gt; {VV : () | VNat.vmul VNat.Zero lq_tmp$x##1855 == VNat.Zero
+                                       &amp;&amp; VNat.vmul lq_tmp$x##1855 VNat.Zero == VNat.Zero}</span><span class='hs-varid'>vmul_zero</span></a> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1922 : VNat.VNat | lq_tmp$x##1922 == ds_d3Rf}</span><span class='hs-varid'>m</span></a>
+<span class=hs-linenum>143: </span><span class='hs-definition'>vmul_commutative</span> <span class='hs-layout'>(</span><span class='hs-conid'>Suc</span> <span class='hs-varid'>m</span><span class='hs-layout'>)</span> <span class='hs-layout'>(</span><span class='hs-conid'>Suc</span> <span class='hs-varid'>n</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <a class=annot href="#"><span class=annottext>{lq_tmp$x##1996 : () | lq_tmp$x##1996 == GHC.Tuple.()
+                       &amp;&amp; lq_tmp$x##1996 == GHC.Tuple.()}</span><span class='hs-conid'>()</span></a>
+<span class=hs-linenum>144: </span>
+<span class=hs-linenum>145: </span><span class='hs-comment'>-- TODO: proof in progress</span>
+<span class=hs-linenum>146: </span><span class='hs-comment'>-- vmul (Suc m) (Suc n)</span>
+<span class=hs-linenum>147: </span><span class='hs-comment'>--   === vadd (Suc n) (vmul m (Suc n))</span>
+<span class=hs-linenum>148: </span><span class='hs-comment'>--   === Suc (vadd n (vmul m (Suc n)))</span>
+<span class=hs-linenum>149: </span><span class='hs-comment'>--   === (Suc (vadd n (vmul (Suc n) m)) ? vmul_commutative m (Suc n))</span>
+<span class=hs-linenum>150: </span><span class='hs-comment'>--   === Suc (vadd n (vadd m (vmul n m)))</span>
+<span class=hs-linenum>151: </span><span class='hs-comment'>--   === (Suc (vadd n (vadd m (vmul m n))) ? vadd_commutative n m)</span>
+<span class=hs-linenum>152: </span><span class='hs-comment'>--   === (Suc (vadd (vadd n m) (vmul m n)) ? vadd_associative n m (vmul m n))</span>
+<span class=hs-linenum>153: </span><span class='hs-comment'>--   === (Suc (vadd (vadd m n) (vmul m n)) ? vadd_commutative m n)</span>
+<span class=hs-linenum>154: </span><span class='hs-comment'>--   === (Suc (vadd m (vadd n (vmul m n))) ? vadd_associative m n (vmul m n))</span>
+<span class=hs-linenum>155: </span><span class='hs-comment'>--   === Suc (vadd m (vmul (Suc m) n))</span>
+<span class=hs-linenum>156: </span><span class='hs-comment'>--   === (Suc (vadd m (vmul n (Suc m))) ? vmul_commutative (Suc m) n)</span>
+<span class=hs-linenum>157: </span><span class='hs-comment'>--   === vadd (Suc m) (vmul n (Suc m))</span>
+<span class=hs-linenum>158: </span><span class='hs-comment'>--   === vmul (Suc n) (Suc m)</span>
+<span class=hs-linenum>159: </span><span class='hs-comment'>--   *** QED</span>
+<span class=hs-linenum>160: </span>
+<span class=hs-linenum>161: </span><span class='hs-comment'>-- TODO: prove</span>
+<span class=hs-linenum>162: </span><span class='hs-comment'>-- Lemma. Distribution of vmultiplication over vaddition i.e.</span>
+<span class=hs-linenum>163: </span><span class='hs-comment'>-- l * (m + n) = (l * m) + (l * n).</span>
+<span class=hs-linenum>164: </span><span class='hs-keyword'>{-@</span> <span class='hs-varid'>assume</span> <span class='hs-varid'>vmul_distributive</span> <span class='hs-keyglyph'>::</span> <span class='hs-varid'>l</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>m</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>n</span><span class='hs-conop'>:</span><span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span>
+<span class=hs-linenum>165: </span>  <span class='hs-keyword'>{IsDistributive vmul vadd l m n}</span> <span class='hs-keyword'>@-}</span>
+<span class=hs-linenum>166: </span><span class='hs-definition'>vmul_distributive</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>VNat</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Proof</span>
+<span class=hs-linenum>167: </span><a class=annot href="#"><span class=annottext>lq_tmp$x##1999:VNat.VNat -&gt; lq_tmp$x##2000:VNat.VNat -&gt; lq_tmp$x##2001:VNat.VNat -&gt; {VV : () | VNat.vmul lq_tmp$x##1999 (VNat.vadd lq_tmp$x##2000 lq_tmp$x##2001) == VNat.vadd (VNat.vmul lq_tmp$x##1999 lq_tmp$x##2000) (VNat.vmul lq_tmp$x##1999 lq_tmp$x##2001)}</span><span class='hs-definition'>vmul_distributive</span></a> <a class=annot href="#"><span class=annottext>VNat.VNat</span><span class='hs-varid'>l</span></a> <a class=annot href="#"><span class=annottext>VNat.VNat</span><span class='hs-varid'>m</span></a> <a class=annot href="#"><span class=annottext>VNat.VNat</span><span class='hs-varid'>n</span></a> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>()</span>
+<span class=hs-linenum>168: </span>
+<span class=hs-linenum>169: </span><span class='hs-comment'>-- TODO: proof in progress</span>
+<span class=hs-linenum>170: </span><span class='hs-comment'>-- vmul_distributive Zero    m n = ()</span>
+<span class=hs-linenum>171: </span><span class='hs-comment'>-- vmul_distributive (Suc l) m n</span>
+<span class=hs-linenum>172: </span><span class='hs-comment'>--   =   vmul (Suc l) (vadd m n)</span>
+<span class=hs-linenum>173: </span><span class='hs-comment'>--   === vadd (vadd m n) (vmul l (vadd m n))</span>
+<span class=hs-linenum>174: </span><span class='hs-comment'>--   === (vadd (vadd m n) (vadd (vmul l m) (vmul l n)) ? vmul_distributive l m n)</span>
+<span class=hs-linenum>175: </span><span class='hs-comment'>--   ===</span>
+<span class=hs-linenum>176: </span><span class='hs-comment'>--   === vadd (vmul (Suc l) m) (vmul (Suc l) n)</span>
+<span class=hs-linenum>177: </span><span class='hs-comment'>--   *** QED</span>
+</pre>
+</body>
+</html>

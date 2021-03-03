@@ -1,0 +1,7 @@
+1:1-1:1::$trModule :: "GHC.Types.Module"
+19:1-19:16::vmapF_VIdentity :: "forall a b .\nx1:(a -> b) -> x3:(VIdentity.VIdentity a) -> {VV : (VIdentity.VIdentity b) | VV == vmapF_VIdentity x1 x3\n                                                                             && VV == VIdentity (x1 (lqdc##$select x3))}"
+19:17-19:18::f :: "a -> b"
+19:35-19:50::VIdentity :: "{VV : forall a .\n      x1:a -> {v : (VIdentity.VIdentity a) | lqdc##$select v == x1\n                                             && v == VIdentity x1} | VV == VIdentity}"
+19:45-19:50::lq_anf$##7205759403792821200 :: "{VV : a | VV == f x}"
+19:48-19:49::x :: "{VV : a | VV == x}"
+28:1-28:20::vmapF_vid_VIdentity :: "forall a .\nx1:(VIdentity.VIdentity a) -> {VV : () | vmapF_VIdentity vid x1 == vid x1}"
