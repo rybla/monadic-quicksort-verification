@@ -3,27 +3,31 @@ module Category.Monad where
 import Function
 import Language.Haskell.Liquid.ProofCombinators
 import Relation.Equality.Prop
-import Prelude hiding (Monad, seq)
+import Prelude hiding (Monad, pure, seq)
 
 {-
 # Monad
 -}
 
+{-
+## Data
+-}
+
 {-@
 data Monad m = Monad
-  { unit :: forall a. a -> m a,
+  { pure :: forall a. a -> m a,
     bind :: forall a b. m a -> (a -> m b) -> m b,
     identityLeft ::
       forall a b.
       (y:b -> EqualProp b {y} {y}) ->
       x:a ->
       k:(a -> m b) ->
-      EqualProp (m b) {bind (unit x) k} {k x},
+      EqualProp (m b) {bind (pure x) k} {k x},
     identityRight ::
       forall a.
       (x:a -> EqualProp a {x} {x}) ->
       m:m a ->
-      EqualProp (m a) {bind m unit} {m},
+      EqualProp (m a) {bind m pure} {m},
     associativity ::
       forall a b c.
       (x:c -> EqualProp c {x} {x}) ->
@@ -35,7 +39,7 @@ data Monad m = Monad
   }
 @-}
 data Monad m = Monad
-  { unit :: forall a. a -> m a,
+  { pure :: forall a. a -> m a,
     bind :: forall a b. m a -> (a -> m b) -> m b,
     identityLeft ::
       forall a b.
@@ -58,10 +62,26 @@ data Monad m = Monad
       EqualityProp (m c)
   }
 
+{-
+## Utilities
+-}
+
 {-@ reflect kleisli @-}
 kleisli :: Monad m -> (a -> m b) -> (b -> m c) -> (a -> m c)
 kleisli mnd k1 k2 x = bind mnd (k1 x) k2
 
+{-@ reflect join @-}
+join :: Monad m -> m (m a) -> m a
+join mnd mm = bind mnd mm identity
+
 {-@ reflect seq @-}
 seq :: Monad m -> m a -> m b -> m b
 seq mnd ma mb = bind mnd ma (\_ -> mb)
+
+{-@ reflect map @-}
+map :: Monad m -> (a -> b) -> (m a -> m b)
+map mnd f m = bind mnd m (\x -> pure mnd (f x))
+
+{-@ reflect map2 @-}
+map2 :: Monad m -> (a -> b -> c) -> (m a -> m b -> m c)
+map2 mnd f ma mb = bind mnd ma (\x -> bind mnd mb (\y -> pure mnd (f x y)))
