@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4339e7e5543ab77a9636f3b244e8779f1bf4b3d4497c879d8a58d6631132a3fc
+-- hash: d03565d1195a1116fc6f627215e0cd191f06fdb0a9c525364c06d2e43c644900
 
 name:           monadic-quicksort-verification
 version:        0.1.0.0
@@ -26,10 +26,14 @@ source-repository head
 
 library
   exposed-modules:
-      Control.Monad.Array.Refined
-      Control.Monad.Plus.Refined
-      Control.Monad.Refined
+      Category.Monad
+      Category.Monad.Array
+      Category.Monad.Plus
+      Data.Natural
+      Data.Unit
       Function
+      Language.Haskell.Liquid.Equational
+      Language.Haskell.Liquid.ProofCombinators
       Relation.Equality.Prop
   other-modules:
       Paths_monadic_quicksort_verification
@@ -39,7 +43,6 @@ library
   ghc-options: -Wall -Wno-name-shadowing -Wno-unused-imports -Wno-unused-matches -Wno-unused-local-binds -Wno-orphans -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--prune-unsorted
   build-depends:
       liquid-base
-    , liquid-prelude
     , liquidhaskell ==0.8.10.2
   default-language: Haskell2010
 
@@ -54,7 +57,6 @@ test-suite monadic-quicksort-verification-test
   ghc-options: -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--prune-unsorted
   build-depends:
       liquid-base
-    , liquid-prelude
     , liquidhaskell ==0.8.10.2
     , monadic-quicksort-verification
   default-language: Haskell2010

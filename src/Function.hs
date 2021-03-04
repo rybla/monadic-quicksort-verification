@@ -18,3 +18,15 @@ map f (x : xs) = f x : map f xs
 {-@ reflect flip @-}
 flip :: (a -> b -> c) -> (b -> a -> c)
 flip f y x = f x y
+
+{-@ reflect constant @-}
+constant :: a -> b -> a
+constant x _ = x
+
+{-@ reflect diagonalize @-}
+diagonalize :: (a -> a -> a) -> (a -> a)
+diagonalize f x = f x x
+
+{-@ reflect identity @-}
+identity :: a -> a
+identity x = x
