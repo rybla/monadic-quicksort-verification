@@ -6,7 +6,7 @@ import Data.Unit
 import Function
 import Language.Haskell.Liquid.ProofCombinators
 import Relation.Equality.Prop
-import Prelude hiding (Monad, length, pure, read, readList, seq)
+import Prelude hiding (Monad, length, pure, read, readList, seq, (>>), (>>=))
 
 {-
 # Array monad
@@ -170,6 +170,7 @@ writeListToLength3 ary i (xs, ys, zs) =
 
 {-@
 writeList_append ::
+  (Equality (m a), Equality (m Unit)) =>
   ary:Array m a ->
   i:Index ->
   xs:[a] ->
@@ -179,9 +180,88 @@ writeList_append ::
     {seq (monad ary) (writeList ary i xs) (writeList ary (add i (length xs)) ys)}
 @-}
 writeList_append ::
+  (Equality (m a), Equality (m Unit)) =>
   Array m a ->
   Index ->
   [a] ->
   [a] ->
   EqualityProp (m Unit)
-writeList_append ary i xs ys = undefined
+--
+writeList_append ary i [] ys =
+  let t1 = writeList_ i ([] `append` ys)
+      t2 = writeList_ i ys -- append_identity
+      t3 = (\_ -> writeList_ i ys) it -- betaEquivalencyTrivial
+      t4 = pure_ it >>= (\_ -> writeList_ i ys) -- bind_identity_left
+      t5 = pure_ it >> writeList_ i ys -- def >>
+      t6 = writeList_ i [] >> writeList_ i ys -- def writeList
+      t7 = writeList_ i [] >> writeList_ (i `add` Z) ys -- add_identity i
+      t8 = writeList_ i [] >> writeList_ (i `add` length []) ys -- def length
+   in (transitivity t1 t4 t8)
+        ( (transitivity t1 t2 t4)
+            -- t1 = t2
+            ( (substitutability (writeList_ i) ([] `append` ys) ys) -- writeList_ i (...)
+                ( (fromSMT ([] `append` ys) ys)
+                    (append_identity ys) -- [] `append` ys = ys
+                )
+                ? writeList_ i ([] `append` ys)
+                ? writeList_ i ys
+            )
+            ( (transitivity t2 t3 t4)
+                -- t2 = t3
+                ( betaEquivalencyTrivial it (writeList_ i ys)
+                    ? (\_ -> writeList_ i ys) it
+                )
+                -- t3 = t4
+                ( (symmetry (pure_ it >>= (\_ -> writeList_ i ys)) ((\_ -> writeList_ i ys) it))
+                    ( bind_identity_left mnd it (\_ -> writeList_ i ys)
+                        ? (pure_ it >>= (\_ -> writeList_ i ys))
+                    )
+                )
+            )
+        )
+        ( (transitivity t4 t6 t8)
+            ( (transitivity t4 t5 t6)
+                -- t4 = t5
+                undefined
+                -- t5 = t6
+                undefined
+            )
+            ( (transitivity t6 t7 t8)
+                -- t6 = t7
+                undefined
+                -- t7 = t7
+                undefined
+            )
+        )
+  where
+    writeList_ = writeList ary
+    (>>) = seq mnd
+    (>>=) = bind mnd
+    pure_ = pure mnd
+    mnd = monad ary
+--
+writeList_append ary i (x : xs) ys = undefined
+
+{-@
+test ::
+  ary:Array m a ->
+  i:Index ->
+  xs:[a] ->
+  EqualProp (m Unit)
+    {writeList ary i (append [] xs)}
+    {writeList ary i xs}
+@-}
+test :: Array m a -> Index -> [a] -> EqualityProp (m Unit)
+test ary i xs =
+  let t1 = writeList_ i ([] `append` xs)
+      t2 = writeList_ i xs -- append_identity
+   in (substitutability (writeList_ i) ([] `append` xs) xs) -- writeList_ i (...)
+        (fromSMT ([] `append` xs) xs (append_identity xs)) -- [] `append` xs = xs
+        ? writeList_ i ([] `append` xs)
+        ? writeList_ i xs
+  where
+    writeList_ = writeList ary
+    (>>) = seq mnd
+    (>>=) = bind mnd
+    pure_ = pure mnd
+    mnd = monad ary

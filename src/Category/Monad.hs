@@ -17,45 +17,43 @@ import Prelude hiding (Monad, pure, seq)
 data Monad m = Monad
   { pure :: forall a. a -> m a,
     bind :: forall a b. m a -> (a -> m b) -> m b,
-    identityLeft ::
+    bind_identity_left ::
       forall a b.
-      (y:b -> EqualProp b {y} {y}) ->
       x:a ->
       k:(a -> m b) ->
-      EqualProp (m b) {bind (pure x) k} {k x},
-    identityRight ::
+      EqualProp (m b)
+        {bind (pure x) k}
+        {k x},
+    bind_identity_right ::
       forall a.
-      (x:a -> EqualProp a {x} {x}) ->
       m:m a ->
-      EqualProp (m a) {bind m pure} {m},
-    associativity ::
+      EqualProp (m a)
+        {bind m pure}
+        {m},
+    bind_associativity ::
       forall a b c.
-      (x:c -> EqualProp c {x} {x}) ->
-      (x:c -> y:c -> z:c -> EqualProp c {x} {y} -> EqualProp c {y} {z} -> EqualProp c {x} {z}) ->
       m:m a ->
       k1:(a -> m b) ->
       k2:(b -> m c) ->
-      EqualProp (m c) {bind (bind m k1) k2} {bind m (\x:a -> bind (k1 x) k2)}
+      EqualProp (m c)
+        {bind (bind m k1) k2}
+        {bind m (\x:a -> bind (k1 x) k2)}
   }
 @-}
 data Monad m = Monad
   { pure :: forall a. a -> m a,
     bind :: forall a b. m a -> (a -> m b) -> m b,
-    identityLeft ::
+    bind_identity_left ::
       forall a b.
-      (b -> EqualityProp b) ->
       a ->
       (a -> m b) ->
       EqualityProp (m b),
-    identityRight ::
+    bind_identity_right ::
       forall a.
-      (a -> EqualityProp a) ->
       m a ->
       EqualityProp (m a),
-    associativity ::
+    bind_associativity ::
       forall a b c.
-      (c -> EqualityProp c) ->
-      (c -> c -> c -> EqualityProp c -> EqualityProp c -> EqualityProp c) ->
       m a ->
       (a -> m b) ->
       (b -> m c) ->

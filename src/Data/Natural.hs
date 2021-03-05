@@ -144,3 +144,11 @@ length (_ : xs) = S (length xs)
 append :: [a] -> [a] -> [a]
 append [] ys = ys
 append (x : xs) ys = x : (xs `append` ys)
+
+{-@ automatic-instances append_identity @-}
+{-@
+append_identity :: xs:[a] -> {append xs [] = xs && append [] xs = xs}
+@-}
+append_identity :: [a] -> Proof
+append_identity [] = trivial
+append_identity (x : xs) = append_identity xs
