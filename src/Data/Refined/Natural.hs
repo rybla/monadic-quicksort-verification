@@ -1,7 +1,8 @@
-module Data.Natural where
+module Data.Refined.Natural where
 
 import Language.Haskell.Liquid.ProofCombinators
-import Prelude hiding (length)
+import Prelude hiding (length, (+))
+import qualified Prelude
 
 {-
 # Natural numbers
@@ -10,11 +11,22 @@ import Prelude hiding (length)
 {-
 ## Data
 -}
-
 {-@
-data Natural = Z | S Natural
+data Natural [toInt] = Z | S Natural
 @-}
 data Natural = Z | S Natural
+
+{-@ reflect  toInt @-}
+toInt :: Natural -> Int
+toInt Z = 0
+toInt (S n) = 1 Prelude.+ toInt n
+
+{-@
+fromInt :: Nat -> Natural
+@-}
+fromInt :: Int -> Natural
+fromInt 0 = Z
+fromInt n = S (fromInt (n - 1))
 
 {-
 ## Addition and Multiplication
@@ -24,6 +36,11 @@ data Natural = Z | S Natural
 add :: Natural -> Natural -> Natural
 Z `add` n = n
 S m `add` n = S (add m n)
+
+{-@ infixl 6 + @-}
+{-@ reflect + @-}
+(+) :: Natural -> Natural -> Natural
+(+) = add
 
 {-@ automatic-instances add_identity @-}
 {-@
@@ -130,25 +147,3 @@ mul_distributivity (S l) m n = undefined
 -}
 
 -- TODO
-
-{-
-## List
--}
-
-{-@ reflect length @-}
-length :: [a] -> Natural
-length [] = Z
-length (_ : xs) = S (length xs)
-
-{-@ reflect append @-}
-append :: [a] -> [a] -> [a]
-append [] ys = ys
-append (x : xs) ys = x : (xs `append` ys)
-
-{-@ automatic-instances append_identity @-}
-{-@
-append_identity :: xs:[a] -> {append xs [] = xs && append [] xs = xs}
-@-}
-append_identity :: [a] -> Proof
-append_identity [] = trivial
-append_identity (x : xs) = append_identity xs

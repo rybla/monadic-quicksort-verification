@@ -1,4 +1,4 @@
-module Category.Monad where
+module Control.Refined.Monad where
 
 import Function
 import Language.Haskell.Liquid.ProofCombinators
@@ -16,7 +16,10 @@ import Prelude hiding (Monad, pure, seq)
 {-@
 data Monad m = Monad
   { pure :: forall a. a -> m a,
-    bind :: forall a b. m a -> (a -> m b) -> m b,
+    bind :: forall a b. m a -> (a -> m b) -> m b
+  }
+@-}
+{-
     bind_identity_left ::
       forall a b.
       x:a ->
@@ -24,41 +27,37 @@ data Monad m = Monad
       EqualProp (m b)
         {bind (pure x) k}
         {k x},
-    bind_identity_right ::
-      forall a.
-      m:m a ->
-      EqualProp (m a)
-        {bind m pure}
-        {m},
-    bind_associativity ::
-      forall a b c.
-      m:m a ->
-      k1:(a -> m b) ->
-      k2:(b -> m c) ->
-      EqualProp (m c)
-        {bind (bind m k1) k2}
-        {bind m (\x:a -> bind (k1 x) k2)}
-  }
-@-}
+-}
 data Monad m = Monad
   { pure :: forall a. a -> m a,
-    bind :: forall a b. m a -> (a -> m b) -> m b,
-    bind_identity_left ::
-      forall a b.
-      a ->
-      (a -> m b) ->
-      EqualityProp (m b),
-    bind_identity_right ::
-      forall a.
-      m a ->
-      EqualityProp (m a),
-    bind_associativity ::
-      forall a b c.
-      m a ->
-      (a -> m b) ->
-      (b -> m c) ->
-      EqualityProp (m c)
+    bind :: forall a b. m a -> (a -> m b) -> m b
   }
+
+{-@
+class MonadLaws m where
+  bind_identity_left :: mnd:Monad m -> x:a -> k:(a -> m b) -> (EqualProp (m b) {bind mnd (pure mnd x) k} {k x})
+  bind_identity_right :: mnd:Monad m -> m:m a -> (EqualProp (m a) {bind mnd m (pure mnd)} {m})
+  bind_associativity :: mnd:Monad m -> m:m a -> k1:(a -> m b) -> k2:(b -> m c) -> (EqualProp (m c) {bind mnd (bind mnd m k1) k2} {bind mnd m (\x:a -> bind mnd (k1 x) k2)})
+@-}
+class MonadLaws m where
+  bind_identity_left ::
+    forall a b.
+    Monad m ->
+    a ->
+    (a -> m b) ->
+    EqualityProp (m b)
+  bind_identity_right ::
+    forall a.
+    Monad m ->
+    m a ->
+    EqualityProp (m a)
+  bind_associativity ::
+    forall a b c.
+    Monad m ->
+    m a ->
+    (a -> m b) ->
+    (b -> m c) ->
+    EqualityProp (m c)
 
 {-
 ## Utilities

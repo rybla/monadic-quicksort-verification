@@ -1,4 +1,4 @@
-module Data.Unit where
+module Data.Refined.Unit where
 
 import Language.Haskell.Liquid.ProofCombinators
 import Relation.Equality.Prop

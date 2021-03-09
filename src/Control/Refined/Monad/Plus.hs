@@ -1,6 +1,6 @@
-module Category.Monad.Plus where
+module Control.Refined.Monad.Plus where
 
-import Category.Monad
+import Control.Refined.Monad
 import Function
 import Language.Haskell.Liquid.ProofCombinators
 import Relation.Equality.Prop
