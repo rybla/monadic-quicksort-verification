@@ -1,7 +1,8 @@
-module Relation.Equality.BlindProp where
+module Relation.Equality.PropBlind where
 
 import Function
 import Language.Haskell.Liquid.ProofCombinators
+import Relation.Equality.Prop
 
 -- TODO: experimental
 -- {-

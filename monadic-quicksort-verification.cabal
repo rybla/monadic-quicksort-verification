@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 670c86e96fbed8d839d00cad99bfea2f6c04b29261e11cebe2646d5a12566bbb
+-- hash: 8c6364f45c418b29c58133ceea0dd48051a6a8f6b769a6e3d7503547ae402893
 
 name:           monadic-quicksort-verification
 version:        0.1.0.0
@@ -39,6 +39,7 @@ library
       Language.Haskell.LiquidCustom.Equational
       Language.Haskell.LiquidCustom.ProofCombinators
       Relation.Equality.Prop
+      Relation.Equality.PropBlind
       Relation.Equality.PropOld
   other-modules:
       Paths_monadic_quicksort_verification

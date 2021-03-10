@@ -275,11 +275,12 @@ writeList_append ary i (Cons x xs) ys =
       -- proofs
       --
       ep_t1_t2 =
-        substitutability (writeList ary i) (Cons x xs ++ ys) (Cons x (xs ++ ys)) $
-          fromSMT (Cons x xs ++ ys) (Cons x (xs ++ ys)) trivial
-            ? writeList ary i (Cons x xs ++ ys)
-            ? writeList ary i (Cons x (xs ++ ys))
-            ? xs ++ ys
+        -- substitutability (writeList ary i) (Cons x xs ++ ys) (Cons x (xs ++ ys)) $
+        --   fromSMT (Cons x xs ++ ys) (Cons x (xs ++ ys)) trivial
+        --     ? writeList ary i (Cons x xs ++ ys)
+        --     ? writeList ary i (Cons x (xs ++ ys))
+        --     ? xs ++ ys
+        undefined -- TODO
       ep_t2_t3 = undefined
       ep_t3_t4 = undefined
       ep_t4_t5 = undefined
