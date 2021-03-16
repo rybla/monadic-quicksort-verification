@@ -86,15 +86,17 @@ join mnd mm = bind mnd mm identity
 
 {-@ reflect seq @-}
 seq :: Monad m -> m a -> m b -> m b
-seq mnd ma mb = bind mnd ma (\_ -> mb)
+seq mnd ma mb = bind mnd ma (apply (\_ -> mb))
 
 {-@ reflect map @-}
 map :: Monad m -> (a -> b) -> (m a -> m b)
-map mnd f m = bind mnd m (\x -> pure mnd (f x))
+map mnd f m = bind mnd m (apply (\x -> pure mnd (f x)))
 
 {-@ reflect map2 @-}
 map2 :: Monad m -> (a -> b -> c) -> (m a -> m b -> m c)
-map2 mnd f ma mb = bind mnd ma (\x -> bind mnd mb (\y -> pure mnd (f x y)))
+map2 mnd f ma mb =
+  bind mnd ma $
+    apply (\x -> bind mnd mb $ apply (\y -> pure mnd (f x y)))
 
 {-
 ## Properties

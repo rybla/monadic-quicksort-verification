@@ -1,5 +1,3 @@
-{-# LANGUAGE IncoherentInstances #-}
-
 module Relation.Equality.Prop where
 
 import Function
@@ -28,10 +26,10 @@ type EqualProp a X Y = {w:EqualityProp a | eqprop X Y}
 -}
 
 {-@ assume
-fromSMT :: x:a -> y:a -> {_:Proof | x = y} -> EqualProp a {x} {y}
+reflexivity :: x:a -> EqualProp a {x} {x}
 @-}
-fromSMT :: a -> a -> Proof -> EqualityProp a
-fromSMT x y pf = EqualityProp
+reflexivity :: a -> EqualityProp a
+reflexivity x = EqualityProp
 
 {-@ assume
 extensionality :: f:(a -> b) -> g:(a -> b) -> (x:a -> EqualProp b {f x} {g x}) -> EqualProp (a -> b) {f} {g}
@@ -69,17 +67,17 @@ fromWitness x y pf = trivial
 ### Equality
 
 Combines together the equality properties:
-- reflexivity
+- reflexivity (axiom)
 - symmetry
 - transitivity
 - substitutability
 -}
 
 {-@
-class (Reflexivity a, Symmetry a, Transitivity a) => Equality a where
+class (Symmetry a, Transitivity a) => Equality a where
   __Equality :: {v:Maybe a | v = Nothing}
 @-}
-class (Reflexivity a, Symmetry a, Transitivity a) => Equality a where
+class (Symmetry a, Transitivity a) => Equality a where
   __Equality :: Maybe a
 
 {-
@@ -125,29 +123,10 @@ class Retractability a b where
   retractability :: (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> (a -> EqualityProp b)
 
 instance Retractability a b where
-  retractability f g ep_f_g x =
-    substitutability (given x) f g ep_f_g
+  retractability f g efg x =
+    substitutability (given x) f g efg
       ? (given x f) -- instantiate `f x`
       ? (given x g) -- instantiate `g x`
-
-{-
-### Reflexivity
--}
-
-{-@
-class Reflexivity a where
-  reflexivity :: x:a -> EqualProp a {x} {x}
-@-}
-class Reflexivity a where
-  reflexivity :: a -> EqualityProp a
-
-instance Concreteness a => Reflexivity a where
-  reflexivity x = fromSMT x x trivial
-
-instance Reflexivity b => Reflexivity (a -> b) where
-  reflexivity f =
-    let ep_fx_fx x = reflexivity (f x)
-     in extensionality f f ep_fx_fx
 
 {-
 ### Symmetry
@@ -161,16 +140,14 @@ class Symmetry a where
   symmetry :: a -> a -> EqualityProp a -> EqualityProp a
 
 instance Concreteness a => Symmetry a where
-  symmetry x y ep_x_y =
-    let e_x_y = concreteness x y ep_x_y
-        e_y_x = e_x_y -- by SMT
-     in fromSMT y x e_y_x
+  symmetry x y exy =
+    reflexivity x ? concreteness x y exy
 
 instance (Symmetry b, Retractability a b) => Symmetry (a -> b) where
-  symmetry f g ep_f_g =
-    let ep_fx_gx = retractability f g ep_f_g
-        ep_gx_fx x = symmetry (f x) (g x) (ep_fx_gx x)
-     in extensionality g f ep_gx_fx
+  symmetry f g efg =
+    let efxgx = retractability f g efg
+        egxfx x = symmetry (f x) (g x) (efxgx x)
+     in extensionality g f egxfx
 
 {-
 ### Transitivity
@@ -184,16 +161,15 @@ class Transitivity a where
   transitivity :: a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
 
 instance Concreteness a => Transitivity a where
-  transitivity x y z ep_x_y ep_y_z =
-    let e_x_y = concreteness x y ep_x_y
-        e_y_z = concreteness y z ep_y_z
-        e_x_z = e_x_y &&& e_y_z -- by SMT
-     in fromSMT x z e_x_z
+  transitivity x y z exy eyz =
+    reflexivity x
+      ? concreteness x y exy
+      ? concreteness y z eyz
 
 instance (Transitivity b, Retractability a b) => Transitivity (a -> b) where
-  transitivity f g h ep_f_g ep_g_h =
-    let es_fx_gx = retractability f g ep_f_g
-        es_gx_hx = retractability g h ep_g_h
+  transitivity f g h efg egh =
+    let es_fx_gx = retractability f g efg
+        es_gx_hx = retractability g h egh
         es_fx_hx x = transitivity (f x) (g x) (h x) (es_fx_gx x) (es_gx_hx x)
      in extensionality f h es_fx_hx
 
@@ -202,17 +178,16 @@ instance (Transitivity b, Retractability a b) => Transitivity (a -> b) where
 -}
 
 {-@
-alphaEquivalency :: Equality b => f:(a -> b) -> EqualProp (a -> b) {f} {(\x:a -> f x)}
+alphaEquivalency :: Equality b => f:(a -> b) -> EqualProp (a -> b) {f} {apply (\x:a -> f x)}
 @-}
 alphaEquivalency :: Equality b => (a -> b) -> EqualityProp (a -> b)
 alphaEquivalency f =
-  extensionality f (\x -> f x) $ \x ->
-    -- TODO: why does this not go through?
-    -- reflexivity (f x) ? f x ? (\x -> f x) x
-    undefined
+  extensionality f (apply (\x -> f x)) $ \y ->
+    reflexivity (f y) ? apply (\x -> f x) y
 
 {-@
 betaEquivalencyTrivial :: Equality b => x:a -> y:b -> EqualProp b {y} {apply (\_:a -> y) x}
 @-}
 betaEquivalencyTrivial :: Equality b => a -> b -> EqualityProp b
-betaEquivalencyTrivial = undefined
+betaEquivalencyTrivial x y =
+  reflexivity y ? apply (\_ -> y) x

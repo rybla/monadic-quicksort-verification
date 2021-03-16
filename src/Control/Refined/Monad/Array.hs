@@ -200,9 +200,9 @@ writeList_append ary i Nil ys =
       -- append_identity
       t2 = writeList ary i ys
       -- betaEquivalencyTrivial
-      t3 = (\_ -> writeList ary i ys) it
+      t3 = apply (\_ -> writeList ary i ys) it
       -- bind_identity_left
-      t4 = pure mnd it >>= (\_ -> writeList ary i ys)
+      t4 = pure mnd it >>= apply (\_ -> writeList ary i ys)
       -- >>
       t5 = pure mnd it >> writeList ary i ys
       -- writeList
@@ -216,26 +216,23 @@ writeList_append ary i Nil ys =
       --
       ep_t1_t2 =
         (substitutability (writeList ary i) (Nil ++ ys) ys) -- writeList_ i (...)
-          ( (fromSMT (Nil ++ ys) ys)
-              (append_identity ys) -- Nil ++ ys = ys
-          )
+          (reflexivity ys ? append_identity ys)
           ? writeList ary i (Nil ++ ys)
           ? writeList ary i ys
       ep_t2_t3 =
         betaEquivalencyTrivial it (writeList ary i ys)
-          ? (\_ -> writeList ary i ys) it
+          ? apply (\_ -> writeList ary i ys) it
       ep_t3_t4 =
-        -- symmetry t4 t3 $
-        --   bind_identity_left mnd it (\_ -> writeList_ i ys)
-        undefined -- TODO
+        symmetry t4 t3 $
+          bind_identity_left mnd it (apply (\_ -> writeList ary i ys))
       ep_t4_t5 =
-        fromSMT t4 t5 trivial
+        reflexivity t4
       ep_t5_t6 =
-        fromSMT t5 t6 trivial
+        reflexivity t5
       ep_t6_t7 =
-        fromSMT t6 t7 $ add_identity i
+        reflexivity t6 ? add_identity i
       ep_t7_t8 =
-        fromSMT t7 t8 trivial
+        reflexivity t7
    in --
       -- structure
       --
