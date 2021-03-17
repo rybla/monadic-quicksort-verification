@@ -125,8 +125,8 @@ class Retractability a b where
 instance Retractability a b where
   retractability f g efg x =
     substitutability (given x) f g efg
-      ? (given x f) -- instantiate `f x`
-      ? (given x g) -- instantiate `g x`
+      ? (given x (f)) -- instantiate `f x`
+      ? (given x (g)) -- instantiate `g x`
 
 {-
 ### Symmetry

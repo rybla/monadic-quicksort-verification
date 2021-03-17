@@ -7,7 +7,7 @@ import Data.Refined.Unit
 import Function
 import Language.Haskell.Liquid.ProofCombinators
 import Relation.Equality.Prop
-import Prelude hiding (Monad, length, pure, read, readList, seq, (+), (++), (>>), (>>=))
+import Prelude hiding (Monad, length, pure, read, readList, seq, (>>), (>>=))
 
 {-
 # Array monad
@@ -152,7 +152,7 @@ writeListToLength2 ::
   Array m a -> Index -> (List a, List a) -> m (Natural, Natural)
 writeListToLength2 ary i (xs, ys) =
   (seq mnd)
-    (writeList ary i (xs ++ ys))
+    (writeList ary i (xs `append` ys))
     (pure mnd (length xs, length ys))
   where
     mnd = monad ary
@@ -162,7 +162,7 @@ writeListToLength3 ::
   Array m a -> Index -> (List a, List a, List a) -> m (Natural, Natural, Natural)
 writeListToLength3 ary i (xs, ys, zs) =
   (seq mnd)
-    (writeList ary i (xs ++ (ys ++ ys)))
+    (writeList ary i (xs `append` (ys `append` ys)))
     (pure mnd (length xs, length ys, length zs))
   where
     mnd = monad ary
@@ -196,7 +196,7 @@ writeList_append ary i Nil ys =
   let --
       -- steps
       --
-      t1 = writeList ary i (Nil ++ ys)
+      t1 = writeList ary i (Nil `append` ys)
       -- append_identity
       t2 = writeList ary i ys
       -- betaEquivalencyTrivial
@@ -215,9 +215,9 @@ writeList_append ary i Nil ys =
       -- proofs
       --
       ep_t1_t2 =
-        (substitutability (writeList ary i) (Nil ++ ys) ys) -- writeList_ i (...)
+        (substitutability (writeList ary i) (Nil `append` ys) ys) -- writeList_ i (...)
           (reflexivity ys ? append_identity ys)
-          ? writeList ary i (Nil ++ ys)
+          ? writeList ary i (Nil `append` ys)
           ? writeList ary i ys
       ep_t2_t3 =
         betaEquivalencyTrivial it (writeList ary i ys)
@@ -251,11 +251,11 @@ writeList_append ary i (Cons x xs) ys =
   let --
       -- steps
       --
-      t1 = writeList ary i (Cons x xs ++ ys)
-      -- Cons x xs ++ ys
-      t2 = writeList ary i (Cons x (xs ++ ys))
+      t1 = writeList ary i (Cons x xs `append` ys)
+      -- Cons x xs `append` ys
+      t2 = writeList ary i (Cons x (xs `append` ys))
       -- writeList ...
-      t3 = write ary i x >> writeList ary (S i) (xs ++ ys)
+      t3 = write ary i x >> writeList ary (S i) (xs `append` ys)
       -- writeList_append ary (S i) xs ys
       t4 = write ary i x >> (writeList ary (S i) xs >> writeList ary (S i `add` length xs) ys)
       -- S i `add` length xs
@@ -274,21 +274,21 @@ writeList_append ary i (Cons x xs) ys =
       ep_t1_t2 =
         substitutability
           (writeList ary i)
-          (append (Cons x xs) ys)
-          (Cons x (append xs ys))
+          (Cons x xs `append` ys)
+          (Cons x (xs `append` ys))
           $ reflexivity $
-            Cons x (xs ++ ys)
-              ? Cons x (append xs ys)
+            Cons x (xs `append` ys)
+              ? Cons x (xs `append` ys)
 
       ep_t2_t3 =
         reflexivity $
-          write ary i x >> writeList ary (S i) (xs ++ ys)
-            ? writeList ary i (Cons x (append xs ys))
+          write ary i x >> writeList ary (S i) (xs `append` ys)
+            ? writeList ary i (Cons x (xs `append` ys))
 
       ep_t3_t4 =
         substitutability
           (seq mnd (write ary i x))
-          (writeList ary (S i) (xs ++ ys))
+          (writeList ary (S i) (xs `append` ys))
           (writeList ary (S i) xs >> writeList ary (S i `add` length xs) ys)
           $ writeList_append ary (S i) xs ys
 
