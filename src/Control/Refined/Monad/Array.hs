@@ -199,7 +199,7 @@ writeList_append ary i Nil ys =
       t1 = writeList ary i (Nil `append` ys)
       -- append_identity
       t2 = writeList ary i ys
-      -- betaEquivalencyTrivial
+      -- etaEquivalency
       t3 = apply (\_ -> writeList ary i ys) it
       -- bind_identity_left
       t4 = pure mnd it >>= apply (\_ -> writeList ary i ys)
@@ -220,7 +220,7 @@ writeList_append ary i Nil ys =
           ? writeList ary i (Nil `append` ys)
           ? writeList ary i ys
       ep_t2_t3 =
-        betaEquivalencyTrivial it (writeList ary i ys)
+        etaEquivalency it (writeList ary i ys)
           ? apply (\_ -> writeList ary i ys) it
       ep_t3_t4 =
         symmetry t4 t3 $

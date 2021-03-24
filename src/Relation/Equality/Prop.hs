@@ -186,8 +186,8 @@ alphaEquivalency f =
     reflexivity (f y) ? apply (\x -> f x) y
 
 {-@
-betaEquivalencyTrivial :: Equality b => x:a -> y:b -> EqualProp b {y} {apply (\_:a -> y) x}
+etaEquivalency :: Equality b => x:a -> y:b -> EqualProp b {y} {apply (\_:a -> y) x}
 @-}
-betaEquivalencyTrivial :: Equality b => a -> b -> EqualityProp b
-betaEquivalencyTrivial x y =
+etaEquivalency :: Equality b => a -> b -> EqualityProp b
+etaEquivalency x y =
   reflexivity y ? apply (\_ -> y) x

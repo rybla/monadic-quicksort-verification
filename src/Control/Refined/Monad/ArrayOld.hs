@@ -206,7 +206,7 @@ import Prelude hiding (Monad, length, pure, read, readList, seq, (+), (++), (>>)
 -- writeList_append ary i [] ys =
 --   let t1 = writeList_ i ([] ++ ys)
 --       t2 = writeList_ i ys -- append_identity
---       t3 = (\_ -> writeList_ i ys) it -- betaEquivalencyTrivial
+--       t3 = (\_ -> writeList_ i ys) it -- etaEquivalency
 --       t4 = pure_ it >>= (\_ -> writeList_ i ys) -- bind_identity_left
 --       t5 = pure_ it >> writeList_ i ys -- def >>
 --       t6 = writeList_ i [] >> writeList_ i ys -- def writeList
@@ -221,7 +221,7 @@ import Prelude hiding (Monad, length, pure, read, readList, seq, (+), (++), (>>)
 --           ? writeList_ i ([] ++ ys)
 --           ? writeList_ i ys
 --       ep_t2_t3 =
---         betaEquivalencyTrivial it (writeList_ i ys)
+--         etaEquivalency it (writeList_ i ys)
 --           ? (\_ -> writeList_ i ys) it
 --       ep_t3_t4 =
 --         bind_identity_left mnd it (\_ -> writeList_ i ys)
