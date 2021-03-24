@@ -17,15 +17,6 @@ import Prelude hiding (Monad, pure, seq)
 data Monad m = Monad
   { pure :: forall a. a -> m a,
     bind :: forall a b. m a -> (a -> m b) -> m b,
-    kleisli :: forall a b c. (a -> m b) -> (b -> m c) -> (a -> m c),
-    kleisli_correct ::
-      forall a b c.
-      k1:(a -> m b) ->
-      k2:(b -> m c) ->
-      x:a ->
-      EqualProp (m c)
-        {kleisli k1 k2 x}
-        {bind (k1 x) k2},
     bind_identity_left ::
       forall a b.
       x:a ->
@@ -44,21 +35,12 @@ data Monad m = Monad
       m:m a ->
       k1:(a -> m b) ->
       k2:(b -> m c) ->
-      EqualProp (m c)
-        {bind (bind m k1) k2}
-        {bind m (kleisli k1 k2)}
+      EqualProp (m c) {bind (bind m k1) k2} {bind m (apply (\x:a -> bind (k1 x) k2))}
   }
 @-}
 data Monad m = Monad
   { pure :: forall a. a -> m a,
     bind :: forall a b. m a -> (a -> m b) -> m b,
-    kleisli :: forall a b c. (a -> m b) -> (b -> m c) -> (a -> m c),
-    kleisli_correct ::
-      forall a b c.
-      (a -> m b) ->
-      (b -> m c) ->
-      a ->
-      EqualityProp (m c),
     bind_identity_left ::
       forall a b.
       a ->
@@ -79,6 +61,10 @@ data Monad m = Monad
 {-
 ## Utilities
 -}
+
+{-@ reflect kleisli @-}
+kleisli :: Monad m -> (a -> m b) -> (b -> m c) -> (a -> m c)
+kleisli mnd k1 k2 = apply (\x -> bind mnd (k1 x) k2)
 
 {-@ reflect join @-}
 join :: Monad m -> m (m a) -> m a
