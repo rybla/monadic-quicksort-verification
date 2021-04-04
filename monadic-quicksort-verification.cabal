@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 586e09a8610e3fd725ca221603cc566b25bc557678890b41dc7218d7bcec07b5
+-- hash: 1982194e81ed0dce69371d5d909a866d79d6f057e04ee0da57c39961f5430582
 
 name:           monadic-quicksort-verification
 version:        0.1.0.0
@@ -29,7 +29,6 @@ library
       Control.Refined.Functor
       Control.Refined.Monad
       Control.Refined.Monad.Array
-      Control.Refined.Monad.ArrayOld
       Control.Refined.Monad.Plus
       Data.Refined.List
       Data.Refined.Nat
@@ -40,18 +39,23 @@ library
       Language.Haskell.LiquidCustom.Equational
       Language.Haskell.LiquidCustom.ProofCombinators
       Relation.Equality.Prop
+      Relation.Equality.Prop.EDSL
+      Relation.Equality.Prop.Reasoning
       Relation.Equality.PropBlind
       Relation.Equality.PropOld
   other-modules:
       Paths_monadic_quicksort_verification
   hs-source-dirs:
       src
-  default-extensions: GADTs KindSignatures ExplicitForAll RankNTypes FlexibleInstances UndecidableInstances MultiParamTypeClasses ScopedTypeVariables
+  default-extensions: GADTs KindSignatures ExplicitForAll RankNTypes FlexibleInstances UndecidableInstances MultiParamTypeClasses ScopedTypeVariables LambdaCase MultiWayIf TupleSections
   ghc-options: -Wall -Wno-name-shadowing -Wno-unused-imports -Wno-unused-matches -Wno-unused-local-binds -Wno-orphans -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--prune-unsorted
   build-depends:
-      liquid-base
+      haskell-src-meta
+    , liquid-base
     , liquid-prelude
     , liquidhaskell ==0.8.10.2
+    , parsec
+    , template-haskell
   default-language: Haskell2010
 
 test-suite monadic-quicksort-verification-test
@@ -65,8 +69,11 @@ test-suite monadic-quicksort-verification-test
   default-extensions: GADTs KindSignatures ExplicitForAll RankNTypes FlexibleInstances UndecidableInstances MultiParamTypeClasses
   ghc-options: -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--prune-unsorted
   build-depends:
-      liquid-base
+      haskell-src-meta
+    , liquid-base
     , liquid-prelude
     , liquidhaskell ==0.8.10.2
     , monadic-quicksort-verification
+    , parsec
+    , template-haskell
   default-language: Haskell2010

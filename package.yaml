@@ -26,6 +26,9 @@ dependencies:
   - liquidhaskell == 0.8.10.2
   - liquid-base
   - liquid-prelude
+  - template-haskell
+  - haskell-src-meta
+  - parsec
 
 library:
   source-dirs: src
@@ -38,6 +41,9 @@ library:
     - UndecidableInstances
     - MultiParamTypeClasses
     - ScopedTypeVariables
+    - LambdaCase
+    - MultiWayIf
+    - TupleSections
   ghc-options:
     - -Wall
     - -Wno-name-shadowing
