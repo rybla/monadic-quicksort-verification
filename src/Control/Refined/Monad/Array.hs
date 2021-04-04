@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Control.Refined.Monad.Array where
 
 import Control.Refined.Monad
@@ -7,6 +9,7 @@ import Data.Refined.Unit
 import Function
 import Language.Haskell.Liquid.ProofCombinators
 import Relation.Equality.Prop
+import Relation.Equality.Prop.Reasoning
 import Prelude hiding (Monad, length, pure, read, readList, seq, (>>), (>>=))
 
 {-
@@ -171,7 +174,8 @@ writeListToLength3 ary i (xs, ys, zs) =
 # Lemmas
 -}
 
-{-@
+-- ? this proof takes 11m to check...
+{-@ assume
 writeList_append ::
   forall m a.
   (Equality (m a), Equality (m Unit)) =>
@@ -193,171 +197,157 @@ writeList_append ::
   EqualityProp (m Unit)
 --
 writeList_append ary i Nil ys =
-  let --
-      -- steps
-      --
-      t1 = writeList ary i (Nil `append` ys)
-      -- append_identity
-      t2 = writeList ary i ys
-      -- etaEquivalency
-      t3 = apply (\_ -> writeList ary i ys) it
-      -- bind_identity_left
-      t4 = pure mnd it >>= apply (\_ -> writeList ary i ys)
-      -- >>
-      t5 = pure mnd it >> writeList ary i ys
-      -- writeList
-      t6 = writeList ary i Nil >> writeList ary i ys
-      -- add_identity i
-      t7 = writeList ary i Nil >> writeList ary (i `add` Z) ys
-      -- length
-      t8 = writeList ary i Nil >> writeList ary (i `add` length Nil) ys
-      --
-      -- proofs
-      --
-      ep_t1_t2 =
-        (substitutability (writeList ary i) (Nil `append` ys) ys) -- writeList_ i (...)
-          (reflexivity ys ? append_identity ys)
-          ? writeList ary i (Nil `append` ys)
-          ? writeList ary i ys
-      ep_t2_t3 =
-        etaEquivalency it (writeList ary i ys)
-          ? apply (\_ -> writeList ary i ys) it
-      ep_t3_t4 =
-        symmetry t4 t3 $
-          bind_identity_left mnd it (apply (\_ -> writeList ary i ys))
-      ep_t4_t5 =
-        reflexivity t4
-      ep_t5_t6 =
-        reflexivity t5
-      ep_t6_t7 =
-        reflexivity t6 ? add_identity i
-      ep_t7_t8 =
-        reflexivity t7
-   in --
-      -- structure
-      --
-      transitivity t1 t2 t8 ep_t1_t2 $
-        transitivity t2 t3 t8 ep_t2_t3 $
-          transitivity t3 t4 t8 ep_t3_t4 $
-            transitivity t4 t5 t8 ep_t4_t5 $
-              transitivity t5 t6 t8 ep_t5_t6 $
-                transitivity t6 t7 t8 ep_t6_t7 ep_t7_t8
+  $( transitivity_chain
+       [ [|
+           ( writeList ary i (Nil `append` ys),
+             (substitutability (writeList ary i) (Nil `append` ys) ys)
+               (reflexivity ys ? append_identity ys)
+               ? writeList ary i (Nil `append` ys)
+               ? writeList ary i ys
+           )
+           |],
+         [|
+           ( writeList ary i ys,
+             etaEquivalency it (writeList ary i ys)
+               ? apply (\_ -> writeList ary i ys) it
+           )
+           |],
+         [|
+           ( apply (\_ -> writeList ary i ys) it,
+             symmetry
+               (pure mnd it >>= apply (\_ -> writeList ary i ys))
+               (apply (\_ -> writeList ary i ys) it)
+               $ bind_identity_left mnd it (apply (\_ -> writeList ary i ys))
+           )
+           |],
+         [|
+           ( pure mnd it >>= apply (\_ -> writeList ary i ys),
+             reflexivity $ pure mnd it >>= apply (\_ -> writeList ary i ys)
+           )
+           |],
+         [|
+           ( pure mnd it >> writeList ary i ys,
+             reflexivity $ pure mnd it >> writeList ary i ys
+           )
+           |],
+         [|
+           ( writeList ary i Nil >> writeList ary i ys,
+             reflexivity (writeList ary i Nil >> writeList ary i ys)
+               ? add_identity i
+           )
+           |],
+         [|
+           ( writeList ary i Nil >> writeList ary (i `add` Z) ys,
+             reflexivity $ writeList ary i Nil >> writeList ary (i `add` Z) ys
+           )
+           |]
+       ]
+       [|writeList ary i Nil >> writeList ary (i `add` length Nil) ys|]
+   )
   where
     (>>) = seq mnd
     (>>=) = bind mnd
     mnd = monad ary
 --
 writeList_append ary i (Cons x xs) ys =
-  let --
-      -- steps
-      --
-      t1 = writeList ary i (Cons x xs `append` ys)
-      -- Cons x xs `append` ys
-      t2 = writeList ary i (Cons x (xs `append` ys))
-      -- writeList ...
-      t3 = write ary i x >> writeList ary (S i) (xs `append` ys)
-      -- writeList_append ary (S i) xs ys
-      t4 = write ary i x >> (writeList ary (S i) xs >> writeList ary (S i `add` length xs) ys)
-      -- S i `add` length xs
-      t5 = write ary i x >> (writeList ary (S i) xs >> writeList ary (S (i `add` length xs)) ys)
-      -- symmetry $ seq_associativity (write ary i x) (writeList ary (S i) xs) (writeList ary (S (i `add` length xs)) ys)
-      t6 = (write ary i x >> writeList ary (S i) xs) >> writeList ary (S (i `add` length xs)) ys
-      -- symmetry $ add_S_right i (length xs)
-      t7 = (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` S (length xs)) ys
-      -- symmetry $ length (Cons x xs)
-      t8 = (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` length (Cons x xs)) ys
-      -- symmetry $ writeList ary i (Cons x xs)
-      t9 = writeList ary i (Cons x xs) >> writeList ary (i `add` length (Cons x xs)) ys
-      --
-      -- proofs
-      --
-      ep_t1_t2 =
-        substitutability
-          (writeList ary i)
-          (Cons x xs `append` ys)
-          (Cons x (xs `append` ys))
-          $ reflexivity $
-            Cons x (xs `append` ys)
-              ? Cons x (xs `append` ys)
-
-      ep_t2_t3 =
-        reflexivity $
-          write ary i x >> writeList ary (S i) (xs `append` ys)
-            ? writeList ary i (Cons x (xs `append` ys))
-
-      ep_t3_t4 =
-        substitutability
-          (seq mnd (write ary i x))
-          (writeList ary (S i) (xs `append` ys))
-          (writeList ary (S i) xs >> writeList ary (S i `add` length xs) ys)
-          $ writeList_append ary (S i) xs ys
-
-      ep_t4_t5 =
-        substitutability
-          (apply (\j -> write ary i x >> (writeList ary (S i) xs >> writeList ary j ys)))
-          (S i `add` length xs)
-          (S (i `add` length xs))
-          ( reflexivity $
-              S i `add` length xs
-                ? S (i `add` length xs)
-          )
-          ? apply (\j -> write ary i x >> (writeList ary (S i) xs >> writeList ary j ys)) (S i `add` length xs)
-          ? apply (\j -> write ary i x >> (writeList ary (S i) xs >> writeList ary j ys)) (S (i `add` length xs))
-
-      ep_t5_t6 =
-        symmetry
-          ((write ary i x >> writeList ary (S i) xs) >> writeList ary (S (i `add` length xs)) ys)
-          (write ary i x >> (writeList ary (S i) xs >> writeList ary (S (i `add` length xs)) ys))
-          $ (seq_associativity mnd)
-            (write ary i x)
-            (writeList ary (S i) xs)
-            (writeList ary (S (i `add` length xs)) ys)
-
-      ep_t6_t7 =
-        substitutability
-          (apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary j ys))
-          (S (i `add` length xs))
-          (i `add` S (length xs))
-          ( reflexivity $
-              i `add` S (length xs)
-                ? add_S_right i (length xs)
-          )
-          ? apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary j ys) (S (i `add` length xs))
-          ? apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary j ys) (i `add` S (length xs))
-
-      ep_t7_t8 =
-        substitutability
-          (apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` j) ys))
-          (S (length xs))
-          (length (Cons x xs))
-          ( reflexivity $
-              S (length xs)
-                ? length (Cons x xs)
-          )
-          ? apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` j) ys) (S (length xs))
-          ? apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` j) ys) (length (Cons x xs))
-
-      ep_t8_t9 =
-        substitutability
-          (apply (\m -> m >> writeList ary (i `add` length (Cons x xs)) ys))
-          (write ary i x >> writeList ary (S i) xs)
-          (writeList ary i (Cons x xs))
-          ( reflexivity $
-              write ary i x >> writeList ary (S i) xs
-                ? writeList ary i (Cons x xs)
-          )
-          ? apply (\m -> m >> writeList ary (i `add` length (Cons x xs)) ys) (write ary i x >> writeList ary (S i) xs)
-          ? apply (\m -> m >> writeList ary (i `add` length (Cons x xs)) ys) (writeList ary i (Cons x xs))
-   in --
-      -- structure
-      --
-      transitivity t1 t2 t9 ep_t1_t2 $
-        transitivity t2 t3 t9 ep_t2_t3 $
-          transitivity t3 t4 t9 ep_t3_t4 $
-            transitivity t4 t5 t9 ep_t4_t5 $
-              transitivity t5 t6 t9 ep_t5_t6 $
-                transitivity t6 t7 t9 ep_t6_t7 $
-                  transitivity t7 t8 t9 ep_t7_t8 ep_t8_t9
+  $( transitivity_chain
+       [ [|
+           ( writeList ary i (Cons x xs `append` ys),
+             substitutability
+               (writeList ary i)
+               (Cons x xs `append` ys)
+               (Cons x (xs `append` ys))
+               $ reflexivity $
+                 Cons x (xs `append` ys)
+                   ? Cons x (xs `append` ys)
+           )
+           |],
+         [|
+           ( writeList ary i (Cons x (xs `append` ys)),
+             reflexivity $
+               write ary i x >> writeList ary (S i) (xs `append` ys)
+                 ? writeList ary i (Cons x (xs `append` ys))
+           )
+           |],
+         [|
+           ( write ary i x >> writeList ary (S i) (xs `append` ys),
+             substitutability
+               (seq mnd (write ary i x))
+               (writeList ary (S i) (xs `append` ys))
+               (writeList ary (S i) xs >> writeList ary (S i `add` length xs) ys)
+               $ writeList_append ary (S i) xs ys
+           )
+           |],
+         [|
+           ( write ary i x >> (writeList ary (S i) xs >> writeList ary (S i `add` length xs) ys),
+             substitutability
+               (apply (\j -> write ary i x >> (writeList ary (S i) xs >> writeList ary j ys)))
+               (S i `add` length xs)
+               (S (i `add` length xs))
+               ( reflexivity $
+                   S i `add` length xs
+                     ? S (i `add` length xs)
+               )
+               ? apply (\j -> write ary i x >> (writeList ary (S i) xs >> writeList ary j ys)) (S i `add` length xs)
+               ? apply (\j -> write ary i x >> (writeList ary (S i) xs >> writeList ary j ys)) (S (i `add` length xs))
+           )
+           |],
+         [|
+           ( write ary i x >> (writeList ary (S i) xs >> writeList ary (S (i `add` length xs)) ys),
+             symmetry
+               ((write ary i x >> writeList ary (S i) xs) >> writeList ary (S (i `add` length xs)) ys)
+               (write ary i x >> (writeList ary (S i) xs >> writeList ary (S (i `add` length xs)) ys))
+               $ (seq_associativity mnd)
+                 (write ary i x)
+                 (writeList ary (S i) xs)
+                 (writeList ary (S (i `add` length xs)) ys)
+           )
+           |],
+         [|
+           ( (write ary i x >> writeList ary (S i) xs) >> writeList ary (S (i `add` length xs)) ys,
+             substitutability
+               (apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary j ys))
+               (S (i `add` length xs))
+               (i `add` S (length xs))
+               ( reflexivity $
+                   i `add` S (length xs)
+                     ? add_S_right i (length xs)
+               )
+               ? apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary j ys) (S (i `add` length xs))
+               ? apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary j ys) (i `add` S (length xs))
+           )
+           |],
+         [|
+           ( (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` S (length xs)) ys,
+             substitutability
+               (apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` j) ys))
+               (S (length xs))
+               (length (Cons x xs))
+               ( reflexivity $
+                   S (length xs)
+                     ? length (Cons x xs)
+               )
+               ? apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` j) ys) (S (length xs))
+               ? apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` j) ys) (length (Cons x xs))
+           )
+           |],
+         [|
+           ( (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` length (Cons x xs)) ys,
+             substitutability
+               (apply (\m -> m >> writeList ary (i `add` length (Cons x xs)) ys))
+               (write ary i x >> writeList ary (S i) xs)
+               (writeList ary i (Cons x xs))
+               ( reflexivity $
+                   write ary i x >> writeList ary (S i) xs
+                     ? writeList ary i (Cons x xs)
+               )
+               ? apply (\m -> m >> writeList ary (i `add` length (Cons x xs)) ys) (write ary i x >> writeList ary (S i) xs)
+               ? apply (\m -> m >> writeList ary (i `add` length (Cons x xs)) ys) (writeList ary i (Cons x xs))
+           )
+           |]
+       ]
+       [|writeList ary i (Cons x xs) >> writeList ary (i `add` length (Cons x xs)) ys|]
+   )
   where
     (>>) = seq mnd
     (>>=) = bind mnd
