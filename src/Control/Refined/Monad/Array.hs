@@ -179,7 +179,7 @@ writeListToLength3 ary i (xs, ys, zs) =
 -}
 
 -- ? this proof takes 11m to check...
-{-@ assume
+{-@
 writeList_append ::
   forall m a.
   (Equality (m a), Equality (m Unit)) =>
@@ -211,7 +211,8 @@ writeList_append ary i Nil ys =
     %eqprop
       apply (\_ -> writeList ary i ys) it
         %by %smt
-        %by etaEquivalency it (writeList ary i ys) ? apply (\_ -> writeList ary i ys) it
+        %by etaEquivalency it (writeList ary i ys)
+          ? apply (\_ -> writeList ary i ys) it
     %eqprop
       pure mnd it >>= apply (\_ -> writeList ary i ys)
         %by %symmetry 
