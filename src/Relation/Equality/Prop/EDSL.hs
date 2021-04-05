@@ -19,7 +19,7 @@ import Relation.Equality.Prop
 import qualified Text.Parsec as P
 import Text.Printf (printf)
 
-sym_eqprop, sym_expln, sym_rewrite, sym_rewrite_to, sym_reflexivity, sym_symmetry, sym_extend, sym_retract :: String
+sym_eqprop, sym_expln, sym_rewrite, sym_rewrite_to, sym_reflexivity, sym_symmetry, sym_extend, sym_retract, sym_smt :: String
 sym_eqprop = "%eqprop"
 sym_expln = "%by"
 sym_rewrite = "%rewrite"
@@ -28,9 +28,10 @@ sym_reflexivity = "%reflexivity"
 sym_symmetry = "%symmetry"
 sym_extend = "%extend"
 sym_retract = "%retract"
+sym_smt = "%smt"
 
 syms_expln :: [String]
-syms_expln = [sym_reflexivity, sym_symmetry, sym_rewrite, sym_extend, sym_retract]
+syms_expln = [sym_reflexivity, sym_symmetry, sym_rewrite, sym_extend, sym_retract, sym_smt]
 
 data Chain = Chain Exp [ChainClause]
   deriving (Show)
@@ -47,6 +48,7 @@ data ChainExpln
   | ChainExpln_Rewrite Exp Exp ChainExpln -- %by %rewrite <exp> %to <exp> %by <clause>
   | ChainExpln_Extend Exp ChainExpln -- %by %extend <exp> %by <clause>
   | ChainExpln_Retract Exp ChainExpln -- %by %retract <exp> %by <clause>
+  | ChainExpln_SMT Exp -- %by %smt %by <exp>
   deriving (Show)
 
 instance Lift Exp where
@@ -67,10 +69,10 @@ instance Lift Chain where
         e12 <- reifyExpln t1 t2 expln12
         e23 <- reifyExpln t2 t3 expln23
         [|transitivity t1 t2 t3 e12 e23|]
-      go (ChainClause tj _ : ChainClause ti explnij : clauses) = do
-        eij <- reifyExpln ti tj explnij
-        e1i <- go (ChainClause ti explnij : clauses)
-        [|transitivity t1 ti tj e1i eij|]
+      go (ChainClause tk explnjk : ChainClause tj explnij : clauses) = do
+        e1j <- go (ChainClause tj explnij : clauses)
+        ejk <- reifyExpln tj tk explnjk
+        [|transitivity t1 tj tk e1j ejk|]
 
       reifyExpln :: Exp -> Exp -> ChainExpln -> Q Exp
       reifyExpln ti tj = \case
@@ -79,10 +81,10 @@ instance Lift Chain where
         ChainExpln_Proof eij ->
           [|eij|]
         ChainExpln_Reflexivity ->
-          [|reflexivity t1|]
+          [|reflexivity ti|]
         ChainExpln_Symmetry expln -> do
           eji <- reifyExpln ti tj expln
-          [|symmetry ti tj eji|]
+          [|symmetry tj ti eji|]
         ChainExpln_Rewrite s3 s4 expln -> do
           e34 <- reifyExpln s3 s4 expln
           rewrite [|s3|] [|s4|] [|e34|] [|ti|]
@@ -90,6 +92,8 @@ instance Lift Chain where
           undefined
         ChainExpln_Retract x expln -> do
           undefined
+        ChainExpln_SMT eSMTij ->
+          [|(reflexivity ti ? eSMTij)|]
 
   -- liftTyped :: Chain -> Q TExp
   liftTyped = unsafeTExpCoerce . lift
@@ -162,6 +166,11 @@ parseChainExpln sExpln =
             tm <- parseExpQ sTm
             expln <- parseChainExpln sExpln2
             return $ ChainExpln_Retract tm expln
+          -- %smt %by <exp>
+          | sym == sym_smt -> do
+            sTm <- parseCmd sym_expln sExpln1
+            tm <- parseExpQ sTm
+            return $ ChainExpln_SMT tm
           | otherwise ->
             fail $ printf "the eqpropchain command `%s` is not implemented" sym
     --

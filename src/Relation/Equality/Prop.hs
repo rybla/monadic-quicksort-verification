@@ -21,6 +21,9 @@ data EqualityProp a = EqualityProp
 type EqualProp a X Y = {w:EqualityProp a | eqprop X Y}
 @-}
 
+trivialProp :: EqualityProp a
+trivialProp = EqualityProp
+
 {-
 ### Axioms
 -}
@@ -105,8 +108,11 @@ class Concreteness a where
 instance EqSMT a => Concreteness a where
   concreteness x y pf = concreteness_EqSMT x y pf
 
+-- ! why....
+{-@ type MyProof = () @-}
+
 {-@ assume
-concreteness_EqSMT :: EqSMT a => x:a -> y:a -> EqualProp a {x} {y} -> {_:Proof | x = y}
+concreteness_EqSMT :: EqSMT a => x:a -> y:a -> EqualProp a {x} {y} -> {_:MyProof | x = y}
 @-}
 concreteness_EqSMT :: EqSMT a => a -> a -> EqualityProp a -> Proof
 concreteness_EqSMT _ _ _ = ()

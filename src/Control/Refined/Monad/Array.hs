@@ -1,4 +1,7 @@
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
+
+{-@ LIQUID "--compile-spec" @-}
 
 module Control.Refined.Monad.Array where
 
@@ -9,6 +12,7 @@ import Data.Refined.Unit
 import Function
 import Language.Haskell.Liquid.ProofCombinators
 import Relation.Equality.Prop
+import Relation.Equality.Prop.EDSL
 import Relation.Equality.Prop.Reasoning
 import Prelude hiding (Monad, length, pure, read, readList, seq, (>>), (>>=))
 
@@ -197,157 +201,97 @@ writeList_append ::
   EqualityProp (m Unit)
 --
 writeList_append ary i Nil ys =
-  $( transitivity_chain
-       [ [|
-           ( writeList ary i (Nil `append` ys),
-             (substitutability (writeList ary i) (Nil `append` ys) ys)
-               (reflexivity ys ? append_identity ys)
-               ? writeList ary i (Nil `append` ys)
-               ? writeList ary i ys
-           )
-           |],
-         [|
-           ( writeList ary i ys,
-             etaEquivalency it (writeList ary i ys)
-               ? apply (\_ -> writeList ary i ys) it
-           )
-           |],
-         [|
-           ( apply (\_ -> writeList ary i ys) it,
-             symmetry
-               (pure mnd it >>= apply (\_ -> writeList ary i ys))
-               (apply (\_ -> writeList ary i ys) it)
-               $ bind_identity_left mnd it (apply (\_ -> writeList ary i ys))
-           )
-           |],
-         [|
-           ( pure mnd it >>= apply (\_ -> writeList ary i ys),
-             reflexivity $ pure mnd it >>= apply (\_ -> writeList ary i ys)
-           )
-           |],
-         [|
-           ( pure mnd it >> writeList ary i ys,
-             reflexivity $ pure mnd it >> writeList ary i ys
-           )
-           |],
-         [|
-           ( writeList ary i Nil >> writeList ary i ys,
-             reflexivity (writeList ary i Nil >> writeList ary i ys)
-               ? add_identity i
-           )
-           |],
-         [|
-           ( writeList ary i Nil >> writeList ary (i `add` Z) ys,
-             reflexivity $ writeList ary i Nil >> writeList ary (i `add` Z) ys
-           )
-           |]
-       ]
-       [|writeList ary i Nil >> writeList ary (i `add` length Nil) ys|]
-   )
+  [eqpropchain|
+      writeList ary i (Nil `append` ys)
+    %eqprop
+      writeList ary i ys
+        %by %rewrite Nil `append` ys %to ys
+        %by %smt
+        %by append_identity ys
+    %eqprop
+      apply (\_ -> writeList ary i ys) it
+        %by %smt
+        %by etaEquivalency it (writeList ary i ys) ? apply (\_ -> writeList ary i ys) it
+    %eqprop
+      pure mnd it >>= apply (\_ -> writeList ary i ys)
+        %by %symmetry 
+        %by bind_identity_left mnd it (apply (\_ -> writeList ary i ys))
+    %eqprop
+      pure mnd it >> writeList ary i ys
+        %by %smt
+        %by pure mnd it >>= apply (\_ -> writeList ary i ys)
+    %eqprop
+      writeList ary i Nil >> writeList ary i ys
+        %by %smt 
+        %by pure mnd it >> writeList ary i ys
+    %eqprop
+      writeList ary i Nil >> writeList ary (i `add` Z) ys
+        %by %smt 
+        %by add_identity i
+    %eqprop
+      writeList ary i Nil >> writeList ary (i `add` length Nil) ys
+        %by %smt 
+        %by writeList ary i Nil >> writeList ary (i `add` Z) ys
+  |]
   where
     (>>) = seq mnd
     (>>=) = bind mnd
     mnd = monad ary
 --
 writeList_append ary i (Cons x xs) ys =
-  $( transitivity_chain
-       [ [|
-           ( writeList ary i (Cons x xs `append` ys),
-             substitutability
-               (writeList ary i)
-               (Cons x xs `append` ys)
-               (Cons x (xs `append` ys))
-               $ reflexivity $
-                 Cons x (xs `append` ys)
-                   ? Cons x (xs `append` ys)
-           )
-           |],
-         [|
-           ( writeList ary i (Cons x (xs `append` ys)),
-             reflexivity $
-               write ary i x >> writeList ary (S i) (xs `append` ys)
-                 ? writeList ary i (Cons x (xs `append` ys))
-           )
-           |],
-         [|
-           ( write ary i x >> writeList ary (S i) (xs `append` ys),
-             substitutability
-               (seq mnd (write ary i x))
-               (writeList ary (S i) (xs `append` ys))
-               (writeList ary (S i) xs >> writeList ary (S i `add` length xs) ys)
-               $ writeList_append ary (S i) xs ys
-           )
-           |],
-         [|
-           ( write ary i x >> (writeList ary (S i) xs >> writeList ary (S i `add` length xs) ys),
-             substitutability
-               (apply (\j -> write ary i x >> (writeList ary (S i) xs >> writeList ary j ys)))
-               (S i `add` length xs)
-               (S (i `add` length xs))
-               ( reflexivity $
-                   S i `add` length xs
-                     ? S (i `add` length xs)
-               )
-               ? apply (\j -> write ary i x >> (writeList ary (S i) xs >> writeList ary j ys)) (S i `add` length xs)
-               ? apply (\j -> write ary i x >> (writeList ary (S i) xs >> writeList ary j ys)) (S (i `add` length xs))
-           )
-           |],
-         [|
-           ( write ary i x >> (writeList ary (S i) xs >> writeList ary (S (i `add` length xs)) ys),
-             symmetry
-               ((write ary i x >> writeList ary (S i) xs) >> writeList ary (S (i `add` length xs)) ys)
-               (write ary i x >> (writeList ary (S i) xs >> writeList ary (S (i `add` length xs)) ys))
-               $ (seq_associativity mnd)
-                 (write ary i x)
-                 (writeList ary (S i) xs)
-                 (writeList ary (S (i `add` length xs)) ys)
-           )
-           |],
-         [|
-           ( (write ary i x >> writeList ary (S i) xs) >> writeList ary (S (i `add` length xs)) ys,
-             substitutability
-               (apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary j ys))
-               (S (i `add` length xs))
-               (i `add` S (length xs))
-               ( reflexivity $
-                   i `add` S (length xs)
-                     ? add_S_right i (length xs)
-               )
-               ? apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary j ys) (S (i `add` length xs))
-               ? apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary j ys) (i `add` S (length xs))
-           )
-           |],
-         [|
-           ( (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` S (length xs)) ys,
-             substitutability
-               (apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` j) ys))
-               (S (length xs))
-               (length (Cons x xs))
-               ( reflexivity $
-                   S (length xs)
-                     ? length (Cons x xs)
-               )
-               ? apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` j) ys) (S (length xs))
-               ? apply (\j -> (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` j) ys) (length (Cons x xs))
-           )
-           |],
-         [|
-           ( (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` length (Cons x xs)) ys,
-             substitutability
-               (apply (\m -> m >> writeList ary (i `add` length (Cons x xs)) ys))
-               (write ary i x >> writeList ary (S i) xs)
-               (writeList ary i (Cons x xs))
-               ( reflexivity $
-                   write ary i x >> writeList ary (S i) xs
-                     ? writeList ary i (Cons x xs)
-               )
-               ? apply (\m -> m >> writeList ary (i `add` length (Cons x xs)) ys) (write ary i x >> writeList ary (S i) xs)
-               ? apply (\m -> m >> writeList ary (i `add` length (Cons x xs)) ys) (writeList ary i (Cons x xs))
-           )
-           |]
-       ]
-       [|writeList ary i (Cons x xs) >> writeList ary (i `add` length (Cons x xs)) ys|]
-   )
+  [eqpropchain|
+      writeList ary i (Cons x xs `append` ys)
+    %eqprop
+      writeList ary i (Cons x (xs `append` ys))
+        %by %rewrite Cons x xs `append` ys
+                 %to Cons x (xs `append` ys)
+        %by %smt 
+        %by Cons x (xs `append` ys)
+    %eqprop
+      write ary i x >> writeList ary (S i) (xs `append` ys)
+        %by %smt
+        %by writeList ary i (Cons x (xs `append` ys))
+    %eqprop
+      write ary i x >> (writeList ary (S i) xs >> writeList ary (S i `add` length xs) ys)
+        %by %rewrite writeList ary (S i) (xs `append` ys)
+                 %to writeList ary (S i) xs >> writeList ary (S i `add` length xs) ys 
+        %by writeList_append ary (S i) xs ys
+    %eqprop
+      write ary i x >> (writeList ary (S i) xs >> writeList ary (S (i `add` length xs)) ys)
+        %by %rewrite S i `add` length xs
+                 %to S (i `add` length xs)
+        %by %smt 
+        %by S i `add` length xs
+          ? S (i `add` length xs)
+    %eqprop
+      (write ary i x >> writeList ary (S i) xs) >> writeList ary (S (i `add` length xs)) ys
+        %by %symmetry
+        %by (seq_associativity mnd)
+              (write ary i x)
+              (writeList ary (S i) xs)
+              (writeList ary (S (i `add` length xs)) ys)
+    %eqprop
+      (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` S (length xs)) ys
+        %by %rewrite S (i `add` length xs)
+                 %to i `add` S (length xs)
+        %by %smt 
+        %by i `add` S (length xs)
+          ? add_S_right i (length xs)
+    %eqprop
+      (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` length (Cons x xs)) ys
+        %by %rewrite S (length xs)
+                 %to length (Cons x xs)
+        %by %smt 
+        %by S (length xs)
+          ? length (Cons x xs)
+    %eqprop
+      writeList ary i (Cons x xs) >> writeList ary (i `add` length (Cons x xs)) ys
+        %by %rewrite write ary i x >> writeList ary (S i) xs
+                 %to writeList ary i (Cons x xs)
+        %by %smt 
+        %by write ary i x >> writeList ary (S i) xs
+          ? writeList ary i (Cons x xs)
+  |]
   where
     (>>) = seq mnd
     (>>=) = bind mnd
