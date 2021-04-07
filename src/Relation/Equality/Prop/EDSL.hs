@@ -3,7 +3,15 @@
 
 {-@ LIQUID "--compile-spec" @-}
 
-module Relation.Equality.Prop.EDSL where
+module Relation.Equality.Prop.EDSL
+  ( eqpropchain,
+    compileChain,
+    parseChain,
+    Chain (..),
+    ChainClause (..),
+    ChainExpln (..),
+  )
+where
 
 import Control.Applicative
 import Control.Monad
@@ -46,8 +54,8 @@ data ChainExpln
   | ChainExpln_Reflexivity -- %by %reflexivity
   | ChainExpln_Symmetry ChainExpln -- %by %symmetry %by <clause>
   | ChainExpln_Rewrite Exp Exp ChainExpln -- %by %rewrite <exp> %to <exp> %by <clause>
-  | ChainExpln_Extend Exp ChainExpln -- %by %extend <exp> %by <clause>
-  | ChainExpln_Retract Exp ChainExpln -- %by %retract <exp> %by <clause>
+  | ChainExpln_Extend Name ChainExpln -- %by %extend <exp> %by <clause>
+  | ChainExpln_Retract Name ChainExpln -- %by %retract <exp> %by <clause>
   | ChainExpln_SMT Exp -- %by %smt %by <exp>
   deriving (Show)
 
@@ -89,8 +97,13 @@ instance Lift Chain where
           e34 <- reifyExpln s3 s4 expln
           rewrite [|s3|] [|s4|] [|e34|] [|ti|]
         ChainExpln_Extend x expln -> do
-          undefined
+          let ti_x = AppE ti (VarE x)
+          let tj_x = AppE tj (VarE x)
+          eij_x <- reifyExpln ti_x tj_x expln
+          let eij = LamE [VarP x] eij_x
+          [|extensionality ti tj eij|]
         ChainExpln_Retract x expln -> do
+          -- TODO: is ChainExpln_Retract even defined well?
           undefined
         ChainExpln_SMT eSMTij ->
           [|(reflexivity ti ? eSMTij)|]
@@ -154,18 +167,24 @@ parseChainExpln sExpln =
             tm2 <- parseExpQ sTm2
             expln <- parseChainExpln sExpln3
             return $ ChainExpln_Rewrite tm1 tm2 expln
-          -- %extend <exp> %by <expln>
+          -- %extend <name> %by <expln>
           | sym == sym_extend -> do
-            (sTm, sExpln2) <- parseToCmd sym_expln sExpln1
-            tm <- parseExpQ sTm
+            (sName, sExpln2) <- parseToCmd sym_expln sExpln1
+            name <-
+              parseExpQ sName >>= \case
+                VarE name -> return name
+                e -> fail $ printf "the eqpropchain command `%s` expects a <name> argument instead of `%s`" sym (show e)
             expln <- parseChainExpln sExpln2
-            return $ ChainExpln_Extend tm expln
-          -- %retract <exp> %by <expln>
+            return $ ChainExpln_Extend name expln
+          -- %retract <name> %by <expln>
           | sym == sym_retract -> do
-            (sTm, sExpln2) <- parseToCmd sym_expln sExpln1
-            tm <- parseExpQ sTm
+            (sName, sExpln2) <- parseToCmd sym_expln sExpln1
+            name <-
+              parseExpQ sName >>= \case
+                VarE name -> return name
+                e -> fail $ printf "the eqpropchain command `%s` expects a <name> argument instead of `%s`" sym (show e)
             expln <- parseChainExpln sExpln2
-            return $ ChainExpln_Retract tm expln
+            return $ ChainExpln_Retract name expln
           -- %smt %by <exp>
           | sym == sym_smt -> do
             sTm <- parseCmd sym_expln sExpln1
@@ -201,11 +220,11 @@ rewrite :: Q Exp -> Q Exp -> Q Exp -> Q Exp -> Q Exp
 rewrite xQ yQ exyQ eQ = do
   x <- xQ
   e <- eQ
-  hole <- newName "hole"
+  holeName <- newName "rewrite_hole"
   let extract :: Exp -> Q Exp
       extract _e =
         if _e == x
-          then varE hole
+          then varE holeName
           else case _e of
             AppE e1 e2 -> AppE <$> extract e1 <*> extract e2
             AppTypeE e t -> AppTypeE <$> extract e <*> return t
@@ -267,7 +286,7 @@ rewrite xQ yQ exyQ eQ = do
       extractGuardExp :: (Guard, Exp) -> Q (Guard, Exp)
       extractGuardExp (grd, e) = (,) <$> extractGuard grd <*> extract e
   --
-  f <- [|$(lamE [varP hole] (extract e))|]
+  f <- [|$(lamE [varP holeName] (extract e))|]
   [|(((substitutability (apply f) $xQ $yQ $exyQ) ? apply f $xQ) ? apply f $yQ)|]
 
 --
@@ -300,28 +319,3 @@ dropSpace = dropWhile Char.isSpace
 --
 --
 --
-
--- parseChain :: String -> Either String Chain
--- parseChain s = do
---   clauses <- parseChainExplns s
---   case clauses of
---     [] -> Left "empty chain"
---     [Left tm] -> return $ Chain tm []
---     (Left tm : steps) -> return $ Chain tm (liftStep <$> steps)
---     _ -> Left "invalid eqpropchain"
-
--- liftStep :: Either Exp (Exp, Exp) -> (Exp, Exp)
--- liftStep (Right (tm, pf)) = (tm, pf)
--- liftStep (Left tm) =
---   -- default proof is reflexivity
---   (tm, AppE (VarE 'reflexivity) tm)
-
--- parseChainExplns :: String -> Either String [Either Exp (Exp, Exp)]
--- parseChainExplns = traverse parseChainExpln . split sym_eqprop
-
--- parseChainExpln :: String -> Either String (Either Exp (Exp, Exp))
--- parseChainExpln s =
---   case split sym_expln s of
---     [s] -> Left <$> parseExp s
---     [s1, s2] -> Right <$> ((,) <$> parseExp s1 <*> parseExp s2)
---     _ -> Left $ "only one `" ++ sym_expln ++ "` is allowed per equational clause"

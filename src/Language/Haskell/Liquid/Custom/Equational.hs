@@ -1,4 +1,4 @@
-module Language.Haskell.LiquidCustom.Equational where
+module Language.Haskell.Liquid.Custom.Equational where
 
 -------------------------------------------------------------------------------
 

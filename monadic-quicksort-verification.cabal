@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6d49b3c48b97c26f5ec2ed6ea852bd8ed6d61eda2dfa2d33011edb18925a172c
+-- hash: cc6a17dab71a9f39b4924541c07c1e6cee0bafb3ac0a64ee43f74ab110e606e4
 
 name:           monadic-quicksort-verification
 version:        0.1.0.0
@@ -30,14 +30,15 @@ library
       Control.Refined.Monad
       Control.Refined.Monad.Array
       Control.Refined.Monad.Plus
+      Control.Refined.SlowsortList
       Data.Refined.List
       Data.Refined.Nat
       Data.Refined.Natural
       Data.Refined.Tuple
       Data.Refined.Unit
       Function
-      Language.Haskell.LiquidCustom.Equational
-      Language.Haskell.LiquidCustom.ProofCombinators
+      Language.Haskell.Liquid.Custom.Equational
+      Language.Haskell.Liquid.Custom.ProofCombinators
       Relation.Equality.Prop
       Relation.Equality.Prop.EDSL
       Relation.Equality.Prop.EDSL.Test
@@ -49,7 +50,7 @@ library
   hs-source-dirs:
       src
   default-extensions: GADTs KindSignatures ExplicitForAll RankNTypes FlexibleInstances UndecidableInstances MultiParamTypeClasses ScopedTypeVariables LambdaCase MultiWayIf TupleSections
-  ghc-options: -Wall -Wno-name-shadowing -Wno-unused-imports -Wno-unused-matches -Wno-unused-local-binds -Wno-orphans -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--prune-unsorted
+  ghc-options: -Wall -Wno-name-shadowing -Wno-unused-imports -Wno-unused-matches -Wno-unused-local-binds -Wno-orphans -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--prune-unsorted -fplugin-opt=LiquidHaskell:--short-errors
   build-depends:
       haskell-src-meta
     , liquid-base

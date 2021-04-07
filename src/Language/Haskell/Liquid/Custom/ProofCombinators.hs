@@ -3,7 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Language.Haskell.LiquidCustom.ProofCombinators
+module Language.Haskell.Liquid.Custom.ProofCombinators
   ( -- ATTENTION! `Admit` and `(==!)` are UNSAFE: they should not belong the final proof term
 
     -- * Proof is just a () alias

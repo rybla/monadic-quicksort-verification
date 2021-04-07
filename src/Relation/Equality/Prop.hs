@@ -1,5 +1,6 @@
 module Relation.Equality.Prop where
 
+import Data.Void (Void)
 import Function
 import Language.Haskell.Liquid.ProofCombinators
 
@@ -19,6 +20,10 @@ data EqualityProp a = EqualityProp
 
 {-@
 type EqualProp a X Y = {w:EqualityProp a | eqprop X Y}
+@-}
+
+{-@
+type NEqualProp a X Y = EqualProp a {X} {Y} -> Void
 @-}
 
 trivialProp :: EqualityProp a

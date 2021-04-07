@@ -57,6 +57,7 @@ library:
     - -fplugin-opt=LiquidHaskell:--diff
     - -fplugin-opt=LiquidHaskell:--short-names
     - -fplugin-opt=LiquidHaskell:--prune-unsorted
+    - -fplugin-opt=LiquidHaskell:--short-errors
 
 tests:
   monadic-quicksort-verification-test:

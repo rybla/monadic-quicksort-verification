@@ -14,9 +14,9 @@ import Relation.Equality.Prop
 
 type Reader r a = r -> a
 
-{-@ reflect unit @-}
-unit :: a -> Reader r a
-unit a = \_ -> a
+{-@ reflect pure @-}
+pure :: a -> Reader r a
+pure a = \_ -> a
 
 {-@ reflect bind @-}
 bind :: Reader r a -> (a -> Reader r b) -> Reader r b
@@ -36,7 +36,7 @@ identityLeft ::
   x:a ->
   k:(a -> Reader r b) ->
   EqualProp (Reader r b)
-    {bind (unit x) k}
+    {bind (pure x) k}
     {k x}
 @-}
 identityLeft ::
@@ -45,10 +45,10 @@ identityLeft ::
   (a -> Reader r b) ->
   EqualityProp (Reader r b)
 identityLeft x k =
-  extensionality (bind (unit x) k) (k x) $ \r ->
-    reflexivity (bind (unit x) k r)
-      ? ( bind (unit x) k r
-            =~= k (unit x r) r
+  extensionality (bind (pure x) k) (k x) $ \r ->
+    reflexivity (bind (pure x) k r)
+      ? ( bind (pure x) k r
+            =~= k (pure x r) r
             =~= k x r
             *** QED
         )
@@ -58,7 +58,7 @@ identityRight ::
   Equality a =>
   m:Reader r a ->
   EqualProp (Reader r a)
-    {bind m unit}
+    {bind m pure}
     {m}
 @-}
 identityRight ::
@@ -66,10 +66,10 @@ identityRight ::
   Reader r a ->
   EqualityProp (Reader r a)
 identityRight m =
-  extensionality (bind m unit) m $ \r ->
-    reflexivity (bind m unit r)
-      ? ( bind m unit r
-            =~= unit (m r) r
+  extensionality (bind m pure) m $ \r ->
+    reflexivity (bind m pure r)
+      ? ( bind m pure r
+            =~= pure (m r) r
             =~= m r
             *** QED
         )

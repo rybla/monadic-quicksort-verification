@@ -9,7 +9,7 @@ type Unit = ()
 type Unit = ()
 
 {-@ reflect it @-}
-it :: Unit
+it :: ()
 it = ()
 
 instance EqSMT Unit where

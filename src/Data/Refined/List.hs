@@ -2,7 +2,7 @@ module Data.Refined.List where
 
 import Data.Refined.Natural
 import Language.Haskell.Liquid.ProofCombinators
-import Prelude hiding (length)
+import Prelude hiding (all, foldl, length)
 
 {-
 # List
@@ -43,3 +43,12 @@ append_identity :: xs:List a -> {(append xs Nil = xs) && (append Nil xs = xs)}
 append_identity :: List a -> Proof
 append_identity Nil = trivial
 append_identity (Cons _ xs) = append_identity xs
+
+{-
+## Utilities
+-}
+
+{-@ reflect all @-}
+all :: (a -> Bool) -> List a -> Bool
+all p Nil = True
+all p (Cons x xs) = p x && all p xs

@@ -158,26 +158,35 @@ writeListToLength ary i xs = seq mnd (writeList ary i xs) (pure mnd (length xs))
 writeListToLength2 ::
   Array m a -> Index -> (List a, List a) -> m (Natural, Natural)
 writeListToLength2 ary i (xs, ys) =
-  (seq mnd)
-    (writeList ary i (xs `append` ys))
-    (pure mnd (length xs, length ys))
+  writeList ary i (xs `append` ys)
+    >> pure mnd (length xs, length ys)
   where
+    (>>) = seq mnd
     mnd = monad ary
 
 {-@ reflect writeListToLength3 @-}
 writeListToLength3 ::
   Array m a -> Index -> (List a, List a, List a) -> m (Natural, Natural, Natural)
 writeListToLength3 ary i (xs, ys, zs) =
-  (seq mnd)
-    (writeList ary i (xs `append` (ys `append` ys)))
-    (pure mnd (length xs, length ys, length zs))
+  writeList ary i (xs `append` (ys `append` ys))
+    >> pure mnd (length xs, length ys, length zs)
   where
+    (>>) = seq mnd
     mnd = monad ary
+
+{-@ reflect swap @-}
+swap :: Array m a -> Index -> Index -> m ()
+swap arr i j = read arr i >>= \x -> read arr j >>= \y -> write arr i y >> write arr j x
+  where
+    (>>=) = bind mnd
+    (>>) = seq mnd
+    mnd = monad arr
 
 {-
 # Lemmas
 -}
 
+-- [ref] equation 9
 -- ? this proof takes 11m to check...
 {-@
 writeList_append ::
