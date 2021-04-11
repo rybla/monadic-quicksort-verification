@@ -1,6 +1,8 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+{-@ LIQUID "--compile-spec" @-}
+
 module Control.Refined.Monad where
 
 import Data.Refined.Unit
@@ -86,10 +88,12 @@ liftM :: Monad m -> (a -> b) -> (m a -> m b)
 liftM mnd f m = bind mnd m (apply (\x -> pure mnd (f x)))
 
 {-@ reflect liftM2 @-}
-liftM2 :: Monad m -> (a -> b -> c) -> (m a -> m b -> m c)
+liftM2 :: forall m a b c. Monad m -> (a -> b -> c) -> (m a -> m b -> m c)
 liftM2 mnd f ma mb =
-  bind mnd ma $
-    apply (\x -> bind mnd mb $ apply (\y -> pure mnd (f x y)))
+  ma >>= (apply (\x -> mb >>= apply (\y -> pure mnd (f x y))))
+  where
+    (>>=) :: forall a b. m a -> (a -> m b) -> m b
+    (>>=) = bind mnd
 
 {-
 ## Properties

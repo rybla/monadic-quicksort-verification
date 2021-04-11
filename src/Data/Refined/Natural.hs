@@ -1,3 +1,5 @@
+{-@ LIQUID "--compile-spec" @-}
+
 module Data.Refined.Natural where
 
 import Language.Haskell.Liquid.ProofCombinators

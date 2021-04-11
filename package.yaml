@@ -44,6 +44,7 @@ library:
     - LambdaCase
     - MultiWayIf
     - TupleSections
+    - ScopedTypeVariables
   ghc-options:
     - -Wall
     - -Wno-name-shadowing

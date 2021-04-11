@@ -54,8 +54,8 @@ data ChainExpln
   | ChainExpln_Reflexivity -- %by %reflexivity
   | ChainExpln_Symmetry ChainExpln -- %by %symmetry %by <clause>
   | ChainExpln_Rewrite Exp Exp ChainExpln -- %by %rewrite <exp> %to <exp> %by <clause>
-  | ChainExpln_Extend Name ChainExpln -- %by %extend <exp> %by <clause>
-  | ChainExpln_Retract Name ChainExpln -- %by %retract <exp> %by <clause>
+  | ChainExpln_Extend Pat ChainExpln -- %by %extend <pat> %by <clause>
+  | ChainExpln_Retract Name ChainExpln -- TODO: %by %retract <exp> %by <clause>
   | ChainExpln_SMT Exp -- %by %smt %by <exp>
   deriving (Show)
 
@@ -89,19 +89,20 @@ instance Lift Chain where
         ChainExpln_Proof eij ->
           [|eij|]
         ChainExpln_Reflexivity ->
-          [|reflexivity ti|]
+          [|(reflexivity ti)|]
         ChainExpln_Symmetry expln -> do
           eji <- reifyExpln ti tj expln
-          [|symmetry tj ti eji|]
+          [|(symmetry tj ti eji)|]
         ChainExpln_Rewrite s3 s4 expln -> do
           e34 <- reifyExpln s3 s4 expln
           rewrite [|s3|] [|s4|] [|e34|] [|ti|]
-        ChainExpln_Extend x expln -> do
-          let ti_x = AppE ti (VarE x)
-          let tj_x = AppE tj (VarE x)
-          eij_x <- reifyExpln ti_x tj_x expln
-          let eij = LamE [VarP x] eij_x
-          [|extensionality ti tj eij|]
+        ChainExpln_Extend p expln -> do
+          pExp <- patToExp p
+          let ti_p = AppE ti pExp
+          let tj_p = AppE tj pExp
+          eij_p <- reifyExpln ti_p tj_p expln
+          let eij = LamE [p] eij_p
+          [|(extensionality ti tj eij)|]
         ChainExpln_Retract x expln -> do
           -- TODO: is ChainExpln_Retract even defined well?
           undefined
@@ -140,8 +141,8 @@ parseChain s = do
 
 parseChainClause :: String -> Q ChainClause
 parseChainClause sClause = case splitFirst sym_expln (dropSpace sClause) of
-  Just (sTm, expln) -> ChainClause <$> parseExpQ sTm <*> parseChainExpln expln
-  Nothing -> ChainClause <$> parseExpQ sClause <*> return ChainExpln_Trivial
+  Just (sTm, expln) -> ChainClause <$> asQ parseExp sTm <*> parseChainExpln expln
+  Nothing -> ChainClause <$> asQ parseExp sClause <*> return ChainExpln_Trivial
 
 parseChainExpln :: String -> Q ChainExpln
 parseChainExpln sExpln =
@@ -163,38 +164,36 @@ parseChainExpln sExpln =
           | sym == sym_rewrite -> do
             (sTm1, sExpln2) <- parseToCmd sym_rewrite_to sExpln1
             (sTm2, sExpln3) <- parseToCmd sym_expln sExpln2
-            tm1 <- parseExpQ sTm1
-            tm2 <- parseExpQ sTm2
+            tm1 <- asQ parseExp sTm1
+            tm2 <- asQ parseExp sTm2
             expln <- parseChainExpln sExpln3
             return $ ChainExpln_Rewrite tm1 tm2 expln
-          -- %extend <name> %by <expln>
+          -- %extend <pat> %by <expln>
           | sym == sym_extend -> do
-            (sName, sExpln2) <- parseToCmd sym_expln sExpln1
-            name <-
-              parseExpQ sName >>= \case
-                VarE name -> return name
-                e -> fail $ printf "the eqpropchain command `%s` expects a <name> argument instead of `%s`" sym (show e)
+            (sPat, sExpln2) <- parseToCmd sym_expln sExpln1
+            pat <- asQ parsePat sPat
             expln <- parseChainExpln sExpln2
-            return $ ChainExpln_Extend name expln
+            return $ ChainExpln_Extend pat expln
           -- %retract <name> %by <expln>
           | sym == sym_retract -> do
-            (sName, sExpln2) <- parseToCmd sym_expln sExpln1
-            name <-
-              parseExpQ sName >>= \case
-                VarE name -> return name
-                e -> fail $ printf "the eqpropchain command `%s` expects a <name> argument instead of `%s`" sym (show e)
-            expln <- parseChainExpln sExpln2
-            return $ ChainExpln_Retract name expln
+            fail $ "the command `%retract` is unimplemented"
+          -- (sName, sExpln2) <- parseToCmd sym_expln sExpln1
+          -- name <-
+          --   asQ parseExp sName >>= \case
+          --     VarE name -> return name
+          --     e -> fail $ printf "the eqpropchain command `%s` expects a <name> argument instead of `%s`" sym (show e)
+          -- expln <- parseChainExpln sExpln2
+          -- return $ ChainExpln_Retract name expln
           -- %smt %by <exp>
           | sym == sym_smt -> do
             sTm <- parseCmd sym_expln sExpln1
-            tm <- parseExpQ sTm
+            tm <- asQ parseExp sTm
             return $ ChainExpln_SMT tm
           | otherwise ->
             fail $ printf "the eqpropchain command `%s` is not implemented" sym
     --
     Nothing ->
-      ChainExpln_Proof <$> parseExpQ sExpln
+      ChainExpln_Proof <$> asQ parseExp sExpln
   where
     parseToCmd :: String -> String -> Q (String, String)
     parseToCmd cmd str = case splitFirst cmd (dropSpace str) of
@@ -209,10 +208,10 @@ parseChainExpln sExpln =
       unless (all isSpace str) $
         fail $ printf "eqpropchain command `%s` does not expect argument `%s`" cmd str
 
-parseExpQ :: String -> Q Exp
-parseExpQ s = case parseExp s of
-  Left err -> fail err
-  Right exp -> return exp
+{-
+## Rewriting
+
+-}
 
 -- x:a -> y:a -> EqualProp a {x} {y} -> e:c -> EqualProp b {f x} {f y}
 -- where f is extracted from e by abstracting out the appearances of x
@@ -289,9 +288,10 @@ rewrite xQ yQ exyQ eQ = do
   f <- [|$(lamE [varP holeName] (extract e))|]
   [|(((substitutability (apply f) $xQ $yQ $exyQ) ? apply f $xQ) ? apply f $yQ)|]
 
---
---
---
+{-
+## Utilities for Parsing
+
+-}
 
 split :: String -> String -> [String]
 split sep _str = go _str ""
@@ -316,6 +316,26 @@ splitFirst sep _str = go _str ""
 dropSpace :: String -> String
 dropSpace = dropWhile Char.isSpace
 
---
---
---
+asQ :: (String -> Either String a) -> String -> Q a
+asQ parse s = case parse s of
+  Left err -> fail err
+  Right a -> return a
+
+patToExp :: Pat -> Q Exp
+patToExp = \case
+  VarP x -> return $ VarE x
+  TupP ps -> TupE <$> traverse (fmap Just . patToExp) ps
+  UnboxedTupP ps -> TupE <$> traverse (fmap Just . patToExp) ps
+  UnboxedSumP p sumAlt sumAry -> UnboxedSumE <$> patToExp p <*> return sumAlt <*> return sumAry
+  ConP x ps -> foldl AppE (VarE x) <$> traverse patToExp ps
+  InfixP p1 o p2 -> InfixE <$> (fmap Just . patToExp) p1 <*> (return . VarE) o <*> (fmap Just . patToExp) p2
+  UInfixP p1 o p2 -> UInfixE <$> patToExp p1 <*> (return . VarE) o <*> patToExp p2
+  ParensP p -> patToExp p
+  TildeP p -> patToExp p
+  BangP p -> patToExp p
+  AsP x _ -> return $ VarE x
+  WildP -> VarE <$> newName "_"
+  RecP x fps -> RecConE x <$> traverse (\(f, p) -> (f,) <$> patToExp p) fps
+  ListP ps -> ListE <$> traverse patToExp ps
+  SigP p _ -> patToExp p
+  p -> fail $ printf "unimplemented `patToExp` for pattern: `%s`" (pprint p)

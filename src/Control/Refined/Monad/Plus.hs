@@ -1,9 +1,12 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+{-@ LIQUID "--compile-spec" @-}
+
 module Control.Refined.Monad.Plus where
 
 import Control.Refined.Monad
+import Data.Refined.Bool
 import Data.Refined.Unit
 import Data.Void
 import Function
@@ -11,7 +14,7 @@ import Language.Haskell.Liquid.ProofCombinators
 import Language.Haskell.TH.Syntax
 import Relation.Equality.Prop
 import Relation.Equality.Prop.EDSL
-import Prelude hiding (Monad, pure, seq)
+import Prelude hiding (Monad, not, pure, seq)
 
 {-
 # Plus monad
@@ -26,7 +29,7 @@ data Plus m = Plus
   { monad :: Monad m,
     epsilon :: forall a. m a,
     plus :: forall a. m a -> m a -> m a,
-    plus_identityLeft ::
+    plus_identity_left ::
       forall a.
       m:m a ->
       EqualProp (m a)
@@ -74,7 +77,7 @@ data Plus m = Plus
   { monad :: Monad m,
     epsilon :: forall a. m a,
     plus :: forall a. m a -> m a -> m a,
-    plus_identityLeft ::
+    plus_identity_left ::
       forall a.
       m a ->
       EqualityProp (m a),
@@ -123,6 +126,7 @@ guard pls b =
   where
     mnd = monad pls
 
+{-@ reflect guardBy @-}
 guardBy :: Plus m -> (a -> Bool) -> a -> m a
 guardBy pls p x = seq mnd (guard pls (p x)) (pure mnd x)
   where
@@ -370,6 +374,10 @@ bind_monotonic_refinesplusF _ pls m _k1 _k2 e_k1_k2 =
 {-
 [ref] "If can be proved that `guard p` commutes with all `m` if non-determinism
 is the only effect in `m` -- a property we will need many times.
+
+  guard b >>= \() -> m >>= \y -> k () y
+  =
+  m >>= \y -> guard b >>= \() -> k () y
 -}
 {-@
 guard_commutes ::
@@ -463,3 +471,18 @@ guard_and _ pls False q =
   |]
   where
     mnd = monad pls
+
+{-@
+guard_disjoint ::
+  forall m a.
+  Monad m ->
+  pls:Plus m ->
+  b:Bool ->
+  m1:m a ->
+  m2:m a ->
+  RefinesPlus m a {pls}
+    {if b then m1 else m2}
+    {plus pls (seq (monad pls) (guard pls b) m1) (seq (monad pls) (guard pls (not b)) m2)}
+@-}
+guard_disjoint :: forall m a. Monad m -> Plus m -> Bool -> m a -> m a -> EqualityProp (m a)
+guard_disjoint _ pls b m1 m2 = undefined

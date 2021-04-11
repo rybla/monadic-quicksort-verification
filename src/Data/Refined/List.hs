@@ -1,3 +1,5 @@
+{-@ LIQUID "--compile-spec" @-}
+
 module Data.Refined.List where
 
 import Data.Refined.Natural
@@ -30,6 +32,10 @@ length (Cons _ xs) = S (length xs)
 append :: List a -> List a -> List a
 append Nil ys = ys
 append (Cons x xs) ys = Cons x (append xs ys)
+
+{-@ reflect ++ @-}
+(++) :: List a -> List a -> List a
+(++) = append
 
 -- {-@ infixr 5 ++ @-}
 -- {-@ reflect ++ @-}

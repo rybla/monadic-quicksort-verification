@@ -11,6 +11,7 @@ import Data.Refined.Natural
 import Data.Refined.Unit
 import Function
 import Language.Haskell.Liquid.ProofCombinators
+import Language.Haskell.TH.Syntax
 import Relation.Equality.Prop
 import Relation.Equality.Prop.EDSL
 import Relation.Equality.Prop.Reasoning
@@ -52,12 +53,12 @@ data Array m a = Array
       EqualProp (m Unit)
         {seq monad (write i x) (write i y)}
         {write i y},
-    map_read ::
+    liftM_read ::
       i:Index ->
       f:(a -> a -> a) ->
       EqualProp (m a)
-        {map2 monad f (read i) (read i)}
-        {map monad (diagonalize f) (read i)},
+        {liftM2 monad f (read i) (read i)}
+        {liftM monad (diagonalize f) (read i)},
     seq_commutativity_read ::
       i:Index ->
       j:Index ->
@@ -100,7 +101,7 @@ data Array m a = Array
       a ->
       a ->
       EqualityProp (m Unit),
-    map_read ::
+    liftM_read ::
       Index ->
       (a -> a -> a) ->
       EqualityProp (m a),
@@ -133,7 +134,7 @@ readList :: Array m a -> Index -> Natural -> m (List a)
 readList ary i Z = pure mnd Nil
   where
     mnd = monad ary
-readList ary i (S n) = map2 mnd Cons (read ary i) (readList ary (S i) n)
+readList ary i (S n) = liftM2 mnd Cons (read ary i) (readList ary (S i) n)
   where
     mnd = monad ary
 
