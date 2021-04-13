@@ -30,3 +30,7 @@ diagonalize f x = f x x
 {-@ reflect identity @-}
 identity :: a -> a
 identity x = x
+
+{-@ reflect compose @-}
+compose :: (b -> c) -> (a -> b) -> (a -> c)
+compose f g x = f (g x)

@@ -3,7 +3,7 @@
 module Data.Refined.Natural where
 
 import Language.Haskell.Liquid.ProofCombinators
-import Prelude hiding (length, (+))
+import Prelude hiding (length, (*), (+))
 import qualified Prelude
 
 {-
@@ -81,7 +81,14 @@ add_associativity (S l) m n = add_associativity l m n
 {-@ reflect mul @-}
 mul :: Natural -> Natural -> Natural
 Z `mul` n = Z
-S m `mul` n = n `add` (m `mul` n)
+S m `mul` n = n + (m `mul` n)
+
+{-@ infixl 7 * @-}
+infixl 7 *
+
+{-@ reflect * @-}
+(*) :: Natural -> Natural -> Natural
+(*) = mul
 
 {-@ reflect one @-}
 one :: Natural

@@ -27,8 +27,8 @@ import Relation.Equality.Prop
 import qualified Text.Parsec as P
 import Text.Printf (printf)
 
-sym_eqprop, sym_expln, sym_rewrite, sym_rewrite_to, sym_reflexivity, sym_symmetry, sym_extend, sym_retract, sym_smt :: String
-sym_eqprop = "%eqprop"
+sym_eqprop, sym_expln, sym_rewrite, sym_rewrite_to, sym_reflexivity, sym_symmetry, sym_extend, sym_retract, sym_smt, sym_commentline, sym_commentblock_begin, sym_commentblock_end :: String
+sym_eqprop = "%=="
 sym_expln = "%by"
 sym_rewrite = "%rewrite"
 sym_rewrite_to = "%to"
@@ -37,6 +37,9 @@ sym_symmetry = "%symmetry"
 sym_extend = "%extend"
 sym_retract = "%retract"
 sym_smt = "%smt"
+sym_commentline = "%--"
+sym_commentblock_begin = "%{-"
+sym_commentblock_end = "-}%"
 
 syms_expln :: [String]
 syms_expln = [sym_reflexivity, sym_symmetry, sym_rewrite, sym_extend, sym_retract, sym_smt]
@@ -128,6 +131,7 @@ compileChain s = do
 
 parseChain :: String -> Q Chain
 parseChain s = do
+  s <- removeComments s
   clauses <- traverse parseChainClause . split sym_eqprop $ s
   case clauses of
     [] ->
@@ -339,3 +343,27 @@ patToExp = \case
   ListP ps -> ListE <$> traverse patToExp ps
   SigP p _ -> patToExp p
   p -> fail $ printf "unimplemented `patToExp` for pattern: `%s`" (pprint p)
+
+{-
+## Comments
+
+-}
+
+removeComments :: String -> Q String
+removeComments "" = return ""
+removeComments s@(c : s') = case foldl
+  (<|>)
+  Nothing
+  [ ( do
+        s <- stripPrefix sym_commentline s
+        (_, s) <- splitFirst "\n" s
+        return s
+    ),
+    ( do
+        s <- stripPrefix sym_commentblock_begin s
+        (_, s) <- splitFirst sym_commentblock_end s
+        return s
+    )
+  ] of
+  Just s' -> removeComments s'
+  Nothing -> (c :) <$> removeComments s'

@@ -37,52 +37,36 @@ data Array m a = Array
     write :: Index -> a -> m Unit,
     bind_read_write ::
       i:Index ->
-      EqualProp (m Unit)
-        {bind monad (read i) (write i)}
-        {pure monad it},
+      {_:EqualityProp (m Unit) | eqprop (bind monad (read i) (write i)) (pure monad it)},
     seq_write_read ::
       i:Index ->
       x:a ->
-      EqualProp (m a)
-        {seq monad (write i x) (read i)}
-        {seq monad (write i x) (pure monad x)},
+      {_:EqualityProp (m a) | eqprop (seq monad (write i x) (read i)) (seq monad (write i x) (pure monad x))},
     seq_write_write ::
       i:Index ->
       x:a ->
       y:a ->
-      EqualProp (m Unit)
-        {seq monad (write i x) (write i y)}
-        {write i y},
+      {_:EqualityProp (m Unit) | eqprop (seq monad (write i x) (write i y)) (write i y)},
     liftM_read ::
       i:Index ->
       f:(a -> a -> a) ->
-      EqualProp (m a)
-        {liftM2 monad f (read i) (read i)}
-        {liftM monad (diagonalize f) (read i)},
+      {_:EqualityProp (m a) | eqprop (liftM2 monad f (read i) (read i)) (liftM monad (diagonalize f) (read i))},
     seq_commutativity_read ::
       i:Index ->
       j:Index ->
-      EqualProp (m a)
-        {seq monad (read i) (read j)}
-        {seq monad (read j) (read i)},
+      {_:EqualityProp (m a) | eqprop (seq monad (read i) (read j)) (seq monad (read j) (read i))},
     seq_commutativity_write ::
       i:Index ->
-      j:Index ->
-      {_:Proof | i /= j} ->
+      j:{j:Index | i /= j} ->
       x:a ->
       y:a ->
-      EqualProp (m Unit)
-        {seq monad (write i x) (write j y)}
-        {seq monad (write j y) (write i x)},
+      {_:EqualityProp (m Unit) | eqprop (seq monad (write i x) (write j y)) (seq monad (write j y) (write i x))},
     seq_associativity_write ::
       i:Index ->
-      j:Index ->
-      {_:Proof | i /= j} ->
+      j:{j:Index | i /= j} ->
       x:a ->
       y:a ->
-      EqualProp (m Unit)
-        {seq monad (seq monad (read i) (pure monad it)) (write j x)}
-        {seq monad (write j x) (seq monad (read i) (pure monad it))}
+      {_:EqualityProp (m Unit) | eqprop (seq monad (seq monad (read i) (pure monad it)) (write j x)) (seq monad (write j x) (seq monad (read i) (pure monad it)))}
   }
 @-}
 data Array m a = Array
@@ -112,14 +96,12 @@ data Array m a = Array
     seq_commutativity_write ::
       Index ->
       Index ->
-      Proof ->
       a ->
       a ->
       EqualityProp (m Unit),
     seq_associativity_write ::
       Index ->
       Index ->
-      Proof ->
       a ->
       a ->
       EqualityProp (m Unit)
@@ -177,17 +159,17 @@ writeListToLength3 ary i (xs, ys, zs) =
 
 {-@ reflect swap @-}
 swap :: Array m a -> Index -> Index -> m ()
-swap arr i j = read arr i >>= \x -> read arr j >>= \y -> write arr i y >> write arr j x
+swap ary i j = read ary i >>= \x -> read ary j >>= \y -> write ary i y >> write ary j x
   where
     (>>=) = bind mnd
     (>>) = seq mnd
-    mnd = monad arr
+    mnd = monad ary
 
 {-
 # Lemmas
 -}
 
--- [ref] equation 9
+-- [ref] display 9
 -- ? this proof takes 11m to check...
 {-@
 writeList_append ::
@@ -213,35 +195,35 @@ writeList_append ::
 writeList_append ary i Nil ys =
   [eqpropchain|
       writeList ary i (Nil `append` ys)
-    %eqprop
+    %==
       writeList ary i ys
         %by %rewrite Nil `append` ys %to ys
         %by %smt
         %by append_identity ys
-    %eqprop
+    %==
       apply (\_ -> writeList ary i ys) it
         %by %smt
         %by etaEquivalency it (writeList ary i ys)
           ? apply (\_ -> writeList ary i ys) it
-    %eqprop
+    %==
       pure mnd it >>= apply (\_ -> writeList ary i ys)
-        %by %symmetry 
+        %by %symmetry
         %by bind_identity_left mnd it (apply (\_ -> writeList ary i ys))
-    %eqprop
+    %==
       pure mnd it >> writeList ary i ys
         %by %smt
         %by pure mnd it >>= apply (\_ -> writeList ary i ys)
-    %eqprop
+    %==
       writeList ary i Nil >> writeList ary i ys
-        %by %smt 
+        %by %smt
         %by pure mnd it >> writeList ary i ys
-    %eqprop
+    %==
       writeList ary i Nil >> writeList ary (i `add` Z) ys
-        %by %smt 
+        %by %smt
         %by add_identity i
-    %eqprop
+    %==
       writeList ary i Nil >> writeList ary (i `add` length Nil) ys
-        %by %smt 
+        %by %smt
         %by writeList ary i Nil >> writeList ary (i `add` Z) ys
   |]
   where
@@ -252,54 +234,54 @@ writeList_append ary i Nil ys =
 writeList_append ary i (Cons x xs) ys =
   [eqpropchain|
       writeList ary i (Cons x xs `append` ys)
-    %eqprop
+    %==
       writeList ary i (Cons x (xs `append` ys))
         %by %rewrite Cons x xs `append` ys
                  %to Cons x (xs `append` ys)
-        %by %smt 
+        %by %smt
         %by Cons x (xs `append` ys)
-    %eqprop
+    %==
       write ary i x >> writeList ary (S i) (xs `append` ys)
         %by %smt
         %by writeList ary i (Cons x (xs `append` ys))
-    %eqprop
+    %==
       write ary i x >> (writeList ary (S i) xs >> writeList ary (S i `add` length xs) ys)
         %by %rewrite writeList ary (S i) (xs `append` ys)
-                 %to writeList ary (S i) xs >> writeList ary (S i `add` length xs) ys 
+                 %to writeList ary (S i) xs >> writeList ary (S i `add` length xs) ys
         %by writeList_append ary (S i) xs ys
-    %eqprop
+    %==
       write ary i x >> (writeList ary (S i) xs >> writeList ary (S (i `add` length xs)) ys)
         %by %rewrite S i `add` length xs
                  %to S (i `add` length xs)
-        %by %smt 
+        %by %smt
         %by S i `add` length xs
           ? S (i `add` length xs)
-    %eqprop
+    %==
       (write ary i x >> writeList ary (S i) xs) >> writeList ary (S (i `add` length xs)) ys
         %by %symmetry
         %by (seq_associativity mnd)
               (write ary i x)
               (writeList ary (S i) xs)
               (writeList ary (S (i `add` length xs)) ys)
-    %eqprop
+    %==
       (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` S (length xs)) ys
         %by %rewrite S (i `add` length xs)
                  %to i `add` S (length xs)
-        %by %smt 
+        %by %smt
         %by i `add` S (length xs)
           ? add_S_right i (length xs)
-    %eqprop
+    %==
       (write ary i x >> writeList ary (S i) xs) >> writeList ary (i `add` length (Cons x xs)) ys
         %by %rewrite S (length xs)
                  %to length (Cons x xs)
-        %by %smt 
+        %by %smt
         %by S (length xs)
           ? length (Cons x xs)
-    %eqprop
+    %==
       writeList ary i (Cons x xs) >> writeList ary (i `add` length (Cons x xs)) ys
         %by %rewrite write ary i x >> writeList ary (S i) xs
                  %to writeList ary i (Cons x xs)
-        %by %smt 
+        %by %smt
         %by write ary i x >> writeList ary (S i) xs
           ? writeList ary i (Cons x xs)
   |]

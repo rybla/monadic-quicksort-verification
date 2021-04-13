@@ -17,19 +17,19 @@ import Relation.Equality.Prop.EDSL
 testChainString :: String
 testChainString =
   "t1\
-  \%eqprop\
+  \%==\
   \t2\
   \%by e12\
-  \%eqprop\
+  \%==\
   \t3\
   \%by e23\
-  \%eqprop\
+  \%==\
   \t4\
   \%by e34\
-  \%eqprop\
+  \%==\
   \t5\
   \%by e45\
-  \%eqprop\
+  \%==\
   \t6\
   \%by e56"
 

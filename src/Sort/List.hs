@@ -3,12 +3,14 @@
 
 {-@ LIQUID "--compile-spec" @-}
 
-module Control.Refined.Sort where
+module Sort.List where
 
 import Control.Refined.Monad
 import Control.Refined.Monad.Plus
+import Data.Refined.Bool
 import Data.Refined.List
 import Data.Refined.Natural
+import Data.Refined.Tuple
 import Data.Refined.Unit
 import Function
 import Language.Haskell.Liquid.Equational
@@ -45,7 +47,7 @@ sorted :: List Elem -> Bool
 sorted Nil = True
 sorted (Cons x xs) = all (leq x) xs && sorted xs
 
--- [ref] equation 5
+-- [ref] display 5
 {-@ automatic-instances sorted_middle @-}
 {-@
 sorted_middle ::
@@ -184,32 +186,32 @@ divide_and_conquer_lemma1 _ pls x xs =
 
       slowsort pls (Cons x xs)
   
-    %eqprop
+    %==
   
       (permute pls >=> guardBy pls sorted) (Cons x xs)
   
-    %eqprop
+    %==
   
       (apply (\x -> permute pls x >>= guardBy pls sorted)) (Cons x xs)
         %by %rewrite permute pls >=> guardBy pls sorted
                  %to apply (\x -> permute pls x >>= guardBy pls sorted)
         %by undefined -- TODO: def (>=>)
   
-    %eqprop
+    %==
   
       permute pls (Cons x xs) >>= guardBy pls sorted
   
-    %eqprop
+    %==
   
       (split pls xs >>= apply (\(ys, zs) -> (liftM2 mnd) (\ys' zs' -> ys' ++ Cons x Nil ++ zs') (permute pls ys) (permute pls zs)))
         >>= guardBy pls sorted
   
-    %eqprop
+    %==
   
       (split pls xs >>= apply (\(ys, zs) -> permute pls ys >>= apply (\ys' -> permute pls zs >>= apply (\zs' -> pure mnd (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs') ys' zs')))))
           >>= guardBy pls sorted
   
-    %eqprop
+    %==
   
       (split pls xs
         >>= apply (\(ys, zs) -> permute pls ys 
@@ -217,7 +219,7 @@ divide_and_conquer_lemma1 _ pls x xs =
             >>= apply (\zs' -> pure mnd (ys' ++ Cons x Nil ++ zs')))))
         >>= guardBy pls sorted
   
-    %eqprop
+    %==
   
       split pls xs
         >>= apply (\(ys, zs) -> permute pls ys 
@@ -226,7 +228,7 @@ divide_and_conquer_lemma1 _ pls x xs =
               >>= guardBy pls sorted)))
         %by undefined -- TODO: several associativity steps
   
-    %eqprop
+    %==
   
       split pls xs
         >>= apply (\(ys, zs) -> permute pls ys 
@@ -251,7 +253,7 @@ divide_and_conquer_lemma1 _ pls x xs =
         %by bind_identity_left mnd (ys' ++ Cons x Nil ++ zs') (guardBy pls sorted)
         -}
   
-    %eqprop
+    %==
   
       split pls xs
         >>= apply (\(ys, zs) -> permute pls ys 
@@ -277,7 +279,7 @@ divide_and_conquer_lemma1 _ pls x xs =
         %by %reflexivity
         -}
   
-    %eqprop
+    %==
   
       split pls xs
         >>= apply (\(ys, zs) -> permute pls ys 
@@ -303,7 +305,7 @@ divide_and_conquer_lemma1 _ pls x xs =
         %by sorted_middle ys' x zs'
         -}
   
-    %eqprop
+    %==
 
       split pls xs
         >>= apply (\(ys, zs) -> permute pls ys 
@@ -313,7 +315,7 @@ divide_and_conquer_lemma1 _ pls x xs =
                 >> pure mnd (ys' ++ Cons x Nil ++ zs'))))
         %by undefined -- TODO: several guard_and steps 
 
-    %eqprop
+    %==
 
       split pls xs
         >>= apply (\(ys, zs) -> permute pls ys 
@@ -325,7 +327,7 @@ divide_and_conquer_lemma1 _ pls x xs =
                 >> pure mnd (ys' ++ Cons x Nil ++ zs'))))
         %by undefined  -- TODO: rearrange the sequences guards 
 
-    %eqprop      
+    %==      
 
       split pls xs
         >>= apply (\(ys, zs) -> guard pls (all (leq x) ys && all (geq x) zs)
@@ -335,7 +337,7 @@ divide_and_conquer_lemma1 _ pls x xs =
                 >>= apply (\zs' -> pure mnd (ys' ++ Cons x Nil ++ zs'))))
         %by undefined -- TODO
 
-    %eqprop
+    %==
 
       divide_and_conquer_lemma1_aux pls x xs 
   |]
@@ -371,7 +373,7 @@ divide_and_conquer_aux pls x xs =
     (>>) = seq mnd
     mnd = monad pls
 
--- [ref] equation 8
+-- [ref] display 8
 {-@
 divide_and_conquer ::
   Monad m ->
@@ -392,9 +394,270 @@ divide_and_conquer = undefined
 
 {-@ reflect partition @-}
 partition :: Elem -> List Elem -> (List Elem, List Elem)
-partition x Nil = (Nil, Nil)
-partition x (Cons x' xs) =
-  let (ys, zs) = partition x xs
-   in if leq x' x
-        then (Cons x' ys, zs)
-        else (ys, Cons x' zs)
+partition x' Nil = (Nil, Nil)
+partition x' (Cons x xs) =
+  if leq x x' then (Cons x ys, zs) else (ys, Cons x zs)
+  where
+    ys = proj1 (partition x' xs)
+    zs = proj2 (partition x' xs)
+
+{-@ reflect divide_and_conquer_lemma2_aux @-}
+divide_and_conquer_lemma2_aux :: forall m. Plus m -> Elem -> List Elem -> m (List Elem, List Elem)
+divide_and_conquer_lemma2_aux pls x xs =
+  split pls xs >>= guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs))
+  where
+    (>>=) :: forall a b. m a -> (a -> m b) -> m b
+    (>>=) = bind mnd
+    mnd = monad pls
+
+{-@
+divide_and_conquer_lemma2 ::
+  forall m.
+  Equality (m (List Elem, List Elem)) =>
+  Monad m ->
+  pls:Plus m ->
+  x:Elem ->
+  xs:List Elem ->
+  RefinesPlus m (List Elem, List Elem) {pls}
+    {pure (monad pls) (partition x xs)}
+    {divide_and_conquer_lemma2_aux pls x xs}
+@-}
+divide_and_conquer_lemma2 ::
+  forall m.
+  Equality (m (List Elem, List Elem)) =>
+  Monad m ->
+  Plus m ->
+  Elem ->
+  List Elem ->
+  EqualityProp (m (List Elem, List Elem))
+divide_and_conquer_lemma2 _ pls x Nil =
+  [eqpropchain|
+
+        pure mnd (partition x Nil) <+> divide_and_conquer_lemma2_aux pls x Nil
+
+      %==
+
+        pure mnd (partition x Nil) <+> (split pls Nil >>= guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs)))
+          %by %rewrite divide_and_conquer_lemma2_aux pls x Nil
+                   %to split pls Nil >>= guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs))
+          %by undefined -- TODO: why???
+
+      %==
+
+        pure mnd (Nil, Nil) <+> (split pls Nil >>= guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs)))
+
+      %==
+
+        pure mnd (Nil, Nil) <+> (pure mnd (Nil, Nil) >>= guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs)))
+
+      %==
+
+        pure mnd (Nil, Nil) <+> (guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs)) (Nil, Nil))
+
+          %by %rewrite pure mnd (Nil, Nil) >>= guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs))
+                   %to guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs)) (Nil, Nil)
+
+          %by bind_identity_left mnd (Nil, Nil) (guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs)))
+
+      %==
+
+        pure mnd (Nil, Nil) <+> (guard pls (all (leq x) Nil && all (geq x) Nil) >> pure mnd (Nil, Nil))
+
+      %==
+
+        pure mnd (Nil, Nil) <+> (guard pls True >> pure mnd (Nil, Nil))
+
+      %==
+
+        pure mnd (Nil, Nil) <+> (pure mnd () >> pure mnd (Nil, Nil))
+
+      %==
+
+        pure mnd (Nil, Nil) <+> pure mnd (Nil, Nil)
+
+          %by %rewrite pure mnd () >> pure mnd (Nil, Nil)
+                   %to pure mnd (Nil, Nil)
+
+          %by seq_identity_left mnd () (pure mnd (Nil, Nil))
+
+      %==
+
+        pure mnd (Nil, Nil) <+> pure mnd (Nil, Nil)
+
+      %==
+
+        guard pls True >> pure mnd (Nil, Nil)
+
+      %==
+
+        guard pls (all (leq x) Nil && all (geq x) Nil) >> pure mnd (Nil, Nil)
+
+      %==
+
+        guard pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs) (Nil, Nil)) >> pure mnd (Nil, Nil)
+
+      %==
+
+        guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs)) (Nil, Nil)
+
+      %==
+
+        pure mnd (Nil, Nil) >>= guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs))
+
+          %by %symmetry
+          %by bind_identity_left mnd (Nil, Nil) (guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs)))
+
+      %==
+
+        split pls Nil >>= guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs))
+
+      %==
+
+        divide_and_conquer_lemma2_aux pls x Nil
+
+    |]
+  where
+    (<+>) :: forall a. m a -> m a -> m a
+    (<+>) = plus pls
+    (>>=) :: forall a b. m a -> (a -> m b) -> m b
+    (>>=) = bind mnd
+    (>>) :: forall a b. m a -> m b -> m b
+    (>>) = seq mnd
+    mnd = monad pls
+{-
+TODO: want to get something of the form
+
+  pure mnd (partition x' xs)
+    <+> (split pls xs >>= guardBy pls (apply (\(ys, zs) -> all (leq x') ys && all (geq x') zs)))
+
+in order to use induction
+-}
+divide_and_conquer_lemma2 _ pls x' (Cons x xs) =
+  [eqpropchain|
+
+      pure mnd (partition x' (Cons x xs))
+        <+> divide_and_conquer_lemma2_aux pls x' (Cons x xs)
+
+    %== 
+
+      pure mnd (partition x' (Cons x xs))
+        <+> (split pls (Cons x xs) >>= guardBy pls (apply (\(ys', zs') -> all (leq x') ys' && all (geq x) zs')))
+
+    %==
+
+      (pure mnd (if leq x x' then (Cons x ys, zs) else (ys, Cons x zs)))
+        <+> (split pls (Cons x xs) >>= guardBy pls (apply (\(ys', zs') -> all (leq x') ys' && all (geq x) zs')))
+
+      %by %rewrite partition x' (Cons x xs)
+               %to if leq x x' then (Cons x ys, zs) else (ys, Cons x zs)
+      %by undefined -- TODO: why????
+
+    %==
+
+      (pure mnd (if leq x x' then (Cons x ys, zs) else (ys, Cons x zs)))
+        <+> ((split pls xs >>= apply (\(ys, zs) -> pure mnd (Cons x ys, zs) <+> pure mnd (ys, Cons x zs)))
+          >>= guardBy pls (apply (\(ys', zs') -> all (leq x') ys' && all (geq x) zs')))
+
+    %==
+
+      split pls (Cons x xs) >>= guardBy pls (apply (\(ys', zs') -> all (leq x') ys' && all (geq x) zs'))
+        %by undefined -- TODO: some details missing here... need to use induction
+
+    %==
+
+      divide_and_conquer_lemma2_aux pls x' (Cons x xs)
+
+  |]
+  where
+    ys = proj1 (partition x' xs)
+    zs = proj2 (partition x' xs)
+    (<+>) :: forall a. m a -> m a -> m a
+    (<+>) = plus pls
+    (>>=) :: forall a b. m a -> (a -> m b) -> m b
+    (>>=) = bind mnd
+    (>>) :: forall a b. m a -> m b -> m b
+    (>>) = seq mnd
+    mnd = monad pls
+
+{-@ reflect quicksort @-}
+quicksort :: List Elem -> List Elem
+quicksort Nil = Nil
+quicksort (Cons x xs) = quicksort ys ++ Cons x Nil ++ quicksort zs
+  where
+    ys = proj1 (partition x xs)
+    zs = proj2 (partition x xs)
+
+{-@
+quicksort_refines_slowsort ::
+  forall m.
+  Equality (m (List Elem)) =>
+  Monad m ->
+  pls:Plus m ->
+  xs:List Elem ->
+  RefinesPlus m (List Elem) {pls}
+    {apply (pure (monad pls) . quicksort) xs}
+    {slowsort pls xs}
+@-}
+quicksort_refines_slowsort ::
+  forall m.
+  Equality (m (List Elem)) =>
+  Monad m ->
+  Plus m ->
+  List Elem ->
+  EqualityProp (m (List Elem))
+quicksort_refines_slowsort _ pls Nil =
+  [eqpropchain|
+      (pure mnd . quicksort) Nil <+> slowsort pls Nil
+    %==
+      pure mnd Nil <+> pure mnd Nil
+    %==
+      pure mnd Nil
+        %by undefined -- TODO: refinesplus_reflexivity pls (pure mnd Nil)
+    %==
+      slowsort pls Nil
+        %by undefined
+  |]
+  where
+    (<+>) :: forall a. m a -> m a -> m a
+    (<+>) = plus pls
+    (>>=) :: forall a b. m a -> (a -> m b) -> m b
+    (>>=) = bind mnd
+    (>>) :: forall a b. m a -> m b -> m b
+    (>>) = seq mnd
+    mnd = monad pls
+quicksort_refines_slowsort _ pls (Cons x xs) =
+  [eqpropchain|
+      (pure mnd . quicksort) (Cons x xs) 
+        <+> slowsort pls (Cons x xs)
+    %==
+      pure mnd (quicksort ys ++ Cons x Nil ++ quicksort zs)
+        <+> (permute pls >=> guardBy pls sorted) (Cons x xs)
+    %==
+      pure mnd (quicksort ys ++ Cons x Nil ++ quicksort zs)
+        <+> apply (\x -> permute pls x >>= guardBy pls sorted) (Cons x xs)
+        %by %rewrite permute pls >=> guardBy pls sorted
+                 %to apply (\x -> permute pls x >>= guardBy pls sorted)
+        %by undefined -- TODO: why???
+    %==
+      pure mnd (quicksort ys ++ Cons x Nil ++ quicksort zs)
+        <+> (permute pls (Cons x xs) >>= guardBy pls sorted)
+    %==
+      pure mnd (quicksort ys ++ Cons x Nil ++ quicksort zs)
+        <+> ((split pls xs >>= apply (\(ys, zs) -> (liftM2 mnd) (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs')) (permute pls ys) (permute pls zs)))
+              >>= guardBy pls sorted)
+    %==
+      slowsort pls (Cons x xs)
+        %by undefined -- TODO: not sure how to progress...
+  |]
+  where
+    ys = proj1 (partition x xs)
+    zs = proj2 (partition x xs)
+    (<+>) :: forall a. m a -> m a -> m a
+    (<+>) = plus pls
+    (>>=) :: forall a b. m a -> (a -> m b) -> m b
+    (>>=) = bind mnd
+    (>=>) :: forall a b c. (a -> m b) -> (b -> m c) -> (a -> m c)
+    (>=>) = kleisli mnd
+    (>>) :: forall a b. m a -> m b -> m b
+    (>>) = seq mnd
+    mnd = monad pls

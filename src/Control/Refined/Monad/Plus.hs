@@ -32,45 +32,33 @@ data Plus m = Plus
     plus_identity_left ::
       forall a.
       m:m a ->
-      EqualProp (m a)
-        {plus epsilon m}
-        {m},
+      {_:EqualityProp (m a) | eqprop (plus epsilon m) m},
     plus_associativity ::
       forall a.
       m1:m a ->
       m2:m a ->
       m3:m a ->
-      EqualProp (m a)
-        {plus (plus m1 m2) m3}
-        {plus m1 (plus m2 m3)},
+      {_:EqualityProp (m a) | eqprop (plus (plus m1 m2) m3) (plus m1 (plus m2 m3))},
     plus_distributivity_left ::
       forall a b.
       m1:m a ->
       m2:m a ->
       k:(a -> m b) ->
-      EqualProp (m b)
-        {bind monad (plus m1 m2) k}
-        {plus (bind monad m1 k) (bind monad m2 k)},
+      {_:EqualityProp (m b) | eqprop (bind monad (plus m1 m2) k) (plus (bind monad m1 k) (bind monad m2 k))},
     plus_distributivity_right ::
       forall a b.
       m:m a ->
       k1:(a -> m b) ->
       k2:(a -> m b) ->
-      EqualProp (m b)
-        {bind monad m (\x:a -> plus (k1 x) (k2 x))}
-        {plus (bind monad m k1) (bind monad m k2)},
+      {_:EqualityProp (m b) | eqprop (bind monad m (\x:a -> plus (k1 x) (k2 x))) (plus (bind monad m k1) (bind monad m k2))},
     bind_zero_left ::
       forall a b.
       k:(a -> m b) ->
-      EqualProp (m b)
-        {bind monad epsilon k}
-        {epsilon},
+      {_:EqualityProp (m b) | eqprop (bind monad epsilon k) epsilon},
     bind_zero_right ::
       forall a b.
       m:m a ->
-      EqualProp (m b)
-        {seq monad m epsilon}
-        {epsilon}
+      {_:EqualityProp (m b) | eqprop (seq monad m epsilon) epsilon}
   }
 @-}
 data Plus m = Plus
@@ -185,10 +173,9 @@ refinesplus_reflexivity :: Equality (m a) => Plus m -> m a -> EqualityProp (m a)
 refinesplus_reflexivity pls m =
   [eqpropchain|
       m <+> m
-    %eqprop 
-      undefined -- TODO
-    %eqprop 
+    %== 
       m
+        %by undefined -- TODO
   |]
   where
     (<+>) = plus pls
@@ -215,7 +202,7 @@ refinesplus_antisymmetry pls m1 m2 rp12 rp21 = undefined
 --   absurd
 --     [eqpropchain|
 --         m1 <+> m2
---       %eqprop
+--       %==
 --         m2 <+> m1
 --     |]
 -- where
@@ -243,20 +230,20 @@ refinesplus_transitivity ::
 refinesplus_transitivity pls m1 m2 m3 rp12 rp23 =
   [eqpropchain|
               m1 <+> m3
-    %eqprop 
+    %== 
               m1 <+> (m2 <+> m3)  
                                   %by %rewrite m3 %to m2 <+> m3
                                   %by %symmetry
                                   %by rp23
-    %eqprop   
+    %==   
               (m1 <+> m2) <+> m3  
                                   %by %symmetry 
                                   %by plus_associativity pls m1 m2 m3
-    %eqprop   
+    %==   
               m2 <+> m3           
                                   %by %rewrite m1 <+> m2 %to m2
                                   %by rp12 
-    %eqprop   
+    %==   
               m3                  
                                   %by rp23 
   |]
@@ -266,22 +253,22 @@ refinesplus_transitivity pls m1 m2 m3 rp12 rp23 =
 {-
   [eqpropchain|
       m1 <+> m3
-    %eqprop
+    %==
       m1 <+> (m2 <+> m3)
         %by %rewrite m3
                  %to m2 <+> m3
         %by %symmetry
         %by rp23
-    %eqprop
+    %==
       (m1 <+> m2) <+> m3
         %by %symmetry
         %by plus_associativity pls m1 m2 m3
-    %eqprop
+    %==
       m2 <+> m3
         %by %rewrite m1 <+> m2
                  %to m2
         %by rp12
-    %eqprop
+    %==
       m3
         %by rp23
   |]
@@ -314,11 +301,11 @@ bind_monotonic_refinesplus ::
 bind_monotonic_refinesplus _ pls m1 m2 k rp_m1_m2 =
   [eqpropchain|
       plus pls (bind mnd m1 k) (bind mnd m2 k)
-    %eqprop 
+    %== 
       bind mnd (plus pls m1 m2) k
         %by %symmetry 
         %by plus_distributivity_left pls m1 m2 k 
-    %eqprop 
+    %== 
       bind mnd m2 k 
         %by %rewrite plus pls m1 m2
                  %to m2
@@ -349,16 +336,16 @@ bind_monotonic_refinesplusF ::
 bind_monotonic_refinesplusF _ pls m _k1 _k2 e_k1_k2 =
   [eqpropchain|
       plus pls (bind mnd m k1) (bind mnd m k2)
-    %eqprop 
+    %== 
       bind mnd m (\x -> plus pls (k1 x) (k2 x))
         %by %symmetry
         %by plus_distributivity_right pls m k1 k2
-    %eqprop 
+    %== 
       bind mnd m (\x -> k2 x)
         %by %rewrite (\x -> plus pls (k1 x) (k2 x))
                  %to (\x -> k2 x)
         %by undefined -- TODO: why not `e_k1_k2 x`?
-    %eqprop 
+    %== 
       (bind mnd m k2)
         %by %rewrite (\x -> k2 x)
                  %to k2
@@ -402,9 +389,9 @@ guard_commutes ::
 guard_commutes _ pls b m k =
   [eqpropchain|
       bind mnd (guard pls b) (apply (\() -> bind mnd m (apply (\x -> k mnd () x))))
-    %eqprop 
+    %== 
       undefined -- TODO 
-    %eqprop 
+    %== 
       bind mnd m (apply (\x -> bind mnd (guard pls b) (apply (\() -> k mnd () x))))
   |]
   where
@@ -434,13 +421,13 @@ guard_and ::
 guard_and _ pls True q =
   [eqpropchain|
       guard pls (andBool True q)
-    %eqprop
+    %==
       guard pls q
-    %eqprop
+    %==
       seq mnd (pure mnd ()) (guard pls q)
         %by seq_identity_left mnd () (guard pls q)
           ? undefined -- TODO: what else??
-    %eqprop 
+    %== 
       seq mnd (guard pls True) (guard pls q)
         %by %smt
         %by guard pls True
@@ -450,21 +437,21 @@ guard_and _ pls True q =
 guard_and _ pls False q =
   [eqpropchain|
       guard pls (andBool False q)
-    %eqprop
+    %==
       guard pls False
-    %eqprop
+    %==
       epsilon pls
         %by %smt 
         %by guard pls False 
-    %eqprop
+    %==
       bind mnd (epsilon pls) (apply (\_ -> guard pls q))
         %by %symmetry
         %by bind_zero_left pls (apply (\_ -> guard pls q))
-    %eqprop
+    %==
       bind mnd (guard pls False) (apply (\_ -> guard pls q))
         %by %smt
         %by guard pls False
-    %eqprop
+    %==
       seq mnd (guard pls False) (guard pls q)
         %by %smt
         %by seq mnd (guard pls False) (guard pls q)
@@ -472,6 +459,9 @@ guard_and _ pls False q =
   where
     mnd = monad pls
 
+-- (if b then m1 else m2) <+> (guard b >> m1) <+> (guard (not b) m2)
+-- ==
+-- (guard b >> m1) <+> (guard (not b) m2)
 {-@
 guard_disjoint ::
   forall m a.

@@ -95,6 +95,13 @@ liftM2 mnd f ma mb =
     (>>=) :: forall a b. m a -> (a -> m b) -> m b
     (>>=) = bind mnd
 
+{-@ reflect second @-}
+second :: forall m a b c. Monad m -> (b -> m c) -> (a, b) -> m (a, c)
+second mnd k (x, y) = k y >>= apply (\y' -> pure mnd (x, y'))
+  where
+    (>>=) :: forall a b. m a -> (a -> m b) -> m b
+    (>>=) = bind mnd
+
 {-
 ## Properties
 -}
@@ -120,32 +127,32 @@ seq_associativity ::
 seq_associativity mnd ma mb mc =
   [eqpropchain|
       seq mnd (seq mnd ma mb) mc
-    %eqprop
+    %==
       seq mnd (bind mnd ma (apply (\_ -> mb))) mc
         %by %smt 
         %by seq mnd ma mb 
-    %eqprop
+    %==
       bind mnd (bind mnd ma (apply (\_ -> mb))) (apply (\_ -> mc))
         %by %smt 
         %by seq mnd (bind mnd ma (apply (\_ -> mb))) mc
-    %eqprop
+    %==
       bind mnd ma (apply (\x -> bind mnd (apply (\_ -> mb) x) (apply (\_ -> mc))))
         %by undefined -- bind_associativity mnd ma (apply (\_ -> mb)) (apply (\_ -> mc))
         -- TODO: why doesn't this step work?
-    %eqprop
+    %==
       bind mnd ma (apply (\x -> bind mnd mb (apply (\_ -> mc))))
         %by %rewrite apply (\x -> bind mnd (apply (\_ -> mb) x) (apply (\_ -> mc)))
                  %to apply (\x -> bind mnd mb (apply (\_ -> mc)))
         %by %extend x 
         %by %reflexivity
-    %eqprop
+    %==
       bind mnd ma (apply (\x -> seq mnd mb mc))
         %by %rewrite apply (\x -> bind mnd mb (apply (\_ -> mc)))
                  %to apply (\x -> seq mnd mb mc)
         %by %extend x
         %by %smt
         %by seq mnd mb mc
-    %eqprop
+    %==
       seq mnd ma (seq mnd mb mc)
         %by %smt 
         %by seq mnd ma (seq mnd mb mc)
@@ -173,14 +180,14 @@ seq_identity_left ::
 seq_identity_left mnd x m =
   [eqpropchain|
       seq mnd (pure mnd x) m
-    %eqprop 
+    %== 
       bind mnd (pure mnd x) (apply (\_ -> m))
         %by %smt 
         %by undefined -- TODO: why not `seq mnd (pure mnd ()) m`?
-    %eqprop
+    %==
       apply (\_ -> m) ()
         %by bind_identity_left mnd (pure mnd x) (apply (\_ -> m))
-    %eqprop 
+    %== 
       m
   |]
 
@@ -203,17 +210,17 @@ seq_identity_left mnd x m =
 -- seq_identity_right mnd m x =
 --   [eqpropchain|
 --       seq mnd m (pure mnd x)
---     %eqprop
+--     %==
 --       bind mnd m (apply (\_ -> pure mnd x))
 --         %by %smt
 --         %by undefined
---     %eqprop
+--     %==
 --       bind mnd m (pure mnd x)
 --         %by %rewrite apply (\_ -> pure mnd x)
 --             %to pure mnd x
 --         %by %extend y
 --         %by apply (\_ -> pure mnd x) y
---     %eqprop
+--     %==
 
 --   |]
 
