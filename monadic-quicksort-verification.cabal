@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 60c0271d20895848bbf71b657f6af0882f47472793a404ea7f9698d7ac25265c
+-- hash: 4c37daa18628c9aaa546c24083c548d8371931cafc5334d7668e6343f465b024
 
 name:           monadic-quicksort-verification
 version:        0.1.0.0
@@ -29,8 +29,9 @@ library
       Control.Refined.Functor
       Control.Refined.Monad
       Control.Refined.Monad.Array
+      Control.Refined.Monad.ArrayPlus
       Control.Refined.Monad.Plus
-      Control.Refined.Sort
+      Data.Refined.Bool
       Data.Refined.List
       Data.Refined.Nat
       Data.Refined.Natural
@@ -45,11 +46,16 @@ library
       Relation.Equality.Prop.Reasoning
       Relation.Equality.PropBlind
       Relation.Equality.PropOld
+      Sort.Array
+      Sort.ArrayOld
+      Sort.ArrayProto
+      Sort.List
+      Sort.ListProto
   other-modules:
       Paths_monadic_quicksort_verification
   hs-source-dirs:
       src
-  default-extensions: GADTs KindSignatures ExplicitForAll RankNTypes FlexibleInstances UndecidableInstances MultiParamTypeClasses ScopedTypeVariables LambdaCase MultiWayIf TupleSections ScopedTypeVariables
+  default-extensions: GADTs KindSignatures ExplicitForAll RankNTypes FlexibleInstances FlexibleContexts UndecidableInstances MultiParamTypeClasses ScopedTypeVariables LambdaCase MultiWayIf TupleSections ScopedTypeVariables
   ghc-options: -Wall -Wno-name-shadowing -Wno-unused-imports -Wno-unused-matches -Wno-unused-local-binds -Wno-orphans -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--prune-unsorted -fplugin-opt=LiquidHaskell:--short-errors
   build-depends:
       haskell-src-meta

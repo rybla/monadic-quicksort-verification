@@ -38,6 +38,7 @@ library:
     - ExplicitForAll
     - RankNTypes
     - FlexibleInstances
+    - FlexibleContexts
     - UndecidableInstances
     - MultiParamTypeClasses
     - ScopedTypeVariables
