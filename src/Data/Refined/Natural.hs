@@ -3,7 +3,8 @@
 module Data.Refined.Natural where
 
 import Language.Haskell.Liquid.ProofCombinators
-import Prelude hiding (length, (*), (+))
+import Relation.Equality.Prop
+import Prelude (Int, undefined, (-))
 import qualified Prelude
 
 {-
@@ -18,7 +19,7 @@ data Natural [toInt] = Z | S Natural
 @-}
 data Natural = Z | S Natural
 
-{-@ reflect  toInt @-}
+{-@ reflect toInt @-}
 toInt :: Natural -> Int
 toInt Z = 0
 toInt (S n) = 1 Prelude.+ toInt n

@@ -1,14 +1,142 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-{-@ LIQUID "--compile-spec" @-}
-
 module Relation.Equality.Prop.EDSL.Test where
 
+import Data.Refined.Natural
+import Function
+import Language.Haskell.Liquid.ProofCombinators
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import Relation.Equality.Prop
 import Relation.Equality.Prop.EDSL
+
+{-@ reflect test1_aux1 @-}
+test1_aux1 :: Natural -> Natural
+test1_aux1 x = add x (S Z)
+
+{-@ reflect test1_aux2 @-}
+test1_aux2 :: Natural -> Natural
+test1_aux2 x = add (S Z) x
+
+{-@
+test1 ::
+  Equality (Natural -> Natural) =>
+  EqualProp (Natural -> Natural)
+    {test1_aux1}
+    {test1_aux2}
+@-}
+test1 :: Equality (Natural -> Natural) => EqualityProp (Natural -> Natural)
+test1 =
+  transitivity
+    test1_aux1
+    (apply (\x -> add x (S Z)))
+    test1_aux2
+    ( transitivity
+        test1_aux1
+        (apply (\x -> test1_aux1 x))
+        (apply (\x -> add x (S Z)))
+        trivialProp
+        undefined
+        -- ( extensionality
+        --     (apply (\x -> test1_aux1 x))
+        --     (apply (\x -> add x (S Z)))
+        --     (\x -> (?) ((?) (reflexivity (apply (\x -> test1_aux1 x) x)) (apply (\x -> test1_aux1 x) x)) (apply (\x -> add x (S Z)) x))
+        -- )
+    )
+    undefined
+
+{-
+{-@
+test2 ::
+  (Equality (Natural -> Natural), Equality Natural) =>
+  EqualProp (Natural -> Natural)
+    {apply (\x:Data.Refined.Natural.Natural -> test1_aux1 x)}
+    {apply (\x:Data.Refined.Natural.Natural -> add x (S Z))}
+@-}
+test2 :: (Equality (Natural -> Natural), Equality Natural) => EqualityProp (Natural -> Natural)
+test2 =
+  extensionality
+    (apply (\x -> test1_aux1 x))
+    (apply (\x -> add x (S Z)))
+    test2_lemma
+
+{-@
+test2_lemma :: Equality Natural => x:Natural -> EqualProp Natural {test1_aux1 x} {add x (S Z)}
+@-}
+test2_lemma :: Equality Natural => Natural -> EqualityProp Natural
+test2_lemma x = reflexivity (test1_aux1 x) ? undefined
+-}
+
+{-
+  [eqpropchain|
+      test1_aux1
+    %==
+      apply (\x -> test1_aux1 x)
+    %==
+      apply (\x -> add x (S Z))
+        %by %extend x
+        %by %reflexivity
+    %==
+      test1_aux2
+        %by undefined
+  |]
+-}
+
+-- test1_exp =
+--   compileChain
+--     "test1_aux1\
+--     \%==\
+--     \apply (\\x -> test1_aux1 x)\
+--     \%==\
+--     \apply (\\x -> add x (S Z))\
+--     \%by %extend x \
+--     \%by %reflexivity \
+--     \%==\
+--     \test1_aux2\
+--     \%by undefined"
+
+-- _ =
+--   Chain
+--     (VarE test1_aux1)
+--     [ ChainClause
+--         ( AppE
+--             (VarE apply)
+--             ( ParensE
+--                 ( LamE
+--                     [VarP x]
+--                     ( AppE
+--                         (VarE test1_aux1)
+--                         (VarE x)
+--                     )
+--                 )
+--             )
+--         )
+--         ChainExpln_Trivial,
+--       ChainClause
+--         ( AppE
+--             (VarE apply)
+--             ( ParensE
+--                 ( LamE
+--                     [VarP x]
+--                     ( AppE
+--                         ( AppE
+--                             (VarE add)
+--                             (VarE x)
+--                         )
+--                         ( ParensE
+--                             ( AppE
+--                                 (ConE S)
+--                                 (ConE Z)
+--                             )
+--                         )
+--                     )
+--                 )
+--             )
+--         )
+--         (ChainExpln_Extend (VarP x) ChainExpln_Reflexivity),
+--       ChainClause (VarE test1_aux2) (ChainExpln_Proof (VarE undefined))
+--     ]
 
 {-
 -- test :: [a] -> [EqualityProp a] -> Q Chain
@@ -54,7 +182,7 @@ testChainExpQ = compileChain testChainString
 --         ( AppE
 --             ( AppE
 --                 ( AppE
---                     (VarE Relation.Equality.Prop.transitivity)
+--                     (VarE transitivity)
 --                     (VarE t1)
 --                 )
 --                 (VarE t5)
@@ -66,7 +194,7 @@ testChainExpQ = compileChain testChainString
 --                 ( AppE
 --                     ( AppE
 --                         ( AppE
---                             (VarE Relation.Equality.Prop.transitivity)
+--                             (VarE transitivity)
 --                             (VarE t1)
 --                         )
 --                         (VarE t4)
@@ -78,7 +206,7 @@ testChainExpQ = compileChain testChainString
 --                         ( AppE
 --                             ( AppE
 --                                 ( AppE
---                                     (VarE Relation.Equality.Prop.transitivity)
+--                                     (VarE transitivity)
 --                                     (VarE t1)
 --                                 )
 --                                 (VarE t3)
@@ -90,7 +218,7 @@ testChainExpQ = compileChain testChainString
 --                                 ( AppE
 --                                     ( AppE
 --                                         ( AppE
---                                             (VarE Relation.Equality.Prop.transitivity)
+--                                             (VarE transitivity)
 --                                             (VarE t1)
 --                                         )
 --                                         (VarE t2)
@@ -110,19 +238,19 @@ testChainExpQ = compileChain testChainString
 --     )
 --     (VarE e45)
 
-Relation.Equality.Prop.transitivity
+transitivity
   t1
   t5
   t6
-  ( Relation.Equality.Prop.transitivity
+  ( transitivity
       t1
       t4
       t5
-      ( Relation.Equality.Prop.transitivity
+      ( transitivity
           t1
           t3
           t4
-          ( Relation.Equality.Prop.transitivity
+          ( transitivity
               t1
               t2
               t3

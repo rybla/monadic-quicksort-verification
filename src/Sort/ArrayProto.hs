@@ -58,17 +58,18 @@ permute_kleisli_permute_lemma _ pls Nil =
     mnd = Plus.monad pls
 permute_kleisli_permute_lemma _ pls (Cons x xs) =
   [eqpropchain|
-      permute pls (Cons x xs) >>= permute pls
+      permute pls (Cons x xs)
+        >>= permute pls
     %==
       split pls xs
-        >>= (apply (\(ys, zs) -> (liftM2 mnd) (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs')) (permute pls ys) (permute pls zs)))
+        >>= apply (\(ys, zs) -> liftM2 mnd (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs')) (permute pls ys) (permute pls zs))
           >>= permute pls
     %==
       split pls xs
-        >>= (apply (\(ys, zs) -> (permute pls ys) >>= (apply (\ys' -> (permute pls zs) >>= (apply (\zs' -> pure mnd (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs') ys' zs')))))))
+        >>= apply (\(ys, zs) -> permute pls ys >>= apply (\ys' -> permute pls zs >>= apply (\zs' -> pure mnd (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs') ys' zs'))))
           >>= permute pls
-        %by %rewrite apply (\(ys, zs) -> (liftM2 mnd) (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs')) (permute pls ys) (permute pls zs))
-                 %to apply (\(ys, zs) -> (permute pls ys) >>= (apply (\ys' -> (permute pls zs) >>= (apply (\zs' -> pure mnd (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs') ys' zs'))))))
+        %by %rewrite apply (\(ys, zs) -> liftM2 mnd (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs')) (permute pls ys) (permute pls zs))
+                 %to apply (\(ys, zs) -> permute pls ys >>= apply (\ys' -> permute pls zs >>= apply (\zs' -> pure mnd (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs') ys' zs'))))
         %-- %by %extend (ys, zs) -- TODO: why does this break it? even with `%by undefined` after
         %by undefined 
     %==
@@ -89,28 +90,29 @@ permute_kleisli_permute_lemma _ pls (Cons x xs) =
 {-@
 permute_kleisli_permute ::
   forall m.
-  Equality (List Elem -> m (List Elem)) =>
+  (Equality (List Elem -> m (List Elem)), Equality (m (List Elem))) =>
   Monad m ->
   pls:Plus m ->
   EqualProp (List Elem -> m (List Elem))
     {kleisli (Plus.monad pls) (permute pls) (permute pls)}
     {permute pls}
 @-}
-permute_kleisli_permute :: forall m. Equality (List Elem -> m (List Elem)) => Monad m -> Plus m -> EqualityProp (List Elem -> m (List Elem))
+permute_kleisli_permute :: forall m. (Equality (List Elem -> m (List Elem)), Equality (m (List Elem))) => Monad m -> Plus m -> EqualityProp (List Elem -> m (List Elem))
 permute_kleisli_permute _ pls =
   [eqpropchain|
-
       permute pls >=> permute pls
-
     %==
-
       apply (\xs -> permute pls xs >>= permute pls)
-
     %==
-
+      apply (\xs -> permute pls xs)
+        %-- TODO: why not?
+        %-- %by %extend xs
+        %-- permute_kleisli_permute_lemma mnd pls xs
+        %by undefined 
+    %==
       permute pls 
+        %by %extend xs
         %by undefined
-  
   |]
   where
     (>>=) :: forall a b. m a -> (a -> m b) -> m b
@@ -123,13 +125,39 @@ permute_kleisli_permute _ pls =
     (<+>) = plus pls
     mnd = Plus.monad pls
 
--- {-@
--- permute_kleisli_slowsort ::
---   EqualProp (m (List Elem))
---     {kleisli mnd (permute pls) (slowsort pls)}
---     {slowsort}
--- @-}
+{-@
+permute_kleisli_slowsort ::
+  forall m.
+  Equality (m (List Elem)) =>
+  Monad m ->
+  pls:Plus m ->
+  xs:List Elem ->
+  EqualProp (m (List Elem))
+    {kleisli (Plus.monad pls) (permute pls) (slowsort pls) xs}
+    {slowsort pls xs}
+@-}
+permute_kleisli_slowsort :: forall m. Equality (m (List Elem)) => Monad m -> Plus m -> List Elem -> EqualityProp (m (List Elem))
+permute_kleisli_slowsort _ pls xs =
+  [eqpropchain|
+      (permute pls >=> slowsort pls) xs 
+    %==
+      (permute pls >=> (permute pls >=> guardBy pls sorted)) xs
+    %==
+      slowsort pls xs
+        %by undefined
+  |]
+  where
+    (>>=) :: forall a b. m a -> (a -> m b) -> m b
+    (>>=) = bind mnd
+    (>=>) :: forall a b c. (a -> m b) -> (b -> m c) -> (a -> m c)
+    (>=>) = kleisli mnd
+    (>>) :: forall a b. m a -> m b -> m b
+    (>>) = seq mnd
+    (<+>) :: forall a. m a -> m a -> m a
+    (<+>) = plus pls
+    mnd = Plus.monad pls
 
+-- main theorem
 -- [ref] display 12
 {-@
 iqsort_spec ::
@@ -165,7 +193,7 @@ iqsort_spec _ _ _ arp i (Cons p xs) =
                         >> iqsort arp (S (i + length ys)) (length zs)
                   )
           )
-        %by undefined
+        %by undefined -- TODO: prove
 
     %==
 

@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-{-@ LIQUID "--compile-spec" @-}
+-- {-@ LIQUID "--compile-spec" @-}
 
 module Control.Refined.Monad where
 
@@ -73,7 +73,7 @@ data Monad m = Monad
 
 {-@ reflect kleisli @-}
 kleisli :: Monad m -> (a -> m b) -> (b -> m c) -> (a -> m c)
-kleisli mnd k1 k2 = apply (\x -> bind mnd (k1 x) k2)
+kleisli mnd k1 k2 x = bind mnd (k1 x) k2
 
 {-@ reflect join @-}
 join :: Monad m -> m (m a) -> m a
@@ -191,38 +191,85 @@ seq_identity_left mnd x m =
       m
   |]
 
--- {-@
--- seq_identity_right ::
---   Equality (m b) =>
---   mnd:Monad m ->
---   m:m a ->
---   x:b ->
---   EqualProp (m b)
---     {seq mnd m (pure mnd x)}
---     {x}
--- @-}
--- seq_identity_right ::
---   Equality (m b) =>
---   Monad m ->
---   m a ->
---   b ->
---   EqualityProp (m b)
--- seq_identity_right mnd m x =
---   [eqpropchain|
---       seq mnd m (pure mnd x)
---     %==
---       bind mnd m (apply (\_ -> pure mnd x))
---         %by %smt
---         %by undefined
---     %==
---       bind mnd m (pure mnd x)
---         %by %rewrite apply (\_ -> pure mnd x)
---             %to pure mnd x
---         %by %extend y
---         %by apply (\_ -> pure mnd x) y
---     %==
+{-
+{-@
+seq_identity_right ::
+  Equality (m b) =>
+  mnd:Monad m ->
+  m:m a ->
+  x:b ->
+  EqualProp (m b)
+    {seq mnd m (pure mnd x)}
+    {x}
+@-}
+seq_identity_right ::
+  Equality (m b) =>
+  Monad m ->
+  m a ->
+  b ->
+  EqualityProp (m b)
+seq_identity_right mnd m x =
+  [eqpropchain|
+      seq mnd m (pure mnd x)
+    %==
+      bind mnd m (apply (\_ -> pure mnd x))
+        %by %smt
+        %by undefined
+    %==
+      bind mnd m (pure mnd x)
+        %by %rewrite apply (\_ -> pure mnd x)
+            %to pure mnd x
+        %by %extend y
+        %by apply (\_ -> pure mnd x) y
+    %==
 
---   |]
+  |]
+-}
+
+{-@
+kleisli_associativity ::
+  forall m a b c d.
+  Equality (a -> m d) =>
+  mnd:Monad m ->
+  k1:(a -> m b) ->
+  k2:(b -> m c) ->
+  k3:(c -> m d) ->
+  EqualProp (a -> m d)
+    {kleisli mnd (kleisli mnd k1 k2) k3}
+    {kleisli mnd k1 (kleisli mnd k2 k3)}
+@-}
+kleisli_associativity :: forall m a b c d. Equality (a -> m d) => Monad m -> (a -> m b) -> (b -> m c) -> (c -> m d) -> EqualityProp (a -> m d)
+kleisli_associativity mnd k1 k2 k3 =
+  [eqpropchain|
+      (k1 >=> k2) >=> k3
+    %==
+      apply (\ma -> ((k1 >=> k2) >=> k3) ma)
+        %by %extend ma
+        %by %reflexivity
+    %==
+      apply (\ma -> (k1 >=> k2) ma >>= k3)
+        %by undefined
+        %{-
+        -- TODO: there is a problem with extensionally manipulating
+        -- expressions inside lambdas
+        
+        %by %extend ma
+        %by %rewrite ((k1 >=> k2) >=> k3) ma
+                 %to (k1 >=> k2) ma >>= k3
+        %by %smt 
+        %by apply (\ma -> apply (\a -> (k1 >=> k2) a >>= k3) ma) ma
+        -}%
+    %==
+      k1 >=> (k2 >=> k3)
+        %by undefined
+  |]
+  where
+    (>>) :: forall a. m a -> m a -> m a
+    (>>) = seq mnd
+    (>>=) :: forall a b. m a -> (a -> m b) -> m b
+    (>>=) = bind mnd
+    (>=>) :: forall a b c. (a -> m b) -> (b -> m c) -> (a -> m c)
+    (>=>) = kleisli mnd
 
 {-
 ## Monadic Commutativity

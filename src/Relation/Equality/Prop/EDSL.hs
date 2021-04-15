@@ -70,6 +70,7 @@ instance Lift Chain where
   -- lift :: Chain -> Q Exp
   lift (Chain t1 _clauses) = go (reverse _clauses)
     where
+      -- generate transitivity chain
       go :: [ChainClause] -> Q Exp
       go [] = do
         [|reflexivity t1|]
@@ -85,6 +86,7 @@ instance Lift Chain where
         ejk <- reifyExpln tj tk explnjk
         [|transitivity t1 tj tk e1j ejk|]
 
+      -- generate explanation term that `ti` is eqprop to `tj`
       reifyExpln :: Exp -> Exp -> ChainExpln -> Q Exp
       reifyExpln ti tj = \case
         ChainExpln_Trivial ->
@@ -104,7 +106,9 @@ instance Lift Chain where
           let ti_p = AppE ti pExp
           let tj_p = AppE tj pExp
           eij_p <- reifyExpln ti_p tj_p expln
-          let eij = LamE [p] eij_p
+          qm <- [|(?)|]
+          let eij = LamE [p] (foldl AppE qm [foldl AppE qm [eij_p, ti_p], tj_p])
+          -- let eij = LamE [p] eij_p
           [|(extensionality ti tj eij)|]
         ChainExpln_Retract x expln -> do
           -- TODO: is ChainExpln_Retract even defined well?

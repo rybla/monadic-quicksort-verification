@@ -60,6 +60,7 @@ library:
     - -fplugin-opt=LiquidHaskell:--short-names
     - -fplugin-opt=LiquidHaskell:--prune-unsorted
     - -fplugin-opt=LiquidHaskell:--short-errors
+    # - -fplugin-opt=LiquidHaskell:--smtsolver=cvc4
 
 tests:
   monadic-quicksort-verification-test:
