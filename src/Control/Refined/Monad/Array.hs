@@ -18,7 +18,7 @@ import Relation.Equality.Prop.Reasoning
 import Prelude hiding (Monad, length, pure, read, readList, seq, (>>), (>>=))
 
 {-
-# Array monad
+# Array Monad
 -}
 
 {-
@@ -32,45 +32,45 @@ type Index = Natural
 
 {-@
 data Array m a = Array
-  { monad :: Monad m,
+  { arrayMonad :: Monad m,
     read :: Index -> m a,
     write :: Index -> a -> m Unit,
     bind_read_write ::
       i:Index ->
-      {_:EqualityProp (m Unit) | eqprop (bind monad (read i) (write i)) (pure monad it)},
+      {_:EqualityProp (m Unit) | eqprop (bind arrayMonad (read i) (write i)) (pure arrayMonad it)},
     seq_write_read ::
       i:Index ->
       x:a ->
-      {_:EqualityProp (m a) | eqprop (seq monad (write i x) (read i)) (seq monad (write i x) (pure monad x))},
+      {_:EqualityProp (m a) | eqprop (seq arrayMonad (write i x) (read i)) (seq arrayMonad (write i x) (pure arrayMonad x))},
     seq_write_write ::
       i:Index ->
       x:a ->
       y:a ->
-      {_:EqualityProp (m Unit) | eqprop (seq monad (write i x) (write i y)) (write i y)},
+      {_:EqualityProp (m Unit) | eqprop (seq arrayMonad (write i x) (write i y)) (write i y)},
     liftM_read ::
       i:Index ->
       f:(a -> a -> a) ->
-      {_:EqualityProp (m a) | eqprop (liftM2 monad f (read i) (read i)) (liftM monad (diagonalize f) (read i))},
+      {_:EqualityProp (m a) | eqprop (liftM2 arrayMonad f (read i) (read i)) (liftM arrayMonad (diagonalize f) (read i))},
     seq_commutativity_read ::
       i:Index ->
       j:Index ->
-      {_:EqualityProp (m a) | eqprop (seq monad (read i) (read j)) (seq monad (read j) (read i))},
+      {_:EqualityProp (m a) | eqprop (seq arrayMonad (read i) (read j)) (seq arrayMonad (read j) (read i))},
     seq_commutativity_write ::
       i:Index ->
       j:{j:Index | i /= j} ->
       x:a ->
       y:a ->
-      {_:EqualityProp (m Unit) | eqprop (seq monad (write i x) (write j y)) (seq monad (write j y) (write i x))},
+      {_:EqualityProp (m Unit) | eqprop (seq arrayMonad (write i x) (write j y)) (seq arrayMonad (write j y) (write i x))},
     seq_associativity_write ::
       i:Index ->
       j:{j:Index | i /= j} ->
       x:a ->
       y:a ->
-      {_:EqualityProp (m Unit) | eqprop (seq monad (seq monad (read i) (pure monad it)) (write j x)) (seq monad (write j x) (seq monad (read i) (pure monad it)))}
+      {_:EqualityProp (m Unit) | eqprop (seq arrayMonad (seq arrayMonad (read i) (pure arrayMonad it)) (write j x)) (seq arrayMonad (write j x) (seq arrayMonad (read i) (pure arrayMonad it)))}
   }
 @-}
 data Array m a = Array
-  { monad :: Monad m,
+  { arrayMonad :: Monad m,
     read :: Index -> m a,
     write :: Index -> a -> m Unit,
     bind_read_write ::
@@ -115,27 +115,27 @@ data Array m a = Array
 readList :: Array m a -> Index -> Natural -> m (List a)
 readList ary i Z = pure mnd Nil
   where
-    mnd = monad ary
+    mnd = arrayMonad ary
 readList ary i (S n) = liftM2 mnd Cons (read ary i) (readList ary (S i) n)
   where
-    mnd = monad ary
+    mnd = arrayMonad ary
 
 {-@ reflect writeList @-}
 writeList :: Array m a -> Index -> List a -> m Unit
 writeList ary i Nil = pure mnd it
   where
-    mnd = monad ary
+    mnd = arrayMonad ary
 writeList ary i (Cons x xs) = write ary i x >> writeList ary (S i) xs
   where
     (>>) = seq mnd
-    mnd = monad ary
+    mnd = arrayMonad ary
 
 {-@ reflect writeListToLength @-}
 writeListToLength :: Array m a -> Index -> List a -> m Natural
 writeListToLength ary i xs = seq mnd (writeList ary i xs) (pure mnd (length xs))
   where
     (>>) = seq mnd
-    mnd = monad ary
+    mnd = arrayMonad ary
 
 {-@ reflect writeListToLength2 @-}
 writeListToLength2 ::
@@ -145,7 +145,7 @@ writeListToLength2 ary i (xs, ys) =
     >> pure mnd (length xs, length ys)
   where
     (>>) = seq mnd
-    mnd = monad ary
+    mnd = arrayMonad ary
 
 {-@ reflect writeListToLength3 @-}
 writeListToLength3 ::
@@ -155,7 +155,7 @@ writeListToLength3 ary i (xs, ys, zs) =
     >> pure mnd (length xs, length ys, length zs)
   where
     (>>) = seq mnd
-    mnd = monad ary
+    mnd = arrayMonad ary
 
 {-@ reflect swap @-}
 swap :: Array m a -> Index -> Index -> m ()
@@ -163,7 +163,7 @@ swap ary i j = read ary i >>= \x -> read ary j >>= \y -> write ary i y >> write 
   where
     (>>=) = bind mnd
     (>>) = seq mnd
-    mnd = monad ary
+    mnd = arrayMonad ary
 
 {-
 # Lemmas
@@ -181,7 +181,7 @@ writeList_append ::
   ys:List a ->
   EqualProp (m Unit)
     {writeList ary i (append xs ys)}
-    {seq (monad ary) (writeList ary i xs) (writeList ary (add i (length xs)) ys)}
+    {seq (arrayMonad ary) (writeList ary i xs) (writeList ary (add i (length xs)) ys)}
 @-}
 writeList_append ::
   forall m a.
@@ -229,7 +229,7 @@ writeList_append ary i Nil ys =
   where
     (>>) = seq mnd
     (>>=) = bind mnd
-    mnd = monad ary
+    mnd = arrayMonad ary
 --
 writeList_append ary i (Cons x xs) ys =
   [eqpropchain|
@@ -288,4 +288,4 @@ writeList_append ary i (Cons x xs) ys =
   where
     (>>) = seq mnd
     (>>=) = bind mnd
-    mnd = monad ary
+    mnd = arrayMonad ary

@@ -39,7 +39,7 @@ slowsort :: Plus m -> List Elem -> m (List Elem)
 slowsort pls = permute pls >=> guardBy pls sorted
   where
     (>=>) = kleisli mnd
-    mnd = monad pls
+    mnd = plusMonad pls
 
 --
 {-@ reflect sorted @-}
@@ -83,11 +83,11 @@ sorted_middle (Cons y ys) x zs = undefined
 permute_insertionsort :: Plus m -> List Elem -> m (List Elem)
 permute_insertionsort pls Nil = pure mnd Nil
   where
-    mnd = monad pls
+    mnd = plusMonad pls
 permute_insertionsort pls (Cons x xs) = permute pls xs >>= insert pls x
   where
     (>>=) = bind mnd
-    mnd = monad pls
+    mnd = plusMonad pls
 
 -- The insert function for insertionsort.
 insert :: Plus m -> Elem -> List Elem -> m (List Elem)
@@ -99,7 +99,7 @@ insert pls x xs = undefined
 permute :: Plus m -> List a -> m (List a)
 permute pls Nil = pure mnd Nil
   where
-    mnd = monad pls
+    mnd = plusMonad pls
 permute pls (Cons x xs) =
   split pls xs
     >>= apply
@@ -111,13 +111,13 @@ permute pls (Cons x xs) =
       )
   where
     (>>=) = bind mnd
-    mnd = monad pls
+    mnd = plusMonad pls
 
 {-@ reflect split @-}
 split :: Plus m -> List a -> m (List a, List a)
 split pls Nil = pure mnd (Nil, Nil)
   where
-    mnd = monad pls
+    mnd = plusMonad pls
 split pls (Cons x xs) =
   split pls xs
     >>= apply
@@ -127,7 +127,7 @@ split pls (Cons x xs) =
   where
     (<+>) = plus pls
     (>>=) = bind mnd
-    mnd = monad pls
+    mnd = plusMonad pls
 
 -- [ref] divide and conquer equation chain
 {-@ reflect divide_and_conquer_lemma1_aux @-}
@@ -159,7 +159,7 @@ divide_and_conquer_lemma1_aux pls x xs =
     (>>=) = bind mnd
     (>>) :: forall a b. m a -> m b -> m b
     (>>) = seq mnd
-    mnd = monad pls
+    mnd = plusMonad pls
 
 {-@
 divide_and_conquer_lemma1 ::
@@ -287,9 +287,6 @@ divide_and_conquer_lemma1 _ pls x xs =
             >>= apply (\zs' -> 
               guard pls (sorted ys' && sorted zs' && all (geq x) ys' && all (leq x) zs')
                 >> pure mnd (ys' ++ Cons x Nil ++ zs'))))
-        %by undefined
-        {-
-        -- the following proof takes ~3min to check
 
         %by %rewrite apply (\(ys, zs) -> permute pls ys >>= apply (\ys' -> permute pls zs >>= apply (\zs' -> guard pls (sorted (ys' ++ Cons x Nil ++ zs')) >> pure mnd (ys' ++ Cons x Nil ++ zs'))))
                  %to apply (\(ys, zs) -> permute pls ys >>= apply (\ys' -> permute pls zs >>= apply (\zs' -> guard pls (sorted ys' && sorted zs' && all (geq x) ys' && all (leq x) zs') >> pure mnd (ys' ++ Cons x Nil ++ zs'))))
@@ -302,8 +299,8 @@ divide_and_conquer_lemma1 _ pls x xs =
         %by %extend zs'
         %by %rewrite sorted (ys' ++ Cons x Nil ++ zs')
                  %to sorted ys' && sorted zs' && all (geq x) ys' && all (leq x) zs'
+        %by %smt
         %by sorted_middle ys' x zs'
-        -}
   
     %==
 
@@ -348,7 +345,7 @@ divide_and_conquer_lemma1 _ pls x xs =
     (>=>) = kleisli mnd
     (>>) :: forall a b. m a -> m b -> m b
     (>>) = seq mnd
-    mnd = monad pls
+    mnd = plusMonad pls
 
 {-@ reflect divide_and_conquer_aux @-}
 divide_and_conquer_aux :: forall m. Plus m -> Elem -> List Elem -> m (List Elem)
@@ -371,7 +368,7 @@ divide_and_conquer_aux pls x xs =
     (>>=) = bind mnd
     (>>) :: forall a b. m a -> m b -> m b
     (>>) = seq mnd
-    mnd = monad pls
+    mnd = plusMonad pls
 
 -- [ref] display 8
 {-@
@@ -408,7 +405,7 @@ divide_and_conquer_lemma2_aux pls x xs =
   where
     (>>=) :: forall a b. m a -> (a -> m b) -> m b
     (>>=) = bind mnd
-    mnd = monad pls
+    mnd = plusMonad pls
 
 {-@
 divide_and_conquer_lemma2 ::
@@ -419,7 +416,7 @@ divide_and_conquer_lemma2 ::
   x:Elem ->
   xs:List Elem ->
   RefinesPlus m (List Elem, List Elem) {pls}
-    {pure (monad pls) (partition x xs)}
+    {pure (plusMonad pls) (partition x xs)}
     {divide_and_conquer_lemma2_aux pls x xs}
 @-}
 divide_and_conquer_lemma2 ::
@@ -523,7 +520,7 @@ divide_and_conquer_lemma2 _ pls x Nil =
     (>>=) = bind mnd
     (>>) :: forall a b. m a -> m b -> m b
     (>>) = seq mnd
-    mnd = monad pls
+    mnd = plusMonad pls
 {-
 TODO: want to get something of the form
 
@@ -577,7 +574,7 @@ divide_and_conquer_lemma2 _ pls x' (Cons x xs) =
     (>>=) = bind mnd
     (>>) :: forall a b. m a -> m b -> m b
     (>>) = seq mnd
-    mnd = monad pls
+    mnd = plusMonad pls
 
 {-@ reflect quicksort @-}
 quicksort :: List Elem -> List Elem
@@ -595,7 +592,7 @@ quicksort_refines_slowsort ::
   pls:Plus m ->
   xs:List Elem ->
   RefinesPlus m (List Elem) {pls}
-    {apply (pure (monad pls) . quicksort) xs}
+    {apply (pure (plusMonad pls) . quicksort) xs}
     {slowsort pls xs}
 @-}
 quicksort_refines_slowsort ::
@@ -624,7 +621,7 @@ quicksort_refines_slowsort _ pls Nil =
     (>>=) = bind mnd
     (>>) :: forall a b. m a -> m b -> m b
     (>>) = seq mnd
-    mnd = monad pls
+    mnd = plusMonad pls
 quicksort_refines_slowsort _ pls (Cons x xs) =
   [eqpropchain|
       (pure mnd . quicksort) (Cons x xs) 
@@ -660,4 +657,4 @@ quicksort_refines_slowsort _ pls (Cons x xs) =
     (>=>) = kleisli mnd
     (>>) :: forall a b. m a -> m b -> m b
     (>>) = seq mnd
-    mnd = monad pls
+    mnd = plusMonad pls

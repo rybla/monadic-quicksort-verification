@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
--- {-@ LIQUID "--compile-spec" @-}
+{-@ LIQUID "--compile-spec" @-}
 
 module Control.Refined.Monad where
 
@@ -138,7 +138,7 @@ seq_associativity mnd ma mb mc =
     %==
       bind mnd ma (apply (\x -> bind mnd (apply (\_ -> mb) x) (apply (\_ -> mc))))
         %by undefined -- bind_associativity mnd ma (apply (\_ -> mb)) (apply (\_ -> mc))
-        -- TODO: why doesn't this step work?
+        %-- TODO: why doesn't this step work?
     %==
       bind mnd ma (apply (\x -> bind mnd mb (apply (\_ -> mc))))
         %by %rewrite apply (\x -> bind mnd (apply (\_ -> mb) x) (apply (\_ -> mc)))

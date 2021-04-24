@@ -17,7 +17,7 @@ import Relation.Equality.Prop.EDSL
 import Prelude hiding (Monad, not, pure, seq)
 
 {-
-# Plus monad
+# Plus Monad
 -}
 
 {-
@@ -26,7 +26,7 @@ import Prelude hiding (Monad, not, pure, seq)
 
 {-@
 data Plus m = Plus
-  { monad :: Monad m,
+  { plusMonad :: Monad m,
     epsilon :: forall a. m a,
     plus :: forall a. m a -> m a -> m a,
     plus_identity_left ::
@@ -44,25 +44,25 @@ data Plus m = Plus
       m1:m a ->
       m2:m a ->
       k:(a -> m b) ->
-      {_:EqualityProp (m b) | eqprop (bind monad (plus m1 m2) k) (plus (bind monad m1 k) (bind monad m2 k))},
+      {_:EqualityProp (m b) | eqprop (bind plusMonad (plus m1 m2) k) (plus (bind plusMonad m1 k) (bind plusMonad m2 k))},
     plus_distributivity_right ::
       forall a b.
       m:m a ->
       k1:(a -> m b) ->
       k2:(a -> m b) ->
-      {_:EqualityProp (m b) | eqprop (bind monad m (\x:a -> plus (k1 x) (k2 x))) (plus (bind monad m k1) (bind monad m k2))},
+      {_:EqualityProp (m b) | eqprop (bind plusMonad m (\x:a -> plus (k1 x) (k2 x))) (plus (bind plusMonad m k1) (bind plusMonad m k2))},
     bind_zero_left ::
       forall a b.
       k:(a -> m b) ->
-      {_:EqualityProp (m b) | eqprop (bind monad epsilon k) epsilon},
+      {_:EqualityProp (m b) | eqprop (bind plusMonad epsilon k) epsilon},
     bind_zero_right ::
       forall a b.
       m:m a ->
-      {_:EqualityProp (m b) | eqprop (seq monad m epsilon) epsilon}
+      {_:EqualityProp (m b) | eqprop (seq plusMonad m epsilon) epsilon}
   }
 @-}
 data Plus m = Plus
-  { monad :: Monad m,
+  { plusMonad :: Monad m,
     epsilon :: forall a. m a,
     plus :: forall a. m a -> m a -> m a,
     plus_identity_left ::
@@ -112,20 +112,20 @@ guard pls b =
     then pure mnd ()
     else epsilon pls
   where
-    mnd = monad pls
+    mnd = plusMonad pls
 
 {-@ reflect guardBy @-}
 guardBy :: Plus m -> (a -> Bool) -> a -> m a
 guardBy pls p x = seq mnd (guard pls (p x)) (pure mnd x)
   where
-    mnd = monad pls
+    mnd = plusMonad pls
 
 {-
 ## Refinement
 -}
 
 {-
-monad plus refinement: every result of M1 is a possible result of M2. aka
+plusMonad plus refinement: every result of M1 is a possible result of M2. aka
   • M1 refines M2
   • M2 can be refined to M1
   • M2 subsumes M1
@@ -142,7 +142,7 @@ type RefinesPlus m a Pls M1 M2 =
 @-}
 
 {-
-monad plus refinement of functions. aka
+plusMonad plus refinement of functions. aka
   F1
 where
   • Pls :: Plus m
@@ -287,7 +287,7 @@ bind_monotonic_refinesplus ::
   pls:Plus m ->
   m1:m a -> m2:m a -> k:(a -> m b) ->
   RefinesPlus m a {pls} {m1} {m2} ->
-  RefinesPlus m b {pls} {bind (monad pls) m1 k} {bind (monad pls) m2 k}
+  RefinesPlus m b {pls} {bind (plusMonad pls) m1 k} {bind (plusMonad pls) m2 k}
 @-}
 bind_monotonic_refinesplus ::
   (Equality (m a), Equality (m b)) =>
@@ -312,7 +312,7 @@ bind_monotonic_refinesplus _ pls m1 m2 k rp_m1_m2 =
         %by rp_m1_m2 
   |]
   where
-    mnd = monad pls
+    mnd = plusMonad pls
 
 {-@
 bind_monotonic_refinesplusF ::
@@ -323,7 +323,7 @@ bind_monotonic_refinesplusF ::
   RefinesPlusF m a b {pls} {k1} {k2} ->
   EqualityProp (m b)
 @-}
--- RefinesPlus m b {pls} {bind (monad pls) m k1} {bind (monad pls) m k2}
+-- RefinesPlus m b {pls} {bind (plusMonad pls) m k1} {bind (plusMonad pls) m k2}
 bind_monotonic_refinesplusF ::
   (Equality (m a), Equality (m b)) =>
   Monad m ->
@@ -355,7 +355,7 @@ bind_monotonic_refinesplusF _ pls m _k1 _k2 e_k1_k2 =
           ? apply k2 x 
   |]
   where
-    mnd = monad pls
+    mnd = plusMonad pls
     (k1, k2) = (_k1 pls, _k2 pls)
 
 {-
@@ -375,8 +375,8 @@ guard_commutes ::
   m:m b ->
   k:(Monad m -> Tuple -> b -> m c) ->
   EqualProp (m c)
-    {bind (monad pls) (guard pls b) (apply (\x:Tuple -> bind (monad pls) m (apply (\y:b -> k (monad pls) it y))))}
-    {bind (monad pls) m (apply (\y:b -> bind (monad pls) (guard pls b) (apply (\x:Tuple -> k (monad pls) it y))))}
+    {bind (plusMonad pls) (guard pls b) (apply (\x:Tuple -> bind (plusMonad pls) m (apply (\y:b -> k (plusMonad pls) it y))))}
+    {bind (plusMonad pls) m (apply (\y:b -> bind (plusMonad pls) (guard pls b) (apply (\x:Tuple -> k (plusMonad pls) it y))))}
 @-}
 guard_commutes ::
   Equality (m c) =>
@@ -395,7 +395,7 @@ guard_commutes _ pls b m k =
       bind mnd m (apply (\x -> bind mnd (guard pls b) (apply (\() -> k mnd () x))))
   |]
   where
-    mnd = monad pls
+    mnd = plusMonad pls
 
 {-@ reflect andBool @-}
 andBool :: Bool -> Bool -> Bool
@@ -409,7 +409,7 @@ guard_and ::
   p:Bool -> q:Bool ->
   EqualProp (m Tuple)
     {guard pls (andBool p q)}
-    {seq (monad pls) (guard pls p) (guard pls q)}
+    {seq (plusMonad pls) (guard pls p) (guard pls q)}
 @-}
 guard_and ::
   Equality (m ()) =>
@@ -433,7 +433,7 @@ guard_and _ pls True q =
         %by guard pls True
   |]
   where
-    mnd = monad pls
+    mnd = plusMonad pls
 guard_and _ pls False q =
   [eqpropchain|
       guard pls (andBool False q)
@@ -457,7 +457,7 @@ guard_and _ pls False q =
         %by seq mnd (guard pls False) (guard pls q)
   |]
   where
-    mnd = monad pls
+    mnd = plusMonad pls
 
 -- (if b then m1 else m2) <+> (guard b >> m1) <+> (guard (not b) m2)
 -- ==
@@ -472,7 +472,7 @@ guard_disjoint ::
   m2:m a ->
   RefinesPlus m a {pls}
     {if b then m1 else m2}
-    {plus pls (seq (monad pls) (guard pls b) m1) (seq (monad pls) (guard pls (not b)) m2)}
+    {plus pls (seq (plusMonad pls) (guard pls b) m1) (seq (plusMonad pls) (guard pls (not b)) m2)}
 @-}
 guard_disjoint :: forall m a. Monad m -> Plus m -> Bool -> m a -> m a -> EqualityProp (m a)
 guard_disjoint _ pls b m1 m2 = undefined

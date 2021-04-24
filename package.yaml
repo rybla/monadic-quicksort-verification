@@ -58,7 +58,6 @@ library:
     - -fplugin-opt=LiquidHaskell:--ple-local
     - -fplugin-opt=LiquidHaskell:--diff
     - -fplugin-opt=LiquidHaskell:--short-names
-    - -fplugin-opt=LiquidHaskell:--prune-unsorted
     - -fplugin-opt=LiquidHaskell:--short-errors
     # - -fplugin-opt=LiquidHaskell:--smtsolver=cvc4
 

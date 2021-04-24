@@ -238,7 +238,7 @@ rewrite xQ yQ exyQ eQ = do
             InfixE mb_e1 e2 mb_e3 -> InfixE <$> traverse extract mb_e1 <*> extract e2 <*> traverse extract mb_e3
             UInfixE e1 e2 e3 -> UInfixE <$> extract e1 <*> extract e2 <*> extract e3
             ParensE e -> ParensE <$> extract e
-            LamE pats e -> LamE pats <$> extract e
+            LamE pats e -> return _e -- cannot rewrite under lambdas, since this requires extensionality
             LamCaseE mats -> LamCaseE <$> traverse extractMatch mats
             TupE mb_es -> TupE <$> (traverse . traverse) extract mb_es
             UnboxedTupE mb_es -> UnboxedTupE <$> (traverse . traverse) extract mb_es

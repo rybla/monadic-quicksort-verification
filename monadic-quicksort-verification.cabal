@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4c37daa18628c9aaa546c24083c548d8371931cafc5334d7668e6343f465b024
+-- hash: 2f299d47f8487d182f20e43b59ce3eb68aa80800899ecdbabc1af5ad927e22a4
 
 name:           monadic-quicksort-verification
 version:        0.1.0.0
@@ -56,7 +56,7 @@ library
   hs-source-dirs:
       src
   default-extensions: GADTs KindSignatures ExplicitForAll RankNTypes FlexibleInstances FlexibleContexts UndecidableInstances MultiParamTypeClasses ScopedTypeVariables LambdaCase MultiWayIf TupleSections ScopedTypeVariables
-  ghc-options: -Wall -Wno-name-shadowing -Wno-unused-imports -Wno-unused-matches -Wno-unused-local-binds -Wno-orphans -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--prune-unsorted -fplugin-opt=LiquidHaskell:--short-errors
+  ghc-options: -Wall -Wno-name-shadowing -Wno-unused-imports -Wno-unused-matches -Wno-unused-local-binds -Wno-orphans -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--short-errors
   build-depends:
       haskell-src-meta
     , liquid-base

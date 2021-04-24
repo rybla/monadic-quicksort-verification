@@ -3,8 +3,8 @@ module Function where
 import Prelude hiding (flip, map)
 
 {-@ reflect apply @-}
-apply :: (a -> b) -> a -> b
-apply f x = f x
+apply :: (a -> b) -> (a -> b)
+apply f = f
 
 {-@ reflect given @-}
 given :: a -> (a -> b) -> b
