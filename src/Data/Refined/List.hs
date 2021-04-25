@@ -33,6 +33,9 @@ append :: List a -> List a -> List a
 append Nil ys = ys
 append (Cons x xs) ys = Cons x (append xs ys)
 
+{-@ infixr 5 ++ @-}
+infixr 5 ++
+
 {-@ reflect ++ @-}
 (++) :: List a -> List a -> List a
 (++) = append

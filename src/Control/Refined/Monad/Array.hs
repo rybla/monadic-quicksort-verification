@@ -25,9 +25,6 @@ import Prelude hiding (Monad, length, pure, read, readList, seq, (>>), (>>=))
 ## Data
 -}
 
-{-@
-type Index = Natural
-@-}
 type Index = Natural
 
 {-@

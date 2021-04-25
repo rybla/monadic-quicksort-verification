@@ -44,7 +44,7 @@ data Monad m = Monad
       m:m a ->
       k1:(a -> m b) ->
       k2:(b -> m c) ->
-      EqualProp (m c) {bind (bind m k1) k2} {bind m (apply (\x:a -> bind (k1 x) k2))}
+      EqualProp (m c) {bind (bind m k1) k2} {bind m (bind_associativity_aux bind k1 k2)}
   }
 @-}
 data Monad m = Monad
@@ -66,6 +66,10 @@ data Monad m = Monad
       (b -> m c) ->
       EqualityProp (m c)
   }
+
+{-@ reflect bind_associativity_aux @-}
+bind_associativity_aux :: (m b -> (b -> m c) -> m c) -> (a -> m b) -> (b -> m c) -> a -> m c
+bind_associativity_aux bind k1 k2 x = bind (k1 x) k2
 
 {-
 ## Utilities

@@ -5,9 +5,6 @@
 
 module Sort.Array where
 
-import Control.Refined.Monad
-import Control.Refined.Monad.Array
-import Control.Refined.Monad.Plus
 import Data.Refined.Bool
 import Data.Refined.List
 import Data.Refined.Natural
@@ -16,6 +13,7 @@ import Data.Refined.Unit
 import Function
 import Language.Haskell.Liquid.Equational
 import Language.Haskell.TH.Syntax
+import Placeholder.M
 import Relation.Equality.Prop
 import Relation.Equality.Prop.EDSL
 import Relation.Equality.Prop.Reasoning
@@ -28,45 +26,26 @@ import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (*)
 -}
 
 {-@ reflect partl' @-}
-partl' :: Array m Elem -> Plus m -> Elem -> (List Elem, List Elem, List Elem) -> m (List Elem, List Elem)
-partl' ary pls p (ys, zs, Nil) = pure mnd (ys, zs)
-  where
-    mnd = arrayMonad ary
-partl' ary pls p (ys, zs, Cons x xs) = dispatch ary pls x p (ys, zs, xs) >>= partl' ary pls p
-  where
-    (>>=) = bind mnd
-    mnd = arrayMonad ary
+partl' :: Int -> (List Int, List Int, List Int) -> M (List Int, List Int)
+partl' p (ys, zs, Nil) = pure (ys, zs)
+partl' p (ys, zs, Cons x xs) = dispatch x p (ys, zs, xs) >>= partl' p
 
 {-@ reflect dispatch @-}
-dispatch :: Array m Elem -> Plus m -> Elem -> Elem -> (List Elem, List Elem, List Elem) -> m (List Elem, List Elem, List Elem)
-dispatch ary pls x p (ys, zs, xs) =
+dispatch :: Int -> Int -> (List Int, List Int, List Int) -> M (List Int, List Int, List Int)
+dispatch x p (ys, zs, xs) =
   if leq x p
-    then permute pls zs >>= apply (\zs' -> pure mnd (ys ++ Cons x Nil, zs', xs))
-    else permute pls (zs ++ Cons x Nil) >>= apply (\zs' -> pure mnd (ys, zs', xs))
-  where
-    (>>=) = bind mnd
-    mnd = arrayMonad ary
+    then permute zs >>= \zs' -> pure (ys ++ Cons x Nil, zs', xs)
+    else permute (zs ++ Cons x Nil) >>= \zs' -> pure (ys, zs', xs)
 
 -- final derivation of `ipartl`
 {-@ reflect ipartl @-}
-ipartl :: forall m. Array m Elem -> Plus m -> Elem -> Index -> (Natural, Natural, Natural) -> m (Natural, Natural)
-ipartl ary pls p i (ny, nz, Z) = pure mnd (ny, nz)
-  where
-    mnd = arrayMonad ary
-ipartl ary pls p i (ny, nz, S k) =
-  read ary (i + ny + nz)
-    >>= apply
-      ( \x ->
-          if leq x p
-            then swap ary (i + ny) (i + ny + nz) >> ipartl ary pls p i (S ny, nz, k)
-            else ipartl ary pls p i (ny, S nz, k)
-      )
-  where
-    (>>=) :: forall a b. m a -> (a -> m b) -> m b
-    (>>=) = bind mnd
-    (>>) :: forall a b. m a -> m b -> m b
-    (>>) = seq mnd
-    mnd = arrayMonad ary
+ipartl :: Int -> Natural -> (Natural, Natural, Natural) -> M (Natural, Natural)
+ipartl p i (ny, nz, Z) = pure (ny, nz)
+ipartl p i (ny, nz, S k) =
+  read (i + ny + nz) >>= \x ->
+    if leq x p
+      then swap (i + ny) (i + ny + nz) >> ipartl p i (S ny, nz, k)
+      else ipartl p i (ny, S nz, k)
 
 {-
 ## Theorem. `ipartl_spec`
@@ -74,103 +53,65 @@ ipartl ary pls p i (ny, nz, S k) =
 -}
 
 {-@ reflect ipartl_spec_aux1 @-}
-ipartl_spec_aux1 :: Array m Elem -> Plus m -> Elem -> Index -> List Elem -> List Elem -> List Elem -> m (Natural, Natural)
-ipartl_spec_aux1 ary pls p i xs ys zs = writeList ary i (ys ++ zs ++ xs) >> ipartl ary pls p i (length ys, length zs, length xs)
-  where
-    (>>) = seq mnd
-    mnd = arrayMonad ary
+ipartl_spec_aux1 :: Int -> Natural -> List Int -> List Int -> List Int -> M (Natural, Natural)
+ipartl_spec_aux1 p i xs ys zs = writeList i (ys ++ zs ++ xs) >> ipartl p i (length ys, length zs, length xs)
 
 {-@ reflect ipartl_spec_aux2 @-}
-ipartl_spec_aux2 :: Array m Elem -> Plus m -> Elem -> Index -> List Elem -> List Elem -> List Elem -> m (Natural, Natural)
-ipartl_spec_aux2 ary pls p i xs ys zs = partl' ary pls p (ys, zs, xs) >>= writeListToLength2 ary i
-  where
-    (>>=) = bind mnd
-    mnd = arrayMonad ary
+ipartl_spec_aux2 :: Int -> Natural -> List Int -> List Int -> List Int -> M (Natural, Natural)
+ipartl_spec_aux2 p i xs ys zs = partl' p (ys, zs, xs) >>= writeListToLength2 i
 
 -- [ref] display 10
 {-@
 ipartl_spec ::
-  forall m.
-  Equality (m (Natural, Natural)) =>
-  Monad m ->
-  ary:Array m Elem ->
-  pls:Plus m ->
-  p:Elem ->
-  i:Index ->
-  xs:List Elem ->
-  ys:List Elem ->
-  zs:List Elem ->
-  RefinesPlus m (Natural, Natural) {pls}
-    {ipartl_spec_aux1 ary pls p i xs ys zs}
-    {ipartl_spec_aux2 ary pls p i xs ys zs}
+  Equality (M (Natural, Natural)) =>
+  p:Int ->
+  i:Natural ->
+  xs:List Int ->
+  ys:List Int ->
+  zs:List Int ->
+  RefinesPlus (Natural, Natural)
+    {ipartl_spec_aux1 p i xs ys zs}
+    {ipartl_spec_aux2 p i xs ys zs}
 @-}
-ipartl_spec :: forall m. Equality (m (Natural, Natural)) => Monad m -> Array m Elem -> Plus m -> Elem -> Index -> List Elem -> List Elem -> List Elem -> EqualityProp (m (Natural, Natural))
-ipartl_spec mnd ary pls p i xs ys zs =
+ipartl_spec :: Equality (M (Natural, Natural)) => Int -> Natural -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec p i xs ys zs =
   [eqpropchain|
-      (writeList ary i (ys ++ zs ++ xs) >> ipartl ary pls p i (length ys, length zs, length xs))
-        <+> (partl' ary pls p (ys, zs, xs) >>= writeListToLength2 ary i)
+      (writeList i (ys ++ zs ++ xs) >> ipartl p i (length ys, length zs, length xs))
+        <+> (partl' p (ys, zs, xs) >>= writeListToLength2 i)
     %==
-      partl' ary pls p (ys, zs, xs) >>= writeListToLength2 ary i
+      partl' p (ys, zs, xs) >>= writeListToLength2 i
         %by undefined 
   |]
-  where
-    (>>=) :: forall a b. m a -> (a -> m b) -> m b
-    (>>=) = bind mnd
-    (>>) :: forall a b. m a -> m b -> m b
-    (>>) = seq mnd
-    (<+>) :: forall a. m a -> m a -> m a
-    (<+>) = plus pls
-    mnd = arrayMonad ary
 
 {-@ reflect ipartl_spec_lemma_aux1 @-}
-ipartl_spec_lemma_aux1 :: Array m Elem -> Plus m -> Index -> Elem -> List Elem -> m ()
-ipartl_spec_lemma_aux1 ary pls i x zs =
-  writeList ary i (zs ++ Cons x Nil) >> swap ary i (i + length zs)
-  where
-    (>>) = seq mnd
-    mnd = arrayMonad ary
+ipartl_spec_lemma_aux1 :: Natural -> Int -> List Int -> M ()
+ipartl_spec_lemma_aux1 i x zs =
+  writeList i (zs ++ Cons x Nil) >> swap i (i + length zs)
 
 {-@ reflect ipartl_spec_lemma_aux2 @-}
-ipartl_spec_lemma_aux2 :: Array m Elem -> Plus m -> Index -> Elem -> List Elem -> m ()
-ipartl_spec_lemma_aux2 ary pls i x zs =
-  permute pls zs >>= apply (\zs' -> writeList ary i (Cons x Nil ++ zs'))
-  where
-    (>>=) = bind mnd
-    mnd = arrayMonad ary
+ipartl_spec_lemma_aux2 :: Natural -> Int -> List Int -> M ()
+ipartl_spec_lemma_aux2 i x zs =
+  permute zs >>= \zs' -> writeList i (Cons x Nil ++ zs')
 
 -- [ref] display 11
 -- TODO: do they give a proof of this somewhere?
 {-@
 ipartl_spec_lemma ::
-  forall m.
-  Equality (m ()) =>
-  Monad m ->
-  ary:Array m Elem ->
-  pls:Plus m ->
-  i:Index ->
-  x:Elem ->
-  zs:List Elem ->
-  RefinesPlus m () {pls}
-    {ipartl_spec_lemma_aux1 ary pls i x zs}
-    {ipartl_spec_lemma_aux2 ary pls i x zs}
+  Equality (M Unit) =>
+  i:Natural ->
+  x:Int ->
+  zs:List Int ->
+  RefinesPlus Unit {ipartl_spec_lemma_aux1 i x zs} {ipartl_spec_lemma_aux2 i x zs}
 @-}
-ipartl_spec_lemma :: forall m. Equality (m ()) => Monad m -> Array m Elem -> Plus m -> Index -> Elem -> List Elem -> EqualityProp (m ())
-ipartl_spec_lemma _ ary pls i x zs =
+ipartl_spec_lemma :: Equality (M ()) => Natural -> Int -> List Int -> EqualityProp (M ())
+ipartl_spec_lemma i x zs =
   [eqpropchain|
-      (writeList ary i (zs ++ Cons x Nil) >> swap ary i (i + length zs))
-        <+> (permute pls zs >>= apply (\zs' -> writeList ary i (Cons x Nil ++ zs')))
+      (writeList i (zs ++ Cons x Nil) >> swap i (i + length zs))
+        <+> (permute zs >>= \zs' -> writeList i (Cons x Nil ++ zs'))
     %==
-      permute pls zs >>= apply (\zs' -> writeList ary i (Cons x Nil ++ zs'))
+      permute zs >>= \zs' -> writeList i (Cons x Nil ++ zs')
         %by undefined -- TODO 
   |]
-  where
-    (>>=) :: forall a b. m a -> (a -> m b) -> m b
-    (>>=) = bind mnd
-    (>>) :: forall a b. m a -> m b -> m b
-    (>>) = seq mnd
-    (<+>) :: forall a. m a -> m a -> m a
-    (<+>) = plus pls
-    mnd = arrayMonad ary
 
 {-
 ## Functions. `iqsort` and relatives
@@ -181,25 +122,11 @@ ipartl_spec_lemma _ ary pls i x zs =
 -- TODO: need to prove termination?
 {-@ lazy iqsort @-}
 {-@ reflect iqsort @-}
-iqsort :: forall m. Array m Elem -> Plus m -> Index -> Natural -> m ()
-iqsort ary pls i Z = pure mnd ()
-  where
-    mnd = arrayMonad ary
-iqsort ary pls i (S n) =
-  read ary i
-    >>= apply
-      ( \p ->
-          ipartl ary pls p (S i) (Z, Z, n)
-            >>= apply
-              ( \(ny, nz) ->
-                  swap ary i (i + ny)
-                    >> iqsort ary pls i ny
-                    >> iqsort ary pls (S (i + ny)) nz
-              )
-      )
-  where
-    (>>=) :: forall a b. m a -> (a -> m b) -> m b
-    (>>=) = bind mnd
-    (>>) :: forall a b. m a -> m b -> m b
-    (>>) = seq mnd
-    mnd = arrayMonad ary
+iqsort :: Natural -> Natural -> M ()
+iqsort i Z = pure ()
+iqsort i (S n) =
+  read i >>= \p ->
+    ipartl p (S i) (Z, Z, n) >>= \(ny, nz) ->
+      swap i (i + ny)
+        >> iqsort i ny
+        >> iqsort (S (i + ny)) nz
