@@ -80,7 +80,7 @@ ipartl_spec p i xs ys zs =
         <+> (partl' p (ys, zs, xs) >>= writeListToLength2 i)
     %==
       partl' p (ys, zs, xs) >>= writeListToLength2 i
-        %by undefined 
+        %by undefined -- TODO
   |]
 
 {-@ reflect ipartl_spec_lemma_aux1 @-}
@@ -94,14 +94,16 @@ ipartl_spec_lemma_aux2 i x zs =
   permute zs >>= \zs' -> writeList i (Cons x Nil ++ zs')
 
 -- [ref] display 11
--- TODO: do they give a proof of this somewhere?
+-- TODO: do they give a proof of this somewhere? try
 {-@
 ipartl_spec_lemma ::
   Equality (M Unit) =>
   i:Natural ->
   x:Int ->
   zs:List Int ->
-  RefinesPlus Unit {ipartl_spec_lemma_aux1 i x zs} {ipartl_spec_lemma_aux2 i x zs}
+  RefinesPlus (Unit)
+    {ipartl_spec_lemma_aux1 i x zs}
+    {ipartl_spec_lemma_aux2 i x zs}
 @-}
 ipartl_spec_lemma :: Equality (M ()) => Natural -> Int -> List Int -> EqualityProp (M ())
 ipartl_spec_lemma i x zs =
@@ -130,3 +132,63 @@ iqsort i (S n) =
       swap i (i + ny)
         >> iqsort i ny
         >> iqsort (S (i + ny)) nz
+
+{-@
+permute_kleisli_permute_lemma ::
+  Equality (M (List Int)) =>
+  xs:List Int ->
+  EqualProp (M (List Int)) {bind (permute xs) permute} {permute xs}
+@-}
+permute_kleisli_permute_lemma :: Equality (M (List Int)) => List Int -> EqualityProp (M (List Int))
+permute_kleisli_permute_lemma Nil =
+  [eqpropchain|
+      bind (permute Nil) permute
+    %==
+      bind (pure Nil) permute
+        %by %rewrite permute Nil 
+                 %to pure Nil 
+        %by %reflexivity
+    %==
+      permute Nil
+        %by bind_identity_left_outfix Nil permute 
+  |]
+permute_kleisli_permute_lemma (Cons x xs) =
+  [eqpropchain|
+      bind (permute (Cons x xs)) permute 
+    %==
+      bind
+        (split xs >>= \(ys, zs) -> liftM2 (\ys' zs' -> ys' ++ Cons x Nil ++ zs') (permute ys) (permute zs))
+        permute 
+        %by %rewrite permute (Cons x xs)
+                 %to split xs >>= \(ys, zs) -> liftM2 (\ys' zs' -> ys' ++ Cons x Nil ++ zs') (permute ys) (permute zs)
+        %by undefined
+        %-- TODO: why not? by def of permute
+    %==
+      bind
+        (split xs >>= \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs'))
+        permute 
+          %by undefined
+          %{-
+          -- TODO: doesn't work, even when by undefined
+          ```
+          %by %rewrite \(ys, zs) -> liftM2 (\ys' zs' -> ys' ++ Cons x Nil ++ zs') (permute ys) (permute zs)
+                   %to \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs')
+          %by %extend (ys, zs)
+          %by undefined
+          ```
+          -- TODO: very strange error:
+            ...
+            The sort GHC.Types.Int is not numeric
+              because
+            Cannot unify int with GHC.Types.Int in expression: lq_anf$##7205759403794112138##d5x0K lam_arg##2
+            ...
+          -}%
+    %==
+      bind
+        (split xs >>= \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs'))
+        permute 
+    %==
+      permute (Cons x xs)
+        %by undefined
+        %-- TODO: not sure how to progress
+  |]

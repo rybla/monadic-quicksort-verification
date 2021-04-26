@@ -57,18 +57,18 @@ data M :: * -> * where
 
 {-@ reflect pure @-}
 pure :: a -> M a
-pure = Pure
+pure a = Pure a
 
 {-@ reflect bind @-}
 bind :: M a -> (a -> M b) -> M b
-bind = Bind
+bind m k = Bind m k
 
 {-@ infixl 1 >>= @-}
 infixl 1 >>=
 
 {-@ reflect >>= @-}
 (>>=) :: M a -> (a -> M b) -> M b
-(>>=) = Bind
+m >>= k = Bind m k
 
 -- monad functions
 
@@ -94,6 +94,13 @@ infixr 1 >=>
 (>=>) :: (a -> M b) -> (b -> M c) -> (a -> M c)
 (>=>) = kleisli
 
+{-@
+kleisli_unfold :: k1:(a -> M b) -> k2:(b -> M c) -> x:a ->
+  EqualProp (M c) {kleisli k1 k2 x} {k1 x >>= k2}
+@-}
+kleisli_unfold :: (a -> M b) -> (b -> M c) -> a -> EqualityProp (M c)
+kleisli_unfold k1 k2 x = trivialProp
+
 {-@ reflect join @-}
 join :: M (M a) -> M a
 join mm = mm >>= identity
@@ -118,6 +125,19 @@ bind_identity_left :: x:a -> k:(a -> M b) -> EqualProp (M b) {pure x >>= k} {k x
 @-}
 bind_identity_left :: a -> (a -> M b) -> EqualityProp (M b)
 bind_identity_left _ _ = trivialProp
+
+{-- TODO
+I hate that I seem to have to do this, because apparently I need to use the
+outfixed  notation sometimes due to parsing bugs. And because of a parsing bug
+I can't prove or make use of an extensional equality between `bind` and `(>>=)`.
+But I'm hoping that I don't need to have toooo many `_outfix` proxy lemmas.
+-}
+{-@
+assume
+bind_identity_left_outfix :: x:a -> k:(a -> M b) -> EqualProp (M b) {bind (pure x) k} {k x}
+@-}
+bind_identity_left_outfix :: a -> (a -> M b) -> EqualityProp (M b)
+bind_identity_left_outfix _ _ = trivialProp
 
 {-@
 assume
@@ -170,6 +190,24 @@ seq_associativity ma mb mc =
       ma >> (mb >>= constant mc)
     %==
       ma >> mb >> mc 
+  |]
+
+{-@
+seq_identity_left :: Equality (M b) =>
+  x:a -> m:M b ->
+  EqualProp (M b) {pure x >> m} {m}
+@-}
+seq_identity_left :: Equality (M b) => a -> M b -> EqualityProp (M b)
+seq_identity_left x m =
+  [eqpropchain|
+      pure x >> m
+    %== 
+      pure x >>= \_ -> m
+    %==
+      (\_ -> m) x
+        %by bind_identity_left x (\_ -> m)
+    %== 
+      m
   |]
 
 -- TODO: other monad lemmas

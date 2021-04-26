@@ -20,76 +20,69 @@ import Sort.List
 import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (*), (+), (++), (>>), (>>=))
 
 {-@
-permute_kleisli_permute_lemma ::
-  Equality (M (List Int)) =>
-  xs:List Int ->
-  EqualProp (M (List Int))
-    {bind (permute xs) permute}
-    {permute xs}
-@-}
-permute_kleisli_permute_lemma :: Equality (M (List Int)) => List Int -> EqualityProp (M (List Int))
-permute_kleisli_permute_lemma Nil =
-  -- TODO: solver fail
-  [eqpropchain|
-      %-- permute Nil >>= permute
-      permute Nil >>= permute
-    %==
-      permute Nil
-        %by undefined
-        %-- TODO: bind_identity_left Nil permute 
-  |]
-permute_kleisli_permute_lemma (Cons x xs) = undefined
-
-{-- TODO: solver fail
-[eqpropchain|
-    permute (Cons x xs)
-      >>= permute
-  %==
-    split xs
-      >>= apply (\(ys, zs) -> liftM2 (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs')) (permute ys) (permute zs))
-        >>= permute
-  %==
-    split xs
-      >>= apply (\(ys, zs) -> permute ys >>= apply (\ys' -> permute zs >>= apply (\zs' -> pure (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs') ys' zs'))))
-        >>= permute
-      %by %rewrite apply (\(ys, zs) -> liftM2 (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs')) (permute ys) (permute zs))
-               %to apply (\(ys, zs) -> permute ys >>= apply (\ys' -> permute zs >>= apply (\zs' -> pure (apply (\ys' zs' -> ys' ++ Cons x Nil ++ zs') ys' zs'))))
-      %-- %by %extend (ys, zs) -- TODO: why does this break it? even with `%by undefined` after
-      %by undefined
-  %==
-    permute (Cons x xs)
-      %by undefined
-|]
--}
-
-{-@
 permute_kleisli_permute ::
   (Equality (List Int -> M (List Int)), Equality (M (List Int))) =>
-  EqualProp (List Int -> M (List Int))
-    {kleisli permute permute}
-    {permute}
+  xs:List Int ->
+  EqualProp (M (List Int))
+    {kleisli permute permute xs}
+    {permute xs}
 @-}
-permute_kleisli_permute :: (Equality (List Int -> M (List Int)), Equality (M (List Int))) => EqualityProp (List Int -> M (List Int))
-permute_kleisli_permute = undefined
+permute_kleisli_permute :: (Equality (List Int -> M (List Int)), Equality (M (List Int))) => List Int -> EqualityProp (M (List Int))
+permute_kleisli_permute Nil =
+  [eqpropchain|
+      kleisli permute permute Nil
+    %==
+      permute Nil >>= permute
+    %==
+      pure Nil >>= permute
+        %by %rewrite permute Nil %to pure Nil
+        %by undefined
+        %-- TODO: why not by reflexivity?
+    %==
+      permute Nil
+        %by bind_identity_left Nil permute
+  |]
+permute_kleisli_permute (Cons x xs) =
+  [eqpropchain|
+      kleisli permute permute (Cons x xs)
+    %==
+      permute (Cons x xs) >>= permute
+    %==
+      (split xs >>= permute_aux1 x) >>= permute
+        %by %rewrite permute (Cons x xs)
+                 %to split xs >>= permute_aux1 x
+        %by undefined
+        %-- TODO: why not by def of permute?
+    %==
+      split xs >>= (permute_aux1 x >=> permute)
+        %by bind_associativity (split xs) (permute_aux1 x) permute
+    %==
+      split xs >>= ((\(ys, zs) -> liftM2 (permute_aux2 x) (permute ys) (permute zs)) >=> permute)
+        %by undefined
+        %{-
+        -- TODO: this error again: "The sort GHC.Types.Int is not numeric"
+        %by %rewrite permute_aux1 x
+                 %to \(ys, zs) -> liftM2 (permute_aux2 x) (permute ys) (permute zs)
+        %by %extend (ys, zs)
+        %by %reflexivity
+        -}%
+    %==
+      split xs >>= ((\(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (permute_aux2 x ys' zs')) >=> permute)
+        %by undefined
+        %{-
+        -- TODO: not sure why; parsing error suggesting BlockArguments 
+        %rewrite liftM2 (permute_aux2 x) (permute ys) (permute zs)
+             %to \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (permute_aux2 x ys' zs')
+        %by %extend (ys, zs)
+        %reflexivity
+        -}%
+        %-- TODO: not sure how to progress
+    %==
+      permute (Cons x xs)
+        %by undefined
+  |]
 
-{-- TODO: solver fail
-[eqpropchain|
-    permute >=> permute
-  %==
-    apply (\xs -> permute xs >>= permute)
-  %==
-    apply (\xs -> permute xs)
-      %-- TODO: why not?
-      %-- %by %extend xs
-      %-- permute_kleisli_permute_lemma xs
-      %by undefined
-  %==
-    permute
-      %by %extend xs
-      %by undefined
-|]
--}
-
+{-
 {-@
 permute_kleisli_slowsort ::
   Equality (M (List Int)) =>
@@ -101,18 +94,20 @@ permute_kleisli_slowsort ::
 permute_kleisli_slowsort :: Equality (M (List Int)) => List Int -> EqualityProp (M (List Int))
 permute_kleisli_slowsort xs =
   [eqpropchain|
-      (permute >=> slowsort) xs 
+      (permute >=> slowsort) xs
     %==
       (permute >=> (permute >=> guardBy sorted)) xs
     %==
       slowsort xs
         %by undefined
   |]
+-}
 
 {-
 ## Theorem. `iqsort_spec`
 -}
 
+{-
 {-@ reflect iqsort_spec_aux1 @-}
 iqsort_spec_aux1 :: Natural -> List Int -> M ()
 iqsort_spec_aux1 i xs = writeList i xs >> iqsort i (length xs)
@@ -128,7 +123,9 @@ iqsort_spec ::
   Equality (M Unit) =>
   i:Natural ->
   xs:List Int ->
-  RefinesPlus Unit {iqsort_spec_aux1 i xs} {iqsort_spec_aux2 i xs}
+  RefinesPlus (Unit)
+    {iqsort_spec_aux1 i xs}
+    {iqsort_spec_aux2 i xs}
 @-}
 iqsort_spec :: Equality (M ()) => Natural -> List Int -> EqualityProp (M ())
 iqsort_spec i Nil = undefined
@@ -157,3 +154,4 @@ iqsort_spec i (Cons p xs) =
       slowsort (Cons p xs) >>= writeList i
         %by undefined
   |]
+-}
