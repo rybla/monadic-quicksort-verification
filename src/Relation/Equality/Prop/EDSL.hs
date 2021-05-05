@@ -293,8 +293,6 @@ rewrite xQ yQ exyQ eQ = do
       extractGuardExp :: (Guard, Exp) -> Q (Guard, Exp)
       extractGuardExp (grd, e) = (,) <$> extractGuard grd <*> extract e
   --
-  f = \hole -> (... hole ...)
-
   f <- [|$(lamE [varP holeName] (extract e))|]
   [|(((substitutability (apply f) $xQ $yQ $exyQ) ? apply f $xQ) ? apply f $yQ)|]
 
