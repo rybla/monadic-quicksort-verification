@@ -90,7 +90,7 @@ instance Lift Chain where
       reifyExpln :: Exp -> Exp -> ChainExpln -> Q Exp
       reifyExpln ti tj = \case
         ChainExpln_Trivial ->
-          [|trivialProp|]
+          [|(reflexivity ti)|]
         ChainExpln_Proof eij ->
           [|eij|]
         ChainExpln_Reflexivity ->
@@ -293,6 +293,8 @@ rewrite xQ yQ exyQ eQ = do
       extractGuardExp :: (Guard, Exp) -> Q (Guard, Exp)
       extractGuardExp (grd, e) = (,) <$> extractGuard grd <*> extract e
   --
+  f = \hole -> (... hole ...)
+
   f <- [|$(lamE [varP holeName] (extract e))|]
   [|(((substitutability (apply f) $xQ $yQ $exyQ) ? apply f $xQ) ? apply f $yQ)|]
 
