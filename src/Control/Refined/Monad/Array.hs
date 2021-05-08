@@ -18,12 +18,14 @@ import Relation.Equality.Prop.Reasoning
 import Prelude hiding (Monad, length, pure, read, readList, seq, (>>), (>>=))
 
 {-
-# Array Monad
--}
 
-{-
-## Data
--}
+-- | 
+-- = Array Monad
+--
+
+-- |
+-- == Data
+--
 
 type Index = Natural
 
@@ -104,9 +106,9 @@ data Array m a = Array
       EqualityProp (m Unit)
   }
 
-{-
-## Utilities
--}
+-- |
+-- == Utilities
+--
 
 {-@ reflect readList @-}
 readList :: Array m a -> Index -> Natural -> m (List a)
@@ -162,9 +164,9 @@ swap ary i j = read ary i >>= \x -> read ary j >>= \y -> write ary i y >> write 
     (>>) = seq mnd
     mnd = arrayMonad ary
 
-{-
-# Lemmas
--}
+-- |
+-- == Lemmas
+--
 
 -- [ref] display 9
 -- ? this proof takes 11m to check...
@@ -286,3 +288,5 @@ writeList_append ary i (Cons x xs) ys =
     (>>) = seq mnd
     (>>=) = bind mnd
     mnd = arrayMonad ary
+
+-}

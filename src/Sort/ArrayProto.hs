@@ -8,9 +8,12 @@ import Data.Refined.List
 import Data.Refined.Natural
 import Data.Refined.Tuple
 import Data.Refined.Unit
+import Data.Text (Text, unpack)
 import Function
 import Language.Haskell.Liquid.Equational
+import Language.Haskell.TH.Ppr (pprint)
 import Language.Haskell.TH.Syntax
+import NeatInterpolation (text)
 import Placeholder.M
 import Relation.Equality.Prop
 import Relation.Equality.Prop.EDSL
@@ -19,139 +22,89 @@ import Sort.Array
 import Sort.List
 import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (*), (+), (++), (>>), (>>=))
 
-{-@
-permute_kleisli_permute ::
-  (Equality (List Int -> M (List Int)), Equality (M (List Int))) =>
-  xs:List Int ->
-  EqualProp (M (List Int))
-    {kleisli permute permute xs}
-    {permute xs}
-@-}
-permute_kleisli_permute :: (Equality (List Int -> M (List Int)), Equality (M (List Int))) => List Int -> EqualityProp (M (List Int))
-permute_kleisli_permute Nil =
-  [eqpropchain|
-      kleisli permute permute Nil
-    %==
-      permute Nil >>= permute
-    %==
-      pure Nil >>= permute
-        %by %rewrite permute Nil %to pure Nil
-        %by undefined
-        %-- TODO: why not by reflexivity?
-    %==
-      permute Nil
-        %by bind_identity_left Nil permute
-  |]
-permute_kleisli_permute (Cons x xs) =
-  [eqpropchain|
-      kleisli permute permute (Cons x xs)
-    %==
-      permute (Cons x xs) >>= permute
-    %==
-      (split xs >>= permute_aux1 x) >>= permute
-        %by %rewrite permute (Cons x xs)
-                 %to split xs >>= permute_aux1 x
-        %by undefined
-        %-- TODO: why not by def of permute?
-    %==
-      split xs >>= (permute_aux1 x >=> permute)
-        %by bind_associativity (split xs) (permute_aux1 x) permute
-    %==
-      split xs >>= ((\(ys, zs) -> liftM2 (permute_aux2 x) (permute ys) (permute zs)) >=> permute)
-        %by undefined
-        %{-
-        -- TODO: this error again: "The sort GHC.Types.Int is not numeric"
-        %by %rewrite permute_aux1 x
-                 %to \(ys, zs) -> liftM2 (permute_aux2 x) (permute ys) (permute zs)
-        %by %extend (ys, zs)
-        %by %reflexivity
-        -}%
-    %==
-      split xs >>= ((\(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (permute_aux2 x ys' zs')) >=> permute)
-        %by undefined
-        %{-
-        -- TODO: not sure why; parsing error suggesting BlockArguments 
-        %rewrite liftM2 (permute_aux2 x) (permute ys) (permute zs)
-             %to \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (permute_aux2 x ys' zs')
-        %by %extend (ys, zs)
-        %reflexivity
-        -}%
-        %-- TODO: not sure how to progress
-    %==
-      permute (Cons x xs)
-        %by undefined
-  |]
-
-{-
-{-@
-permute_kleisli_slowsort ::
-  Equality (M (List Int)) =>
-  xs:List Int ->
-  EqualProp (M (List Int))
-    {kleisli permute (slowsort) xs}
-    {slowsort xs}
-@-}
-permute_kleisli_slowsort :: Equality (M (List Int)) => List Int -> EqualityProp (M (List Int))
-permute_kleisli_slowsort xs =
-  [eqpropchain|
-      (permute >=> slowsort) xs
-    %==
-      (permute >=> (permute >=> guardBy sorted)) xs
-    %==
-      slowsort xs
-        %by undefined
-  |]
--}
-
-{-
-## Theorem. `iqsort_spec`
--}
-
-{-
-{-@ reflect iqsort_spec_aux1 @-}
-iqsort_spec_aux1 :: Natural -> List Int -> M ()
-iqsort_spec_aux1 i xs = writeList i xs >> iqsort i (length xs)
-
-{-@ reflect iqsort_spec_aux2 @-}
-iqsort_spec_aux2 :: Natural -> List Int -> M ()
-iqsort_spec_aux2 i xs = slowsort xs >>= writeList i
-
--- main theorem
--- [ref] display 12
+-- [ref 12]
 {-@
 iqsort_spec ::
-  Equality (M Unit) =>
+  (Equality (M Unit), Equality (M (List Int))) =>
   i:Natural ->
   xs:List Int ->
   RefinesPlus (Unit)
     {iqsort_spec_aux1 i xs}
     {iqsort_spec_aux2 i xs}
 @-}
-iqsort_spec :: Equality (M ()) => Natural -> List Int -> EqualityProp (M ())
+iqsort_spec :: (Equality (M ()), Equality (M (List Int))) => Natural -> List Int -> EqualityProp (M ())
 iqsort_spec i Nil = undefined
-iqsort_spec i (Cons p xs) =
+{- -- * correct
   [eqpropchain|
-      (writeList i (Cons p xs) >> iqsort i (length (Cons p xs)))
-        <+> (slowsort (Cons p xs) >>= writeList i)
-
+      iqsort_spec_aux1 i Nil <+> iqsort_spec_aux2 i Nil
     %==
-
-      partl' p (Nil, Nil, (Cons p xs))
-        >>= apply
-          ( \(ys, zs) ->
-              permute ys
-                >>= apply
-                  ( \ys' ->
-                      writeList i (ys' ++ Cons p Nil ++ zs)
-                        >> iqsort i (length ys)
-                        >> iqsort (S (i + length ys)) (length zs)
-                  )
-          )
-        %by undefined -- TODO: prove
-
+      pure it <+> iqsort_spec_aux2 i Nil
+        %by %rewrite iqsort_spec_aux1 i Nil %to pure it
+        %by iqsort_spec_aux1_Nil i
     %==
-
-      slowsort (Cons p xs) >>= writeList i
-        %by undefined
+      pure it <+> pure it
+        %by %rewrite iqsort_spec_aux2 i Nil %to pure it
+        %by iqsort_spec_aux2_Nil i
+    %==
+      pure it
+        %by refinesplus_reflexivity (pure it)
+    %==
+      iqsort_spec_aux2 i Nil
+        %by %symmetry
+        %by iqsort_spec_aux2_Nil i
   |]
+-}
+-- outline:
+--   iqsort_spec_aux1 i (Cons p xs) refines
+--   iqsort_spec_lemma3_aux1 i p xs refines
+--   iqsort_spec_lemma1_aux1 i p xs refines
+--   iqsort_spec_aux2 i (Cons p xs).
+iqsort_spec i (Cons p xs) = undefined
+
+{- --* correct
+  refinesplus_transitivity
+    (iqsort_spec_aux1 i (Cons p xs)) -- (1)
+    (iqsort_spec_lemma3_aux1 i p xs) -- (2)
+    (iqsort_spec_aux2 i (Cons p xs)) -- (4)
+    (iqsort_spec_lemma4 i p xs) -- (1) refines (2)
+    ( refinesplus_transitivity -- (2) refines (4)
+        (iqsort_spec_lemma3_aux1 i p xs) -- (2)
+        (iqsort_spec_lemma1_aux1 i p xs) -- (3)
+        (iqsort_spec_aux2 i (Cons p xs)) -- (4)
+        (iqsort_spec_lemma3 i p xs) -- (2) refines (3)
+        ( refinesplus_equalprop -- (3) refines (4)
+            (iqsort_spec_lemma1_aux1 i p xs)
+            (iqsort_spec_aux2 i (Cons p xs))
+            ( symmetry -- (3) eqprop (4)
+                (iqsort_spec_aux2 i (Cons p xs))
+                (iqsort_spec_lemma1_aux1 i p xs)
+                (iqsort_spec_lemma1 i p xs)
+            )
+        )
+    )
+-}
+
+{- -- * definitions
+iqsort_spec_aux1 i xs = writeList i xs >> iqsort i (length xs)
+iqsort_spec_aux1_Cons_aux i p xs =
+  (write i p >> writeList (S i) xs)
+    >> (read i >>= iqsort_aux1 i n)
+  where
+    n = length xs
+
+iqsort_spec_aux2 i xs = slowsort xs >>= writeList i
+iqsort_spec_aux2_Cons_aux i p xs =
+  split xs
+    >>= permute_aux1 p
+    >>= guardBy sorted
+    >>= writeList i
+
+iqsort_spec_lemma1_aux1 i p xs =
+  partl' p (Nil, Nil, xs) >>= iqsort_spec_lemma1_aux2 i p
+iqsort_spec_lemma1_aux2 i p (ys, zs) =
+  permute ys >>= iqsort_spec_lemma1_aux3 i p ys zs
+iqsort_spec_lemma1_aux3 i p ys zs ys' =
+  writeList i (ys' ++ Cons p Nil ++ zs)
+    >> iqsort i (length ys)
+    >> iqsort (S (i + length ys)) (length zs)
 -}

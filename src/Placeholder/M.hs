@@ -46,7 +46,7 @@ data M :: * -> * where
   Write :: Natural -> Int -> M ()
 
 -- TODO
--- interpretM :: Monad m -> Plus m -> Array m a -> m a -> m a
+-- interpretM :: Monad m -> Plus m -> Array m a -> M a -> m a
 -- interpretM _ pls ary _m = undefined
 
 {-
@@ -99,7 +99,7 @@ kleisli_unfold :: k1:(a -> M b) -> k2:(b -> M c) -> x:a ->
   EqualProp (M c) {kleisli k1 k2 x} {k1 x >>= k2}
 @-}
 kleisli_unfold :: (a -> M b) -> (b -> M c) -> a -> EqualityProp (M c)
-kleisli_unfold k1 k2 x = trivialProp
+kleisli_unfold k1 k2 x = reflexivity (kleisli k1 k2 x)
 
 {-@ reflect join @-}
 join :: M (M a) -> M a
@@ -124,7 +124,7 @@ assume
 bind_identity_left :: x:a -> k:(a -> M b) -> EqualProp (M b) {pure x >>= k} {k x}
 @-}
 bind_identity_left :: a -> (a -> M b) -> EqualityProp (M b)
-bind_identity_left _ _ = trivialProp
+bind_identity_left _ _ = assumedProp
 
 {-- TODO
 I hate that I seem to have to do this, because apparently I need to use the
@@ -137,21 +137,21 @@ assume
 bind_identity_left_outfix :: x:a -> k:(a -> M b) -> EqualProp (M b) {bind (pure x) k} {k x}
 @-}
 bind_identity_left_outfix :: a -> (a -> M b) -> EqualityProp (M b)
-bind_identity_left_outfix _ _ = trivialProp
+bind_identity_left_outfix _ _ = assumedProp
 
 {-@
 assume
 bind_identity_right :: m:M a -> EqualProp (M a) {m >>= pure} {m}
 @-}
 bind_identity_right :: M a -> EqualityProp (M a)
-bind_identity_right _ = trivialProp
+bind_identity_right _ = assumedProp
 
 {-@
 assume
 bind_associativity :: m:M a -> k1:(a -> M b) -> k2:(b -> M c) -> EqualProp (M c) {(m >>= k1) >>= k2} {m >>= (k1 >=> k2)}
 @-}
 bind_associativity :: M a -> (a -> M b) -> (b -> M c) -> EqualityProp (M c)
-bind_associativity _ _ _ = trivialProp
+bind_associativity _ _ _ = assumedProp
 
 -- monad lemmas
 
@@ -254,14 +254,14 @@ assume
 plus_identity_left :: m:M a -> EqualProp (M a) {epsilon <+> m} {m}
 @-}
 plus_identity_left :: M a -> EqualityProp (M a)
-plus_identity_left _ = trivialProp
+plus_identity_left _ = assumedProp
 
 {-@
 assume
 plus_distributivity_left :: m1:M a -> m2:M a -> k:(a -> M b) -> EqualProp (M b) {(m1 <+> m2) >>= k} {(m1 >>= k) <+> (m2 >>= k)}
 @-}
 plus_distributivity_left :: M a -> M a -> (a -> M b) -> EqualityProp (M b)
-plus_distributivity_left _ _ _ = trivialProp
+plus_distributivity_left _ _ _ = assumedProp
 
 {-@ reflect plus_distributivity_right_aux @-}
 plus_distributivity_right_aux :: (a -> M b) -> (a -> M b) -> a -> M b
@@ -272,21 +272,21 @@ assume
 plus_distributivity_right :: m:M a -> k1:(a -> M b) -> k2:(a -> M b) -> EqualProp (M b) {m >>= plus_distributivity_right_aux k1 k2} {(m >>= k1) <+> (m >>= k2)}
 @-}
 plus_distributivity_right :: M a -> (a -> M b) -> (a -> M b) -> EqualityProp (M b)
-plus_distributivity_right _ _ _ = trivialProp
+plus_distributivity_right _ _ _ = assumedProp
 
 {-@
 assume
 bind_zero_left :: k:(a -> M b) -> EqualProp (M b) {epsilon >>= k} {epsilon}
 @-}
 bind_zero_left :: (a -> M b) -> EqualityProp (M b)
-bind_zero_left _ = trivialProp
+bind_zero_left _ = assumedProp
 
 {-@
 assume
 bind_zero_right :: m:M a -> EqualProp (M b) {m >> epsilon} {epsilon}
 @-}
 bind_zero_right :: M a -> EqualityProp (M b)
-bind_zero_right _ = trivialProp
+bind_zero_right _ = assumedProp
 
 -- plus lemmas
 
@@ -299,7 +299,17 @@ type RefinesPlusF a b K1 K2 = x:a -> EqualProp (M b) {plus (K1 x) (K2 x)} {K2 x}
 @-}
 
 {-@
-refinesplus_reflexivity :: Equality (M a) => m:M a -> RefinesPlus a {m} {m}
+refinesplus_equalprop :: Equality (M a) =>
+  m1:M a -> m2:M a ->
+  EqualProp (M a) {m1} {m2} ->
+  RefinesPlus a {m1} {m2}
+@-}
+refinesplus_equalprop :: Equality (M a) => M a -> M a -> EqualityProp (M a) -> EqualityProp (M a)
+refinesplus_equalprop = undefined -- TODO
+
+{-@
+refinesplus_reflexivity :: Equality (M a) =>
+  m:M a -> RefinesPlus a {m} {m}
 @-}
 refinesplus_reflexivity :: Equality (M a) => M a -> EqualityProp (M a)
 refinesplus_reflexivity m =
@@ -312,6 +322,16 @@ refinesplus_reflexivity m =
   |]
 
 -- TODO: other lemmas about RefinesPlus
+
+{-@
+refinesplus_transitivity :: Equality (M a) =>
+  m1:M a -> m2:M a -> m3:M a ->
+  RefinesPlus a {m1} {m2} ->
+  RefinesPlus a {m2} {m3} ->
+  RefinesPlus a {m1} {m3}
+@-}
+refinesplus_transitivity :: Equality (M a) => M a -> M a -> M a -> EqualityProp (M a) -> EqualityProp (M a) -> EqualityProp (M a)
+refinesplus_transitivity m1 m2 m3 h12 h23 = undefined -- TODO
 
 {-
 ## Array interface
@@ -364,42 +384,42 @@ assume
 bind_read_write :: i:Natural -> EqualProp (m ()) {read i >>= write i} {pure it}
 @-}
 bind_read_write :: Natural -> EqualityProp (m ())
-bind_read_write _ = trivialProp
+bind_read_write _ = assumedProp
 
 {-@
 assume
 seq_write_read :: i:Natural -> x:Int -> EqualProp (m Int) {write i x >> read i} {write i x >> pure x}
 @-}
 seq_write_read :: Natural -> Int -> EqualityProp (m Int)
-seq_write_read _ _ = trivialProp
+seq_write_read _ _ = assumedProp
 
 {-@
 assume
 seq_write_write :: i:Natural -> x:Int -> y:Int -> EqualProp (m Unit) {write i x >> write i y} {write i y}
 @-}
 seq_write_write :: Natural -> Int -> Int -> EqualityProp (m Unit)
-seq_write_write _ _ _ = trivialProp
+seq_write_write _ _ _ = assumedProp
 
 {-@
 assume
 liftM_read :: i:Natural -> f:(Int -> Int -> Int) -> EqualProp (M Int) {liftM2 f (read i) (read i)} {liftM (diagonalize f) (read i)}
 @-}
 liftM_read :: Natural -> (Int -> Int -> Int) -> EqualityProp (M Int)
-liftM_read _ _ = trivialProp
+liftM_read _ _ = assumedProp
 
 {-@
 assume
 seq_commutativity_write :: i:Natural -> j:{j:Natural | i /= j} -> x:Int -> y:Int -> EqualProp (M Unit) {write i x >> write j y} {write j y >> write i x}
 @-}
 seq_commutativity_write :: Natural -> Natural -> Int -> Int -> EqualityProp (M ())
-seq_commutativity_write _ _ _ _ = trivialProp
+seq_commutativity_write _ _ _ _ = assumedProp
 
 {-@
 assume
 seq_associativity_write :: i:Natural -> j:{j:Natural | i /= j} -> x:Int -> y:Int -> EqualProp (m Unit) {(read i >> pure it) >> write j x} {write j x >> (read i >> pure it)}
 @-}
 seq_associativity_write :: Natural -> Natural -> Int -> Int -> EqualityProp (m Unit)
-seq_associativity_write _ _ _ _ = trivialProp
+seq_associativity_write _ _ _ _ = assumedProp
 
 -- array lemmas
 

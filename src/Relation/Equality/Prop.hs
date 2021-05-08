@@ -28,8 +28,8 @@ type EqualProp a X Y = {w:EqualityProp a | eqprop X Y}
 type NEqualProp a X Y = EqualProp a {X} {Y} -> Void
 @-}
 
-trivialProp :: EqualityProp a
-trivialProp = EqualityProp
+assumedProp :: EqualityProp a
+assumedProp = EqualityProp
 
 {-
 ### Axioms

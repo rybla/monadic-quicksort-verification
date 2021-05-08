@@ -14,6 +14,7 @@ import qualified Prelude
 {-
 ## Data
 -}
+
 {-@
 data Natural [toInt] = Z | S Natural
 @-}

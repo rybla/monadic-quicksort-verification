@@ -25,7 +25,7 @@ import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (++
 
 {-@ reflect slowsort @-}
 slowsort :: List Int -> M (List Int)
-slowsort xs = kleisli permute (guardBy sorted) xs
+slowsort xs = permute xs >>= guardBy sorted
 
 {-@ reflect sorted @-}
 sorted :: List Int -> Bool
