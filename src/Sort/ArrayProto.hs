@@ -22,6 +22,29 @@ import Sort.Array
 import Sort.List
 import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (*), (+), (++), (>>), (>>=))
 
+-- [ref 10]
+{-@
+ipartl_spec ::
+  Equality (M (Natural, Natural)) =>
+  p:Int ->
+  i:Natural ->
+  xs:List Int ->
+  ys:List Int ->
+  zs:List Int ->
+  RefinesPlus (Natural, Natural)
+    {ipartl_spec_aux1 p i xs ys zs}
+    {ipartl_spec_aux2 p i xs ys zs}
+@-}
+ipartl_spec :: Equality (M (Natural, Natural)) => Int -> Natural -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec p i xs ys zs = undefined
+
+{- -- * definitions
+
+ipartl_spec_aux1 p i xs ys zs = writeList i (ys ++ zs ++ xs) >> ipartl p i (length ys, length zs, length xs)
+
+ipartl_spec_aux2 p i xs ys zs = partl' p (ys, zs, xs) >>= writeListToLength2 i
+-}
+
 -- [ref 12]
 {-@
 iqsort_spec ::

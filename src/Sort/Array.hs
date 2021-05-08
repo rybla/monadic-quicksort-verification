@@ -58,7 +58,122 @@ ipartl_spec_lemma_aux1 i x zs =
 {-@ reflect ipartl_spec_lemma_aux2 @-}
 ipartl_spec_lemma_aux2 :: Natural -> Int -> List Int -> M ()
 ipartl_spec_lemma_aux2 i x zs =
-  permute zs >>= \zs' -> writeList i (Cons x Nil ++ zs')
+  permute zs >>= ipartl_spec_lemma_aux2_aux i x
+
+{-@ reflect ipartl_spec_lemma_aux2_aux @-}
+ipartl_spec_lemma_aux2_aux :: Natural -> Int -> List Int -> M ()
+ipartl_spec_lemma_aux2_aux i x zs' =
+  writeList i (Cons x Nil ++ zs')
+
+{-@
+ipartl_spec_lemma_aux1_Nil ::
+  Equality (M Unit) =>
+  i:Natural -> x:Int ->
+  EqualProp (M Unit)
+    {ipartl_spec_lemma_aux1 i x Nil}
+    {seq (write i x) (pure it)}
+@-}
+ipartl_spec_lemma_aux1_Nil :: Equality (M Unit) => Natural -> Int -> EqualityProp (M Unit)
+{-
+ipartl_spec_lemma_aux1 i x Nil
+writeList i (Nil ++ Cons x Nil) >> swap i (i + length Nil)
+writeList i (Nil ++ Cons x Nil) >> swap i i
+writeList i (Cons x Nil) >> swap i i
+(write i x >> writeList (S i) Nil) >> swap i i
+(write i x >> pure it) >> swap i i
+(write i x >> pure it) >> pure it
+write i x >> (pure it >> pure it)
+write i x >> pure it
+-}
+ipartl_spec_lemma_aux1_Nil i x = undefined -- TODO
+
+{-@
+ipartl_spec_lemma_aux2_Nil ::
+  Equality (M Unit) =>
+  i:Natural -> x:Int ->
+  EqualProp (M Unit)
+    {ipartl_spec_lemma_aux2 i x Nil}
+    {seq (write i x) (pure it)}
+@-}
+ipartl_spec_lemma_aux2_Nil :: Equality (M Unit) => Natural -> Int -> EqualityProp (M Unit)
+{-
+ipartl_spec_lemma_aux2 i x Nil
+permute Nil >>= ipartl_spec_lemma_aux2_aux i x
+pure Nil >>= ipartl_spec_lemma_aux2_aux i x
+ipartl_spec_lemma_aux2_aux i x Nil
+writeList i (Cons x Nil ++ Nil)
+writeList i (Cons x Nil)
+write i x >> writeList (S i) Nil
+write i x >> pure it
+-}
+ipartl_spec_lemma_aux2_Nil i x = undefined -- TODO
+
+{-@ reflect ipartl_spec_lemma_aux1_Cons_aux @-}
+ipartl_spec_lemma_aux1_Cons_aux :: Natural -> Int -> Int -> List Int -> M ()
+ipartl_spec_lemma_aux1_Cons_aux i x z zs =
+  write i z
+    >> writeList (S i) zs
+    >> write (i + length zs) x
+    >> swap i (S (i + length zs))
+
+{-@
+ipartl_spec_lemma_aux1_Cons ::
+  Equality (M Unit) =>
+  i:Natural -> x:Int -> z:Int -> zs:List Int ->
+  EqualProp (M Unit)
+    {ipartl_spec_lemma_aux1 i x (Cons z zs)}
+    {ipartl_spec_lemma_aux1_Cons_aux i x z zs}
+@-}
+ipartl_spec_lemma_aux1_Cons :: Equality (M Unit) => Natural -> Int -> Int -> List Int -> EqualityProp (M ())
+{-
+ipartl_spec_lemma_aux1 i x (Cons z zs)
+writeList i (Cons z zs ++ Cons x Nil) >> swap i (i + length (Cons z zs))
+writeList i (Cons z zs ++ Cons x Nil) >> swap i (S (i + length zs))
+writeList i (Cons z zs ++ Cons x Nil) >> swap i (S (i + length zs))
+writeList i (Cons z (zs ++ Cons x Nil)) >> swap i (S (i + length zs))
+(write i z >> writeList (S i) (zs ++ Cons x Nil)) >> swap i (S (i + length zs))
+(write i z >> (writeList (S i) zs >> writeList (i + length zs) (Cons x Nil))) >> swap i (S (i + length zs))
+(write i z >> (writeList (S i) zs >> (write (i + length zs) x >> writeList (S (i + length zs)) Nil))) >> swap i (S (i + length zs))
+(write i z >> (writeList (S i) zs >> (write (i + length zs) x >> pure it))) >> swap i (S (i + length zs))
+((write i z >> writeList (S i) zs) >> (write (i + length zs) x >> pure it)) >> swap i (S (i + length zs))
+(((write i z >> writeList (S i) zs) >> write (i + length zs) x) >> pure it) >> swap i (S (i + length zs))
+(((write i z >> writeList (S i) zs) >> write (i + length zs) x) >> (pure it >> swap i (S (i + length zs)))
+((write i z >> writeList (S i) zs) >> write (i + length zs) x) >> swap i (S (i + length zs))
+-}
+ipartl_spec_lemma_aux1_Cons i x z zs = undefined -- TODO
+
+{-@ reflect ipartl_spec_lemma_aux2_Cons_aux @-}
+ipartl_spec_lemma_aux2_Cons_aux :: Natural -> Int -> Int -> List Int -> M Unit
+ipartl_spec_lemma_aux2_Cons_aux i x z zs =
+  split zs
+    >>= permute_aux1 z
+    >>= ipartl_spec_lemma_aux2_aux i x
+
+{-@
+ipartl_spec_lemma_aux2_Cons ::
+  Equality (M Unit) =>
+  i:Natural -> x:Int -> z:Int -> zs:List Int ->
+  EqualProp (M Unit)
+    {ipartl_spec_lemma_aux2 i x (Cons z zs)}
+    {ipartl_spec_lemma_aux2_Cons_aux i x z zs}
+@-}
+ipartl_spec_lemma_aux2_Cons :: Equality (M ()) => Natural -> Int -> Int -> List Int -> EqualityProp (M ())
+{-
+ipartl_spec_lemma_aux2 i x (Cons z zs)
+permute (Cons z zs) >>= ipartl_spec_lemma_aux2_aux i x
+split zs >>= permute_aux1 z >>= ipartl_spec_lemma_aux2_aux i x
+-}
+ipartl_spec_lemma_aux2_Cons i x z zs = undefined -- TODO
+
+{-
+permute (Cons x xs) = split xs >>= permute_aux1 x
+
+ipartl_spec_lemma_aux2 i x zs =
+  permute zs >>= ipartl_spec_lemma_aux2_aux i x
+
+ipartl_spec_lemma_aux2_aux i x zs' =
+  writeList i (Cons x Nil ++ zs')
+-}
 
 -- [ref 11]
 -- TODO: do they give a proof of this somewhere? try
@@ -73,14 +188,44 @@ ipartl_spec_lemma ::
     {ipartl_spec_lemma_aux2 i x zs}
 @-}
 ipartl_spec_lemma :: Equality (M ()) => Natural -> Int -> List Int -> EqualityProp (M ())
-ipartl_spec_lemma i x zs =
+ipartl_spec_lemma i x Nil = undefined
+{- --* correct
   [eqpropchain|
-      (writeList i (zs ++ Cons x Nil) >> swap i (i + length zs))
-        <+> (permute zs >>= \zs' -> writeList i (Cons x Nil ++ zs'))
+      ipartl_spec_lemma_aux1 i x Nil <+> ipartl_spec_lemma_aux2 i x Nil
     %==
-      permute zs >>= \zs' -> writeList i (Cons x Nil ++ zs')
-        %by undefined -- TODO 
+      ipartl_spec_lemma_aux1 i x Nil <+> (write i x >> pure it)
+        %by %rewrite ipartl_spec_lemma_aux2 i x Nil
+                 %to write i x >> pure it
+        %by ipartl_spec_lemma_aux2_Nil i x
+    %==
+      (write i x >> pure it) <+> (write i x >> pure it)
+        %by %rewrite ipartl_spec_lemma_aux1 i x Nil
+                 %to write i x >> pure it
+        %by ipartl_spec_lemma_aux1_Nil i x
+    %==
+      write i x >> pure it
+        %by refinesplus_reflexivity (write i x >> pure it)
+    %==
+      ipartl_spec_lemma_aux2 i x Nil
+        %by %symmetry
+        %by ipartl_spec_lemma_aux2_Nil i x
   |]
+-}
+ipartl_spec_lemma i x (Cons z zs) =
+  [eqpropchain|
+      ipartl_spec_lemma_aux1 i x (Cons z zs)
+    %==
+      
+      ipartl_spec_lemma_aux2 i x (Cons z zs)
+  |]
+
+{- -- * definitions
+ipartl_spec_lemma_aux1 i x zs =
+  writeList i (zs ++ Cons x Nil) >> swap i (i + length zs)
+
+ipartl_spec_lemma_aux2 i x zs =
+  permute zs >>= ipartl_spec_lemma_aux2_aux i x
+-}
 
 --
 -- ### ipartl spec
@@ -88,34 +233,15 @@ ipartl_spec_lemma i x zs =
 
 {-@ reflect ipartl_spec_aux1 @-}
 ipartl_spec_aux1 :: Int -> Natural -> List Int -> List Int -> List Int -> M (Natural, Natural)
-ipartl_spec_aux1 p i xs ys zs = writeList i (ys ++ zs ++ xs) >> ipartl p i (length ys, length zs, length xs)
+ipartl_spec_aux1 p i xs ys zs =
+  writeList i (ys ++ zs ++ xs) >> ipartl p i (length ys, length zs, length xs)
 
 {-@ reflect ipartl_spec_aux2 @-}
 ipartl_spec_aux2 :: Int -> Natural -> List Int -> List Int -> List Int -> M (Natural, Natural)
-ipartl_spec_aux2 p i xs ys zs = partl' p (ys, zs, xs) >>= writeListToLength2 i
+ipartl_spec_aux2 p i xs ys zs =
+  partl' p (ys, zs, xs) >>= writeListToLength2 i
 
--- [ref 10]
-{-@
-ipartl_spec ::
-  Equality (M (Natural, Natural)) =>
-  p:Int ->
-  i:Natural ->
-  xs:List Int ->
-  ys:List Int ->
-  zs:List Int ->
-  RefinesPlus (Natural, Natural)
-    {ipartl_spec_aux1 p i xs ys zs}
-    {ipartl_spec_aux2 p i xs ys zs}
-@-}
-ipartl_spec :: Equality (M (Natural, Natural)) => Int -> Natural -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec p i xs ys zs =
-  [eqpropchain|
-      (writeList i (ys ++ zs ++ xs) >> ipartl p i (length ys, length zs, length xs))
-        <+> (partl' p (ys, zs, xs) >>= writeListToLength2 i)
-    %==
-      partl' p (ys, zs, xs) >>= writeListToLength2 i
-        %by undefined -- TODO
-  |]
+-- !INSERT ipartl_spec
 
 --
 -- ## iqsort

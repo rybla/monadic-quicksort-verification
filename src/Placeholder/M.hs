@@ -377,6 +377,17 @@ writeListToLength3 i (xs, ys, zs) = writeList i (xs ++ ys ++ zs) >> pure (length
 swap :: Natural -> Natural -> M ()
 swap i j = read i >>= \x -> read j >>= \y -> write i y >> write j x
 
+{-@
+swap_id ::
+  Equality (M Unit) =>
+  i:Natural ->
+  EqualProp (M Unit)
+    {swap i i}
+    {pure it}
+@-}
+swap_id :: Natural -> EqualityProp (M ())
+swap_id = undefined
+
 -- array laws
 
 {-@
