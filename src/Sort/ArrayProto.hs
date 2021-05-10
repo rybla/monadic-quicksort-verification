@@ -168,30 +168,34 @@ ipartl_spec_steps ::
 @-}
 ipartl_spec_steps :: Equality (M (Natural, Natural)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec_steps p i x xs ys zs =
-  refinesplus_transitivity
-    (ipartl_spec_step1 p i x xs ys zs)
-    (ipartl_spec_step3 p i x xs ys zs)
-    (ipartl_spec_step9 p i x xs ys zs)
-    (ipartl_spec_steps_1_to_3 p i x xs ys zs) -- 1 refines 3
-    ( refinesplus_transitivity
-        (ipartl_spec_step3 p i x xs ys zs)
-        (ipartl_spec_step4 p i x xs ys zs)
-        (ipartl_spec_step9 p i x xs ys zs)
-        (ipartl_spec_steps_3_to_4 p i x xs ys zs) -- 3 refines 4
-        ( refinesplus_transitivity
-            (ipartl_spec_step4 p i x xs ys zs)
-            (ipartl_spec_step7 p i x xs ys zs)
-            (ipartl_spec_step9 p i x xs ys zs)
-            (ipartl_spec_steps_4_to_7 p i x xs ys zs) -- 4 refines 7
-            ( refinesplus_transitivity
-                (ipartl_spec_step7 p i x xs ys zs)
-                (ipartl_spec_step8 p i x xs ys zs)
-                (ipartl_spec_step9 p i x xs ys zs)
-                (ipartl_spec_steps_7_to_8 p i x xs ys zs) -- 7 refines 8
-                (ipartl_spec_steps_8_to_9 p i x xs ys zs) -- 8 refines 9
+  (refinesplus_transitivity step1 step3 step9)
+    -- 1 refines 3
+    (ipartl_spec_steps_1_to_3 p i x xs ys zs)
+    ( (refinesplus_transitivity step3 step4 step9)
+        -- 3 refines 4
+        (ipartl_spec_steps_3_to_4 p i x xs ys zs)
+        ( (refinesplus_transitivity step4 step7 step9)
+            -- 4 refines 7
+            (ipartl_spec_steps_4_to_7 p i x xs ys zs)
+            ( (refinesplus_transitivity step7 step8 step9)
+                -- 7 refines 8
+                (ipartl_spec_steps_7_to_8 p i x xs ys zs)
+                -- 8 refines 9
+                (ipartl_spec_steps_8_to_9 p i x xs ys zs)
             )
         )
     )
+  where
+    -- steps
+    step1 = ipartl_spec_step1 p i x xs ys zs
+    step2 = ipartl_spec_step2 p i x xs ys zs
+    step3 = ipartl_spec_step3 p i x xs ys zs
+    step4 = ipartl_spec_step4 p i x xs ys zs
+    step5 = ipartl_spec_step5 p i x xs ys zs
+    step6 = ipartl_spec_step6 p i x xs ys zs
+    step7 = ipartl_spec_step7 p i x xs ys zs
+    step8 = ipartl_spec_step8 p i x xs ys zs
+    step9 = ipartl_spec_step9 p i x xs ys zs
 
 -- [ref 10]
 -- I am ignoring the previous spec for ipartl given at the top of the same page
@@ -208,18 +212,22 @@ ipartl_spec ::
 ipartl_spec :: Equality (M (Natural, Natural)) => Int -> Natural -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec p i Nil ys zs = undefined
 ipartl_spec p i (Cons x xs) ys zs =
-  refinesplus_transitivity
-    (ipartl_spec_aux1 p i (Cons x xs) ys zs)
-    (ipartl_spec_step1 p i x xs ys zs)
-    (ipartl_spec_aux2 p i (Cons x xs) ys zs)
-    (undefined) -- TODO: if not just reflexivity...
-    ( refinesplus_transitivity
-        (ipartl_spec_step1 p i x xs ys zs)
-        (ipartl_spec_step9 p i x xs ys zs)
-        (ipartl_spec_aux2 p i (Cons x xs) ys zs)
-        (ipartl_spec_steps p i x xs ys zs)
-        (undefined) -- TODO: if not just reflexivity
+  (refinesplus_transitivity aux1 step1 aux2)
+    aux1_refines_step1
+    ( (refinesplus_transitivity step1 step9 aux2)
+        step1_refines_step9
+        step9_refines_aux2
     )
+  where
+    -- steps
+    aux1 = ipartl_spec_aux1 p i (Cons x xs) ys zs
+    step1 = ipartl_spec_step1 p i x xs ys zs
+    step9 = ipartl_spec_step9 p i x xs ys zs
+    aux2 = ipartl_spec_aux2 p i (Cons x xs) ys zs
+    -- proofs
+    aux1_refines_step1 = refinesplus_equalprop aux1 step1 (symmetry step1 aux1 (reflexivity step1))
+    step1_refines_step9 = ipartl_spec_steps p i x xs ys zs
+    step9_refines_aux2 = refinesplus_equalprop step9 aux2 (reflexivity step9)
 
 {-
   [eqpropchain|
