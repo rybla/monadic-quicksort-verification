@@ -45,6 +45,20 @@ data M :: * -> * where
   Read :: Natural -> M Int
   Write :: Natural -> Int -> M ()
 
+-- instance Eq a => Eq (M a) where
+--   Pure x == Pure x' = x == x'
+--   Bind ma k == Bind ma' k' = ma == ma' && k == k'
+--   Epsilon == Epsilon = True
+--   Plus ma1 ma2 == Plus ma1' ma2' = ma1 == ma1' && ma2 == ma2'
+--   Read i == Read i' = i == i'
+--   Write i x == Write i' x' = i == i' && x == x'
+
+instance EqSMT a => EqSMT (M a) where
+  eqSMT = undefined
+
+instance (Equality a, EqSMT a) => Equality (M a) where
+  __Equality = Nothing
+
 -- TODO
 -- interpretM :: Monad m -> Plus m -> Array m a -> M a -> m a
 -- interpretM _ pls ary _m = undefined
@@ -324,7 +338,8 @@ refinesplus_reflexivity m =
 -- TODO: other lemmas about RefinesPlus
 
 {-@
-refinesplus_transitivity :: Equality (M a) =>
+refinesplus_transitivity ::
+  Equality (M a) =>
   m1:M a -> m2:M a -> m3:M a ->
   RefinesPlus a {m1} {m2} ->
   RefinesPlus a {m2} {m3} ->
@@ -332,6 +347,16 @@ refinesplus_transitivity :: Equality (M a) =>
 @-}
 refinesplus_transitivity :: Equality (M a) => M a -> M a -> M a -> EqualityProp (M a) -> EqualityProp (M a) -> EqualityProp (M a)
 refinesplus_transitivity m1 m2 m3 h12 h23 = undefined -- TODO
+
+{-@
+refinesplus_substitutability ::
+  Equality (M a) =>
+  f:(M a -> M b) -> x:M a -> y:M a ->
+  RefinesPlus (a) {x} {y} ->
+  RefinesPlus (b) {f x} {f y}
+@-}
+refinesplus_substitutability :: Equality (M a) => (M a -> M b) -> M a -> M a -> EqualityProp (M a) -> EqualityProp (M b)
+refinesplus_substitutability f x y h = undefined -- TODO
 
 {-
 ## Array interface
@@ -399,21 +424,33 @@ bind_read_write _ = assumedProp
 
 {-@
 assume
-seq_write_read :: i:Natural -> x:Int -> EqualProp (m Int) {write i x >> read i} {write i x >> pure x}
+seq_write_read ::
+  i:Natural -> x:Int ->
+    EqualProp (m Int)
+      {write i x >> read i}
+      {write i x >> pure x}
 @-}
 seq_write_read :: Natural -> Int -> EqualityProp (m Int)
 seq_write_read _ _ = assumedProp
 
 {-@
 assume
-seq_write_write :: i:Natural -> x:Int -> y:Int -> EqualProp (m Unit) {write i x >> write i y} {write i y}
+seq_write_write ::
+  i:Natural -> x:Int -> y:Int ->
+  EqualProp (m Unit)
+    {write i x >> write i y}
+    {write i y}
 @-}
 seq_write_write :: Natural -> Int -> Int -> EqualityProp (m Unit)
 seq_write_write _ _ _ = assumedProp
 
 {-@
 assume
-liftM_read :: i:Natural -> f:(Int -> Int -> Int) -> EqualProp (M Int) {liftM2 f (read i) (read i)} {liftM (diagonalize f) (read i)}
+liftM_read ::
+  i:Natural -> f:(Int -> Int -> Int) ->
+  EqualProp (M Int)
+    {liftM2 f (read i) (read i)}
+    {liftM (diagonalize f) (read i)}
 @-}
 liftM_read :: Natural -> (Int -> Int -> Int) -> EqualityProp (M Int)
 liftM_read _ _ = assumedProp

@@ -22,97 +22,50 @@ import Sort.Array
 import Sort.List
 import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (*), (+), (++), (>>), (>>=))
 
-{-@ reflect ipartl_spec_step1 @-}
-ipartl_spec_step1 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
-ipartl_spec_step1 p i x xs ys zs = ipartl_spec_aux1 p i (Cons x xs) ys zs
-
--- TODO: do I need this? or just use `ipartl_spec_aux1` above
--- writeList i (ys ++ zs ++ Cons x xs)
---   >> read (i + length ys + length zs) >>= \x ->
---     if x <= p
---       then
---         swap (i + length ys) (i + length ys + length zs)
---           >> ipartl p i (S (length ys), length zs, length xs)
---       else ipartl p i (length ys, S (length zs), length xs)
-
-{-@ reflect ipartl_spec_step3 @-}
-ipartl_spec_step3 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
-ipartl_spec_step3 p i x xs ys zs =
-  writeList (S (i + length ys + length zs)) xs
-    >> if x <= p
-      then
-        writeList i (ys ++ zs ++ Cons x Nil)
-          >> swap (i + length ys) (i + length ys + length zs)
-          >> ipartl p i (S (length ys), length zs, length xs)
-      else
-        writeList i (ys ++ zs ++ Cons x Nil)
-          >> ipartl p i (length ys, S (length zs), length xs)
-
-{-@ reflect ipartl_spec_step4 @-}
-ipartl_spec_step4 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
-ipartl_spec_step4 p i x xs ys zs =
-  writeList (S (i + length ys + length zs)) xs
-    >> if x <= p
-      then
-        permute zs >>= \zs' ->
-          writeList i (ys ++ Cons x Nil ++ zs')
-            >> ipartl p i (S (length ys), length zs', length xs)
-      else
-        permute (zs ++ Cons x Nil) >>= \zs' ->
-          writeList i (ys ++ zs')
-            >> ipartl p i (length ys, length zs', length xs)
-
-{-@ reflect ipartl_spec_step7 @-}
-ipartl_spec_step7 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
-ipartl_spec_step7 p i x xs ys zs =
-  dispatch x p (ys, zs, xs)
-    >>= writeListToLength3 i
-    >>= ipartl p i
-
-{-@ reflect ipartl_spec_step8 @-}
-ipartl_spec_step8 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
-ipartl_spec_step8 p i x xs ys zs =
-  dispatch x p (ys, zs, xs)
-    >>= partl' p
-    >>= writeListToLength2 i
-
-{-@ reflect ipartl_spec_step9 @-}
-ipartl_spec_step9 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
-ipartl_spec_step9 p i x xs ys zs = ipartl_spec_aux2 p i (Cons x xs) ys zs
-
--- TODO: do I need this? or just use `ipartl_spec_aux2` above
--- partl' p (ys, zs, Cons x xs)
---   >>= writeListToLength2 i
-
--- uses:
--- - `seq_write_read`
--- - defn of `writeList`
--- - distributivity of `if`
--- - [ref 9]
+-- uses: ipartl_spec_lemma2, refinesplus_substitutability
 {-@
-ipartl_spec_steps_1_to_3 ::
-  Equality (M (Natural, Natural)) =>
+ipartl_spec_steps_3a_to_4 ::
+  (Equality (M (Natural, Natural)), Equality (M Unit)) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
-    {ipartl_spec_step1 p i x xs ys zs}
-    {ipartl_spec_step3 p i x xs ys zs}
+    {ipartl_spec_step3a p i x xs ys zs}
+    {ipartl_spec_step4 p i x xs ys zs}
 @-}
-ipartl_spec_steps_1_to_3 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_steps_1_to_3 = undefined
+ipartl_spec_steps_3a_to_4 :: (Equality (M (Natural, Natural)), Equality (M Unit)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps_3a_to_4 p i x xs ys zs = refinesplus_substitutability f a b h ? f a ? f b
+  where
+    f a' =
+      writeList (S (i + length ys + length zs)) xs
+        >> if x <= p
+          then
+            a'
+              >> ipartl p i (S (length ys), length zs, length xs)
+          else ipartl_spec_lemma1_aux2 p i x xs ys zs
+    a = ipartl_spec_lemma2_aux1 i x ys zs
+    b = ipartl_spec_lemma2_aux2 i x ys zs
+    h = undefined -- ipartl_spec_lemma2 i x ys zs
 
 -- uses:
 -- - `ipartl_spec_lemma1`,
 -- - `ipartl_spec_lemma2`
 {-@
 ipartl_spec_steps_3_to_4 ::
-  Equality (M (Natural, Natural)) =>
+  (Equality (M (Natural, Natural)), Equality (M Unit)) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
     {ipartl_spec_step3 p i x xs ys zs}
     {ipartl_spec_step4 p i x xs ys zs}
 @-}
-ipartl_spec_steps_3_to_4 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_steps_3_to_4 = undefined
+ipartl_spec_steps_3_to_4 :: (Equality (M (Natural, Natural)), Equality (M Unit)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps_3_to_4 p i x xs ys zs =
+  refinesplus_transitivity
+    (ipartl_spec_step3 p i x xs ys zs) -- 3
+    (ipartl_spec_step3a p i x xs ys zs) -- 3a
+    (ipartl_spec_step4 p i x xs ys zs) -- 4
+    -- 3 refines 3a
+    (ipartl_spec_steps_3_to_3a p i x xs ys zs)
+    -- 3a refines 4
+    (ipartl_spec_steps_3a_to_4 p i x xs ys zs)
 
 -- uses:
 -- - defn of `dispatch`
@@ -167,7 +120,9 @@ ipartl_spec_steps ::
     {ipartl_spec_step9 p i x xs ys zs}
 @-}
 ipartl_spec_steps :: Equality (M (Natural, Natural)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_steps p i x xs ys zs =
+ipartl_spec_steps p i x xs ys zs = undefined
+
+{- -- * correct
   (refinesplus_transitivity step1 step3 step9)
     -- 1 refines 3
     (ipartl_spec_steps_1_to_3 p i x xs ys zs)
@@ -188,14 +143,12 @@ ipartl_spec_steps p i x xs ys zs =
   where
     -- steps
     step1 = ipartl_spec_step1 p i x xs ys zs
-    step2 = ipartl_spec_step2 p i x xs ys zs
     step3 = ipartl_spec_step3 p i x xs ys zs
     step4 = ipartl_spec_step4 p i x xs ys zs
-    step5 = ipartl_spec_step5 p i x xs ys zs
-    step6 = ipartl_spec_step6 p i x xs ys zs
     step7 = ipartl_spec_step7 p i x xs ys zs
     step8 = ipartl_spec_step8 p i x xs ys zs
     step9 = ipartl_spec_step9 p i x xs ys zs
+-}
 
 -- [ref 10]
 -- I am ignoring the previous spec for ipartl given at the top of the same page
@@ -211,7 +164,9 @@ ipartl_spec ::
 @-}
 ipartl_spec :: Equality (M (Natural, Natural)) => Int -> Natural -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec p i Nil ys zs = undefined
-ipartl_spec p i (Cons x xs) ys zs =
+ipartl_spec p i (Cons x xs) ys zs = undefined
+
+{- -- * correct
   (refinesplus_transitivity aux1 step1 aux2)
     aux1_refines_step1
     ( (refinesplus_transitivity step1 step9 aux2)
@@ -228,130 +183,6 @@ ipartl_spec p i (Cons x xs) ys zs =
     aux1_refines_step1 = refinesplus_equalprop aux1 step1 (symmetry step1 aux1 (reflexivity step1))
     step1_refines_step9 = ipartl_spec_steps p i x xs ys zs
     step9_refines_aux2 = refinesplus_equalprop step9 aux2 (reflexivity step9)
-
-{-
-  [eqpropchain|
-      ipartl_spec_aux1 p i (Cons x xs) ys zs
-    %{-
-    %==
-      writeList i (ys ++ zs ++ Cons x xs) >>
-        ipartl p i (length ys, length zs, length (Cons x xs))
-    %==
-      writeList i (ys ++ zs ++ Cons x xs) >>
-        ipartl p i (length ys, length zs, S (length xs))
-        %by %rewrite length (Cons x xs)
-                %to S (length xs)
-        %by %reflexivity
-    %==
-      writeList i (ys ++ zs ++ Cons x xs) >>
-        read (i + length ys + length zs) >>=
-          ipartl_aux p i (length ys) (length zs) (length xs)
-        %by %rewrite ipartl p i (length ys, length zs, S (length xs))
-                 %to read (i + length ys + length zs) >>= ipartl_aux p i (length ys) (length zs) (length xs)
-        %by undefined
-        %-- TODO: %by %reflexivity
-    %==
-      %-- (1)
-      writeList i (ys ++ zs ++ Cons x xs) >>
-        read (i + length ys + length zs) >>= \x ->
-          if x <= p then
-            swap (i + length ys) (i + length ys + length zs) >>
-              ipartl p i (S (length ys), length zs, length xs)
-          else
-            ipartl p i (length ys, S (length zs), length xs)
-        %by %rewrite ipartl_aux p i (length ys) (length zs) (length xs)
-                 %to \x -> if x <= p then swap (i + length ys) (i + length ys + length zs) >> ipartl p i (S (length ys), length zs, length xs) else ipartl p i (length ys, S (length zs), length xs)
-        %by %extend x
-        %by %reflexivity
-    -}%
-    %==
-      undefined
-    %==
-      %-- (2)
-      writeList i (ys ++ zs ++ Cons x xs) >>
-        if x <= p then
-          swap (i + length ys) (i + length ys + length zs) >>
-            ipartl p i (S (length ys), length zs, length xs)
-        else
-          ipartl p i (length ys, S (length zs), length xs)
-        %by undefined %-- TODO
-        %-- distributivity of `if`, [ref 9]
-    %==
-      undefined
-    %==
-    %{-
-      %-- applying ipartl_spec_lemma2
-      writeList (S (i + length ys + length zs)) xs >>
-        if x <= p then
-          writeList i (ys ++ zs ++ Cons x Nil) >>
-            swap (i + length ys) (i + length ys + length zs) >>
-              ipartl p i (S (length ys), length zs, length xs)
-        else
-          writeList i (ys ++ zs ++ Cons x Nil) >>
-            ipartl p i (length ys, S (length zs), length xs)
-        %by undefined %-- TODO
-        %-- by ipartl_spec_lemma2
-    %==
-      %-- applying ipartl_spec_lemma1
-      writeList (S (i + length ys + length zs)) xs >>
-        if x <= p then
-          permute zs >>= \zs' ->
-            writeList i (ys ++ Cons x Nil ++ zs') >>
-              ipartl p i (S (length ys), length zs', length xs)
-        else
-          writeList i (ys ++ zs ++ Cons x Nil) >>
-            ipartl p i (length ys, S (length zs), length xs)
-        %by undefined %-- TODO
-        %-- by ipartl_spec_lemma1
-    %==
-      %-- (4)
-      writeList (S (i + length ys + length zs)) xs >>
-        if x <= p then
-          permute zs >>= \zs' ->
-            writeList i (ys ++ Cons x Nil ++ zs') >>
-              ipartl p i (S (length ys), length zs', length xs)
-        else
-          permute (zs ++ Cons x Nil) >>= \zs' ->
-            writeList i (ys ++ zs') >>
-              ipartl p i (length ys, length zs', length xs)
-        %by undefined %-- TODO
-        %-- defn of `dispatch`, function calls distribute into `if`
-    %==
-      %-- (5)
-      writeList (S (i + length ys + length zs)) xs >>
-        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
-          writeList i (ys' ++ zs') >>
-            ipartl p i (length ys', length zs', length xs)
-        %by undefined %-- TODO
-        %-- `permute` preserves length, commutativity
-    %==
-      %-- (6)
-      dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
-        writeList i (ys' ++ zs') >>
-          writeList (i + length (ys' ++ zs')) xs >>
-            ipartl p i (length ys', length zs', length xs)
-        %by undefined %-- TODO
-        %-- monad laws, [ref 9]
-    %==
-      %-- (7)
-      dispatch x p (ys, zs, xs) >>= writeListToLength3 i >>= ipartl p i
-        %by undefined %-- TODO
-        %-- monad laws, inductive hypothesis
-    %==
-      %-- (8)
-      dispatch x p (ys, zs, xs) >>= partl' p >>= writeListToLength2 i
-        %by undefined %-- TODO
-    %==
-      %-- (9)
-      partl' p (ys, zs, Cons x xs) >>= writeListToLength2 i
-        %by %symmetry
-        %by %reflexivity
-    %==
-    -}%
-      ipartl_spec_aux2 p i (Cons x xs) ys zs
-        %by %symmetry
-        %by %reflexivity
-  |]
 -}
 
 {- -- * definitions
@@ -400,7 +231,7 @@ iqsort_spec i Nil = undefined
 --   iqsort_spec_aux2 i (Cons p xs).
 iqsort_spec i (Cons p xs) = undefined
 
-{- --* correct
+{- -- * correct
   refinesplus_transitivity
     (iqsort_spec_aux1 i (Cons p xs)) -- (1)
     (iqsort_spec_lemma3_aux1 i p xs) -- (2)

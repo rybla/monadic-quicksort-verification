@@ -45,8 +45,8 @@ ipartl p i (ny, nz, S k) =
 
 {-@ reflect ipartl_aux @-}
 ipartl_aux :: Int -> Natural -> Natural -> Natural -> Natural -> Int -> M (Natural, Natural)
-ipartl_aux p i ny nz k x =
-  if x <= p
+ipartl_aux p i ny nz k x' =
+  if x' <= p
     then
       swap (i + ny) (i + ny + nz)
         >> ipartl p i (S ny, nz, k)
@@ -68,14 +68,14 @@ ipartl_aux p i ny nz k x =
 --
 
 {-@ reflect ipartl_spec_lemma1_aux1 @-}
-ipartl_spec_lemma1_aux1 :: Natural -> Int -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
-ipartl_spec_lemma1_aux1 i p x xs ys zs =
+ipartl_spec_lemma1_aux1 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
+ipartl_spec_lemma1_aux1 p i x xs ys zs =
   writeList i (ys ++ zs ++ Cons x Nil)
     >> ipartl p i (length ys, S (length zs), length xs)
 
 {-@ reflect ipartl_spec_lemma1_aux2 @-}
-ipartl_spec_lemma1_aux2 :: Natural -> Int -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
-ipartl_spec_lemma1_aux2 i p x xs ys zs =
+ipartl_spec_lemma1_aux2 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
+ipartl_spec_lemma1_aux2 p i x xs ys zs =
   permute (zs ++ Cons x Nil)
     >>= ipartl_spec_lemma1_aux2_aux i p ys xs
 
@@ -90,8 +90,8 @@ ipartl_spec_lemma1 ::
   Equality (M (Natural, Natural)) =>
   i:Natural -> p:Int -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
-    {ipartl_spec_lemma1_aux1 i p x xs ys zs}
-    {ipartl_spec_lemma1_aux2 i p x xs ys zs}
+    {ipartl_spec_lemma1_aux1 p i x xs ys zs}
+    {ipartl_spec_lemma1_aux2 p i x xs ys zs}
 @-}
 ipartl_spec_lemma1 :: Equality (M (Natural, Natural)) => Natural -> Int -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec_lemma1 i p x xs ys zs = undefined -- TODO
@@ -118,13 +118,13 @@ ipartl_spec_lemma2_aux2_aux i x ys zs' =
 
 {-@
 ipartl_spec_lemma2 ::
-  Equality (M (Natural, Natural)) =>
+  (Equality (M (Natural, Natural)), Equality (M Unit)) =>
   i:Natural -> x:Int -> ys:List Int -> zs:List Int ->
-  RefinesPlus (Natural, Natural)
+  RefinesPlus (Unit)
     {ipartl_spec_lemma2_aux1 i x ys zs}
     {ipartl_spec_lemma2_aux2 i x ys zs}
 @-}
-ipartl_spec_lemma2 :: Equality (M (Natural, Natural)) => Natural -> Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_lemma2 :: (Equality (M (Natural, Natural)), Equality (M Unit)) => Natural -> Int -> List Int -> List Int -> EqualityProp (M ())
 ipartl_spec_lemma2 i x ys zs = undefined -- TODO
 
 --
@@ -321,6 +321,182 @@ ipartl_spec_aux1 p i xs ys zs =
 ipartl_spec_aux2 :: Int -> Natural -> List Int -> List Int -> List Int -> M (Natural, Natural)
 ipartl_spec_aux2 p i xs ys zs =
   partl' p (ys, zs, xs) >>= writeListToLength2 i
+
+{-@ reflect ipartl_spec_step1 @-}
+ipartl_spec_step1 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
+ipartl_spec_step1 p i x xs ys zs =
+  ipartl_spec_aux1 p i (Cons x xs) ys zs
+
+{-@ reflect ipartl_spec_step3 @-}
+ipartl_spec_step3 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
+ipartl_spec_step3 p i x xs ys zs =
+  writeList (S (i + length ys + length zs)) xs
+    >> if x <= p
+      then
+        ipartl_spec_lemma2_aux1 i x ys zs
+          >> ipartl p i (S (length ys), length zs, length xs)
+      else ipartl_spec_lemma1_aux1 p i x xs ys zs
+
+-- step3a is step3 with lemma1 applied
+-- step4 is step3a with lemma2 applied
+{-@ reflect ipartl_spec_step3a @-}
+ipartl_spec_step3a :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
+ipartl_spec_step3a p i x xs ys zs =
+  writeList (S (i + length ys + length zs)) xs
+    >> if x <= p
+      then
+        ipartl_spec_lemma2_aux1 i x ys zs
+          >> ipartl p i (S (length ys), length zs, length xs)
+      else ipartl_spec_lemma1_aux2 p i x xs ys zs
+
+{-@ reflect ipartl_spec_step4 @-}
+ipartl_spec_step4 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
+ipartl_spec_step4 p i x xs ys zs =
+  writeList (S (i + length ys + length zs)) xs
+    >> if x <= p
+      then
+        ipartl_spec_lemma2_aux2 i x ys zs
+          >> ipartl p i (S (length ys), length zs, length xs)
+      else ipartl_spec_lemma1_aux2 p i x xs ys zs
+
+{-@ reflect ipartl_spec_step7 @-}
+ipartl_spec_step7 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
+ipartl_spec_step7 p i x xs ys zs =
+  dispatch x p (ys, zs, xs)
+    >>= writeListToLength3 i
+    >>= ipartl p i
+
+{-@ reflect ipartl_spec_step8 @-}
+ipartl_spec_step8 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
+ipartl_spec_step8 p i x xs ys zs =
+  dispatch x p (ys, zs, xs)
+    >>= partl' p
+    >>= writeListToLength2 i
+
+{-@ reflect ipartl_spec_step9 @-}
+ipartl_spec_step9 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
+ipartl_spec_step9 p i x xs ys zs = ipartl_spec_aux2 p i (Cons x xs) ys zs
+
+-- TODO: do I need this? or just use `ipartl_spec_aux2` above
+-- TODO: pretty sure not
+-- partl' p (ys, zs, Cons x xs)
+--   >>= writeListToLength2 i
+
+{-@
+ipartl_spec_steps_1_to_3_lemma ::
+  (Equality (M (Natural, Natural)), Equality Int) =>
+  p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+  EqualProp (M Int)
+    {seq (writeList i (append ys (append zs (Cons x xs)))) (read (add (add i (length ys)) (length ys)))}
+    {seq (writeList i (append ys (append zs (Cons x xs)))) (pure x)}
+@-}
+ipartl_spec_steps_1_to_3_lemma ::
+  (Equality (M (Natural, Natural)), Equality Int) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M Int)
+ipartl_spec_steps_1_to_3_lemma = undefined -- TODO
+
+-- uses:
+-- - `seq_write_read`
+-- - defn of `writeList`
+-- - distributivity of `if`
+-- - [ref 9]
+{-@
+ipartl_spec_steps_1_to_3 ::
+  Equality (M (Natural, Natural)) =>
+  p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+  RefinesPlus (Natural, Natural)
+    {ipartl_spec_step1 p i x xs ys zs}
+    {ipartl_spec_step3 p i x xs ys zs}
+@-}
+ipartl_spec_steps_1_to_3 :: Equality (M (Natural, Natural)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps_1_to_3 p i x xs ys zs =
+  (refinesplus_equalprop (ipartl_spec_step1 p i x xs ys zs) (ipartl_spec_step3 p i x xs ys zs))
+    [eqpropchain|
+        ipartl_spec_step1 p i x xs ys zs
+      %==
+        ipartl_spec_aux1 p i (Cons x xs) ys zs
+      %==
+        writeList i (ys ++ zs ++ Cons x xs)
+          >> ipartl p i (length ys, length zs, length (Cons x xs))
+      %==
+        writeList i (ys ++ zs ++ Cons x xs)
+          >> ipartl p i (length ys, length zs, S (length xs))
+          %by %rewrite length (Cons x xs)
+                   %to S (length xs)
+          %by %reflexivity
+      %==
+        writeList i (ys ++ zs ++ Cons x xs)
+          >> read (i + length ys + length zs)
+            >>= ipartl_aux p i (length ys) (length zs) (length xs)
+          %by %rewrite ipartl p i (length ys, length zs, S (length xs))
+                   %to read (i + length ys + length zs) >>= ipartl_aux p i (length ys) (length zs) (length xs)
+          %by undefined %-- TODO: %by %reflexivity
+      %==
+        writeList i (ys ++ zs ++ Cons x xs)
+          >> read (i + length ys + length zs)
+            >>= \x' -> if x' <= p
+              then
+                swap (i + length ys) (i + length ys + length zs)
+                  >> ipartl p i (S (length ys), length ys, length xs)
+              else
+                ipartl p i (length ys, S (length ys), length xs)
+          %by undefined
+          %{- -- TODO
+          %by %rewrite ipartl_aux p i (length ys) (length zs) (length xs)
+                   %to \x' -> if x' <= p then swap (i + length ys) (i + length ys + length zs) >> ipartl p i (S (length ys), length ys, length xs) else ipartl p i (length ys, S (length ys), length xs)
+          %by %extend x'
+          -}%
+      %==
+        writeList i (ys ++ zs ++ Cons x xs)
+          >> pure x
+            >>= \x' -> if x' <= p
+              then
+                swap (i + length ys) (i + length ys + length zs)
+                  >> ipartl p i (S (length ys), length zs, length xs)
+              else
+                ipartl p i (length ys, S (length zs), length xs)
+          %by %rewrite writeList i (ys ++ zs ++ Cons x xs) >> read (i + length ys + length zs)
+                   %to writeList i (ys ++ zs ++ Cons x xs) >> pure x
+          %by undefined
+          %-- TODO: ipartl_spec_steps_1_to_3_lemma
+      %==
+        %-- ipartl_spec_step2
+        writeList i (ys ++ zs ++ Cons x xs) >>
+        if x <= p
+          then 
+            swap (i + length ys) (i + length ys + length zs) 
+              >> ipartl p i (S (length ys), length zs, length xs)
+          else 
+            ipartl p i (length ys, S (length zs), length xs)
+          %by undefined
+          %-- TODO: bind_identity_left
+      %==
+        ipartl_spec_step3 p i x xs ys zs
+          %by undefined
+    |]
+
+-- uses: ipartl_spec_lemma1, refinesplus_substitutability
+{-@
+ipartl_spec_steps_3_to_3a ::
+  Equality (M (Natural, Natural)) =>
+  p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+  RefinesPlus (Natural, Natural)
+    {ipartl_spec_step3 p i x xs ys zs}
+    {ipartl_spec_step3a p i x xs ys zs}
+@-}
+ipartl_spec_steps_3_to_3a :: Equality (M (Natural, Natural)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps_3_to_3a p i x xs ys zs = refinesplus_substitutability f a b h ? f a ? f b
+  where
+    f a' =
+      writeList (S (i + length ys + length zs)) xs
+        >> if x <= p
+          then
+            writeList i (ys ++ zs ++ Cons x Nil)
+              >> swap (i + length ys) (i + length ys + length zs)
+              >> ipartl p i (S (length ys), length zs, length xs)
+          else a'
+    a = ipartl_spec_lemma1_aux1 p i x xs ys zs
+    b = ipartl_spec_lemma1_aux2 p i x xs ys zs
+    h = undefined -- TODO: ipartl_spec_lemma1 i p x xs ys zs
 
 -- !INSERT ipartl_spec
 
