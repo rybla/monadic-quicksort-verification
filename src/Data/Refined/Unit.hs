@@ -12,5 +12,5 @@ type Unit = ()
 it :: ()
 it = ()
 
-instance EqSMT Unit where
-  eqSMT x y = x == y
+instance Equality Unit where
+  __Equality = Nothing

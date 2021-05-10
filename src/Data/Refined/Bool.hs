@@ -1,5 +1,6 @@
 module Data.Refined.Bool where
 
+import Relation.Equality.Prop
 import Prelude hiding (not)
 
 {-@ reflect not @-}
@@ -18,3 +19,6 @@ if_distributive ::
 
 @-}
 -}
+
+instance Equality Bool where
+  __Equality = Nothing

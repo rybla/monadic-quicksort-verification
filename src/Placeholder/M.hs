@@ -45,6 +45,10 @@ data M :: * -> * where
   Read :: Natural -> M Int
   Write :: Natural -> Int -> M ()
 
+-- TODO: this all doesn't really work, since can't really get `Eq (M a)` without
+-- `Typeable`, and for `Equality` class and such will have issues anyway with
+-- overlapping instances.
+
 -- instance Eq a => Eq (M a) where
 --   Pure x == Pure x' = x == x'
 --   Bind ma k == Bind ma' k' = ma == ma' && k == k'
@@ -53,11 +57,20 @@ data M :: * -> * where
 --   Read i == Read i' = i == i'
 --   Write i x == Write i' x' = i == i' && x == x'
 
-instance EqSMT a => EqSMT (M a) where
-  eqSMT = undefined
+-- instance EqSMT a => EqSMT (M a) where
+--   eqSMT = undefined
 
-instance (Equality a, EqSMT a) => Equality (M a) where
-  __Equality = Nothing
+-- instance Eq a => Eq (M a) where
+--   (==) = undefined
+
+-- instance Transitivity a => Transitivity (M a) where
+--   transitivity = undefined
+
+-- instance Symmetry a => Symmetry (M a) where
+--   symmetry = undefined
+
+-- instance Equality a => Equality (M a) where
+--   __Equality = Nothing
 
 -- TODO
 -- interpretM :: Monad m -> Plus m -> Array m a -> M a -> m a

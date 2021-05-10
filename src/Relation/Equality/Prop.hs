@@ -101,6 +101,9 @@ class EqSMT a where
 class EqSMT a where
   eqSMT :: a -> a -> Bool
 
+instance Eq a => EqSMT a where
+  eqSMT = (==)
+
 {-
 ### Concreteness
 -}

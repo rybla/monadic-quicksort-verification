@@ -18,7 +18,7 @@ import qualified Prelude
 {-@
 data Natural [toInt] = Z | S Natural
 @-}
-data Natural = Z | S Natural
+data Natural = Z | S Natural deriving (Prelude.Eq)
 
 {-@ reflect toInt @-}
 toInt :: Natural -> Int
@@ -31,6 +31,9 @@ fromInt :: Nat -> Natural
 fromInt :: Int -> Natural
 fromInt 0 = Z
 fromInt n = S (fromInt (n - 1))
+
+instance Equality Natural where
+  __Equality = Prelude.Nothing
 
 {-
 ## Addition and Multiplication
