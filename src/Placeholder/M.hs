@@ -434,8 +434,14 @@ seq_associativity_write _ _ _ _ = assumedProp
 
 -- array lemmas
 
+-- [ref 9]
 {-@
-writeList_append :: i:Natural -> xs:List Int -> ys:List Int -> EqualProp (M Unit) {writeList i (append xs ys)} {writeList i xs >> writeList (add i (length xs)) ys}
+writeList_append ::
+  Equality (M Unit) =>
+  i:Natural -> xs:List Int -> ys:List Int ->
+  EqualProp (M Unit)
+    {writeList i (append xs ys)}
+    {writeList i xs >> writeList (add i (length xs)) ys}
 @-}
 writeList_append :: Natural -> List Int -> List Int -> EqualityProp (M ())
 writeList_append = undefined -- TODO: migrate proof from Control.Monad.Array

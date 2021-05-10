@@ -59,6 +59,17 @@ permute_aux1 x (ys, zs) = liftM2 (permute_aux2 x) (permute ys) (permute zs)
 permute_aux2 :: Int -> List Int -> List Int -> List Int
 permute_aux2 x ys' zs' = ys' ++ Cons x Nil ++ zs'
 
+{-@
+permute_preserves_length ::
+  Equality Int =>
+  xs:List Int ->
+  EqualProp Int
+    {pure (length xs)}
+    {liftM length (permute xs)}
+@-}
+permute_preserves_length :: Equality Int => List Int -> EqualityProp Int
+permute_preserves_length xs = undefined -- TODO
+
 {-@ reflect split @-}
 split :: List Int -> M (List Int, List Int)
 split Nil = pure (Nil, Nil)

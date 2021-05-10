@@ -11,3 +11,10 @@ not False = True
 branch :: Bool -> a -> a -> a
 branch True a1 _ = a1
 branch False _ a2 = a2
+
+{-
+{-@
+if_distributive ::
+
+@-}
+-}
