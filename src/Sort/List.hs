@@ -63,7 +63,7 @@ permute_aux2 x ys' zs' = ys' ++ Cons x Nil ++ zs'
 permute_preserves_length ::
   Equality Int =>
   xs:List Int ->
-  EqualProp Int
+  EqualProp (Int)
     {pure (length xs)}
     {liftM length (permute xs)}
 @-}

@@ -177,12 +177,12 @@ ipartl_spec_steps p i x xs ys zs =
         (ipartl_spec_step3 p i x xs ys zs)
         (ipartl_spec_step4 p i x xs ys zs)
         (ipartl_spec_step9 p i x xs ys zs)
-        (ipartl_spec_steps_3_to_4) -- 3 refines 4
+        (ipartl_spec_steps_3_to_4 p i x xs ys zs) -- 3 refines 4
         ( refinesplus_transitivity
             (ipartl_spec_step4 p i x xs ys zs)
             (ipartl_spec_step7 p i x xs ys zs)
             (ipartl_spec_step9 p i x xs ys zs)
-            (ipartl_spec_steps_4_to_7) -- 4 refines 7
+            (ipartl_spec_steps_4_to_7 p i x xs ys zs) -- 4 refines 7
             ( refinesplus_transitivity
                 (ipartl_spec_step7 p i x xs ys zs)
                 (ipartl_spec_step8 p i x xs ys zs)
@@ -217,7 +217,7 @@ ipartl_spec p i (Cons x xs) ys zs =
         (ipartl_spec_step1 p i x xs ys zs)
         (ipartl_spec_step9 p i x xs ys zs)
         (ipartl_spec_aux2 p i (Cons x xs) ys zs)
-        (ipartl_spec_steps p i x xs yz zs)
+        (ipartl_spec_steps p i x xs ys zs)
         (undefined) -- TODO: if not just reflexivity
     )
 
