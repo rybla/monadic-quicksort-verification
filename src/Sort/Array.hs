@@ -32,9 +32,17 @@ partl' p (ys, zs, Cons x xs) = dispatch x p (ys, zs, xs) >>= partl' p
 {-@ reflect dispatch @-}
 dispatch :: Int -> Int -> (List Int, List Int, List Int) -> M (List Int, List Int, List Int)
 dispatch x p (ys, zs, xs) =
-  if leq x p
-    then permute zs >>= \zs' -> pure (ys ++ Cons x Nil, zs', xs)
-    else permute (zs ++ Cons x Nil) >>= \zs' -> pure (ys, zs', xs)
+  if x <= p
+    then permute zs >>= dispatch_aux1 x xs ys
+    else permute (zs ++ Cons x Nil) >>= dispatch_aux2 xs ys
+
+{-@ reflect dispatch_aux1 @-}
+dispatch_aux1 :: Int -> List Int -> List Int -> List Int -> M (List Int, List Int, List Int)
+dispatch_aux1 x xs ys zs' = pure (ys ++ Cons x Nil, zs', xs)
+
+{-@ reflect dispatch_aux2 @-}
+dispatch_aux2 :: List Int -> List Int -> List Int -> M (List Int, List Int, List Int)
+dispatch_aux2 xs ys zs' = pure (ys, zs', xs)
 
 -- final derivation of `ipartl`
 {-@ reflect ipartl @-}
@@ -468,7 +476,7 @@ ipartl_spec_steps_1_to_3 p i x xs ys zs =
           else 
             ipartl p i (length ys, S (length zs), length xs)
           %by undefined
-          %-- TODO: bind_identity_left
+          %-- TODO: pure_bind
       %==
         ipartl_spec_step3 p i x xs ys zs
           %by undefined
@@ -570,7 +578,7 @@ permute_kleisli_permute_lemma Nil =
         %by %reflexivity
     %==
       permute Nil
-        %by bind_identity_left_outfix Nil permute 
+        %by pure_bind_outfix Nil permute 
   |]
 permute_kleisli_permute_lemma (Cons x xs) =
   [eqpropchain|
@@ -634,7 +642,7 @@ permute_kleisli_permute Nil =
         %-- TODO: why not by reflexivity?
     %==
       permute Nil
-        %by bind_identity_left Nil permute
+        %by pure_bind Nil permute
   |]
 permute_kleisli_permute (Cons x xs) =
   [eqpropchain|
@@ -922,7 +930,7 @@ iqsort_spec_aux2_Nil i =
     %==
       guardBy sorted Nil >>= writeList i
         %by %rewrite pure Nil >>= guardBy sorted %to guardBy sorted Nil
-        %by bind_identity_left Nil (guardBy sorted)
+        %by pure_bind Nil (guardBy sorted)
     %==
       (guard (sorted Nil) >> pure Nil) >>= writeList i
         %by %rewrite guardBy sorted Nil %to guard (sorted Nil) >> pure Nil
@@ -941,7 +949,7 @@ iqsort_spec_aux2_Nil i =
         %by seq_identity_left () (pure Nil)
     %==
       writeList i Nil
-        %by bind_identity_left Nil (writeList i)
+        %by pure_bind Nil (writeList i)
     %==
       pure it
         %by undefined

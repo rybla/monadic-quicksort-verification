@@ -26,7 +26,7 @@ import Prelude hiding (Monad, pure, seq, (>>), (>>=))
 data Monad m = Monad
   { pure :: forall a. a -> m a,
     bind :: forall a b. m a -> (a -> m b) -> m b,
-    bind_identity_left ::
+    pure_bind ::
       forall a b.
       x:a ->
       k:(a -> m b) ->
@@ -50,7 +50,7 @@ data Monad m = Monad
 data Monad m = Monad
   { pure :: forall a. a -> m a,
     bind :: forall a b. m a -> (a -> m b) -> m b,
-    bind_identity_left ::
+    pure_bind ::
       forall a b.
       a ->
       (a -> m b) ->
@@ -190,7 +190,7 @@ seq_identity_left mnd x m =
         %by undefined -- TODO: why not `seq mnd (pure mnd ()) m`?
     %==
       apply (\_ -> m) ()
-        %by bind_identity_left mnd (pure mnd x) (apply (\_ -> m))
+        %by pure_bind mnd (pure mnd x) (apply (\_ -> m))
     %== 
       m
   |]

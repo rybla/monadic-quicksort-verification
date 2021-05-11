@@ -244,7 +244,7 @@ divide_and_conquer_lemma1 _ pls x xs =
         %by %extend zs'
         %by %rewrite pure mnd (ys' ++ Cons x Nil ++ zs') >>= guardBy pls sorted
                  %to guardBy pls sorted (ys' ++ Cons x Nil ++ zs')
-        %by bind_identity_left mnd (ys' ++ Cons x Nil ++ zs') (guardBy pls sorted)
+        %by pure_bind mnd (ys' ++ Cons x Nil ++ zs') (guardBy pls sorted)
         -}
   
     %==
@@ -448,7 +448,7 @@ divide_and_conquer_lemma2 _ pls x Nil =
           %by %rewrite pure mnd (Nil, Nil) >>= guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs))
                    %to guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs)) (Nil, Nil)
 
-          %by bind_identity_left mnd (Nil, Nil) (guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs)))
+          %by pure_bind mnd (Nil, Nil) (guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs)))
 
       %==
 
@@ -496,7 +496,7 @@ divide_and_conquer_lemma2 _ pls x Nil =
         pure mnd (Nil, Nil) >>= guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs))
 
           %by %symmetry
-          %by bind_identity_left mnd (Nil, Nil) (guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs)))
+          %by pure_bind mnd (Nil, Nil) (guardBy pls (apply (\(ys, zs) -> all (leq x) ys && all (geq x) zs)))
 
       %==
 

@@ -148,10 +148,10 @@ second k (x, y) = k y >>= \y' -> pure (x, y')
 
 {-@
 assume
-bind_identity_left :: x:a -> k:(a -> M b) -> EqualProp (M b) {pure x >>= k} {k x}
+pure_bind :: x:a -> k:(a -> M b) -> EqualProp (M b) {pure x >>= k} {k x}
 @-}
-bind_identity_left :: a -> (a -> M b) -> EqualityProp (M b)
-bind_identity_left _ _ = assumedProp
+pure_bind :: a -> (a -> M b) -> EqualityProp (M b)
+pure_bind _ _ = assumedProp
 
 {-- TODO
 I hate that I seem to have to do this, because apparently I need to use the
@@ -161,10 +161,10 @@ But I'm hoping that I don't need to have toooo many `_outfix` proxy lemmas.
 -}
 {-@
 assume
-bind_identity_left_outfix :: x:a -> k:(a -> M b) -> EqualProp (M b) {bind (pure x) k} {k x}
+pure_bind_outfix :: x:a -> k:(a -> M b) -> EqualProp (M b) {bind (pure x) k} {k x}
 @-}
-bind_identity_left_outfix :: a -> (a -> M b) -> EqualityProp (M b)
-bind_identity_left_outfix _ _ = assumedProp
+pure_bind_outfix :: a -> (a -> M b) -> EqualityProp (M b)
+pure_bind_outfix _ _ = assumedProp
 
 {-@
 assume
@@ -175,9 +175,14 @@ bind_identity_right _ = assumedProp
 
 {-@
 assume
-bind_associativity :: m:M a -> k1:(a -> M b) -> k2:(b -> M c) -> EqualProp (M c) {(m >>= k1) >>= k2} {m >>= (k1 >=> k2)}
+bind_associativity ::
+  Equality (M c) =>
+  m:M a -> k1:(a -> M b) -> k2:(b -> M c) ->
+  EqualProp (M c)
+    {m >>= k1 >>= k2}
+    {m >>= (k1 >=> k2)}
 @-}
-bind_associativity :: M a -> (a -> M b) -> (b -> M c) -> EqualityProp (M c)
+bind_associativity :: Equality (M c) => M a -> (a -> M b) -> (b -> M c) -> EqualityProp (M c)
 bind_associativity _ _ _ = assumedProp
 
 -- monad lemmas
@@ -232,7 +237,7 @@ seq_identity_left x m =
       pure x >>= \_ -> m
     %==
       (\_ -> m) x
-        %by bind_identity_left x (\_ -> m)
+        %by pure_bind x (\_ -> m)
     %== 
       m
   |]

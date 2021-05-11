@@ -19,7 +19,7 @@ import Prelude hiding (Monad, length, pure, read, readList, seq, (>>), (>>=))
 
 {-
 
--- | 
+-- |
 -- = Array Monad
 --
 
@@ -207,7 +207,7 @@ writeList_append ary i Nil ys =
     %==
       pure mnd it >>= apply (\_ -> writeList ary i ys)
         %by %symmetry
-        %by bind_identity_left mnd it (apply (\_ -> writeList ary i ys))
+        %by pure_bind mnd it (apply (\_ -> writeList ary i ys))
     %==
       pure mnd it >> writeList ary i ys
         %by %smt

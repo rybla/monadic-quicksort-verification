@@ -152,7 +152,7 @@ divide_and_conquer_lemma1 x xs =
         %by %rewrite \zs' -> pure (ys' ++ Cons x Nil ++ zs') >>= guardBy sorted
                 %to \zs' -> guardBy sorted (ys' ++ Cons x Nil ++ zs')
         %by %extend zs' 
-        %by bind_identity_left (ys' ++ Cons x Nil ++ zs') (guardBy sorted)
+        %by pure_bind (ys' ++ Cons x Nil ++ zs') (guardBy sorted)
         -}%
     %==
       split xs >>= \(ys, zs) ->
@@ -287,7 +287,7 @@ divide_and_conquer_lemma2 p Nil =
       pure (partition p Nil) <+> guardBy (divide_and_conquer_lemma2_aux2 p) (Nil, Nil)
         %by %rewrite pure (Nil, Nil) >>= guardBy (divide_and_conquer_lemma2_aux2 p)
                  %to guardBy (divide_and_conquer_lemma2_aux2 p) (Nil, Nil)
-        %by bind_identity_left (Nil, Nil) (guardBy (divide_and_conquer_lemma2_aux2 p))
+        %by pure_bind (Nil, Nil) (guardBy (divide_and_conquer_lemma2_aux2 p))
     %==
       pure (partition p Nil) <+> (guard (divide_and_conquer_lemma2_aux2 p (Nil, Nil)) >> pure (Nil, Nil))
         %by %rewrite guardBy (divide_and_conquer_lemma2_aux2 p) (Nil, Nil)
@@ -336,7 +336,7 @@ divide_and_conquer_lemma2 p Nil =
     %==
       pure (Nil, Nil) >>= guardBy (\(ys, zs) -> (all (leq p) ys && all (geq p) zs))
         %by %symmetry
-        %by bind_identity_left (Nil, Nil) (guardBy (\(ys, zs) -> (all (leq p) ys && all (geq p) zs)))
+        %by pure_bind (Nil, Nil) (guardBy (\(ys, zs) -> (all (leq p) ys && all (geq p) zs)))
     %==
       split Nil >>= guardBy (\(ys, zs) -> (all (leq p) ys && all (geq p) zs))
         %by %rewrite pure (Nil, Nil) %to split Nil
@@ -419,7 +419,7 @@ slowsort_Nil =
         %by %reflexivity
     %==
       guardBy sorted Nil 
-        %by bind_identity_left Nil (guardBy sorted)
+        %by pure_bind Nil (guardBy sorted)
     %==
       guard (sorted Nil) >> pure Nil
     %==

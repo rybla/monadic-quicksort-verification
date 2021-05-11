@@ -40,7 +40,7 @@ permute_kleisli_permute_lemma _ pls Nil =
       %-- permute pls Nil
       permute pls Nil
         %by undefined
-        %-- TODO: bind_identity_left mnd Nil (permute pls) 
+        %-- TODO: pure_bind mnd Nil (permute pls) 
   |]
   where
     (>>=) :: forall a b. m a -> (a -> m b) -> m b
