@@ -53,6 +53,18 @@ append_identity :: List a -> Proof
 append_identity Nil = trivial
 append_identity (Cons _ xs) = append_identity xs
 
+{-@
+append_associativity :: xs:List a -> ys:List a -> zs:List a -> {xs ++ ys ++ zs = (xs ++ ys) ++ zs}
+@-}
+append_associativity :: List a -> List a -> List a -> Proof
+append_associativity xs ys zs = undefined -- TODO
+
+{-@
+length_snoc :: xs:List a -> x:a -> {length (xs ++ Cons x Nil) = S (length xs)}
+@-}
+length_snoc :: List a -> a -> Proof
+length_snoc xs x = undefined -- TODO
+
 {-
 ## Utilities
 -}

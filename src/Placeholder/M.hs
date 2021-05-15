@@ -189,7 +189,10 @@ bind_associativity _ _ _ = assumedProp
 
 {-@
 seq_associativity ::
-  Equality (M c) => ma:M a -> mb:M b -> mc:M c -> EqualProp (M c) {(ma >> mb) >> mc} {ma >> mb >> mc}
+  Equality (M c) => ma:M a -> mb:M b -> mc:M c ->
+  EqualProp (M c)
+    {(ma >> mb) >> mc}
+    {ma >> mb >> mc}
 @-}
 seq_associativity ::
   Equality (M c) => M a -> M b -> M c -> EqualityProp (M c)
