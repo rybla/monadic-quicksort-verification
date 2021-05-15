@@ -1039,6 +1039,10 @@ iqsort_spec_aux2_Cons i p xs =
         %by %reflexivity
   |]
 
+--
+-- ipartl_spec_steps_4_to_7_lemma1
+--
+
 {-@ reflect ipartl_spec_steps_4_to_7_lemma1_aux1 @-}
 ipartl_spec_steps_4_to_7_lemma1_aux1 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
 ipartl_spec_steps_4_to_7_lemma1_aux1 p i x xs ys zs =
