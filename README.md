@@ -5,82 +5,45 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 
 ## Tasks
 
-- [ ] types synonyms (and predicates)
-  - [x] collection of type synonyms and predicates relating to reasoning about
-        functions (`Function.hs`)
-  - [x] collection of type synonyms and predicates relating to reasoning about
-        relations (functions that return `Bool`) (`Relation.hs`)
-- [x] data classes:
-  - [x] semigroup (`VSemigroup.hs`)
-  - [x] functor (`VFunctor.hs`)
-  - [x] group (`VGroup.hs`)
-  - [x] monad (`VMonad.hs`)
-    - [ ] monadic sequence right-identity (`vseq_identity_right`)
-  - [ ] plus-monad, used for monadic nondeterminism (`VMonadPlus.hs`)
-    - [x] implement
-    - [x] plus-monadic refinement (`RefinesPlusMonadic` and
-          `RefinesPlusMonadicF`)
-    - [x] plus-monadic refinement is monotic in monadic binding
-          (`bind_monotonic_refinement`)
-    - [x] guarding monad-commutes with other monad elements (that have just
-          (monadic) effect) (`guard_isCommutativeMonadic`)
-    - [ ] guarding a conjunction is the same as the sequence of guarding each
-          conjunct (`guard_and_vseq`)
-    - [ ] guarding the plus-monadic sum of two monad sequence terms with head
-          elements are guarding on disjoint conditions plus-monad refines a
-          top-level branching by the boolean over the sequence tails
-          (`guard_disjoint_branch`)
-  - [ ] array-monad, used for monadic array interface (`VMonadArray.hs`)
-    - [x] implement
-    - [ ] array-monad writing the append of two lists is the same as the
-          sequence of array-monad writing the first list and then array-monad
-          writing the second list ofset by the length of the first list
-  - [x] ordered (set) (`VOrdered.hs`)
-- [ ] data
-  - [x] identity functor (`VIdentity.hs`)
-  - [x] list (`VList.hs`)
-  - [x] natural numbers (`VNat.hs`)
-- [ ] SlowSort List (`SlowSort.hs`)
-  - [x] filter (nondeterministic) (`vfilter`)
-  - [x] predicate for "is sorted" (`isSorted`)
-  - [x] permutation (nondeterministic) (`permute`)
-  - [x] split (nondeterministic) (`split`)
-  - [ ] `slowsort` termination
-  - [ ] `permute` termination
-  - [ ] lift of a list plus-monadically refines permutations of itself
-        (`identity_refines_permute`)
-  - [ ] `isSorted` termination
-  - [ ] `split` termination
-- [ ] QuickSort List (`QuickSortList.hs`)
-  - [ ] `partition_correct`
-  - [ ] "divide and conquer" property (`divide_and_conquer`)
-- [ ] Partition Array (`PartitionArray.hs`)
-  - [ ] what's the main theorem of this module?
-  - [x] mark corresponding terms in paper
-  - [ ] `partl_correct`
-  - [ ] `partl_generalizes_partition`
-  - [ ] `ipartl_specification1_correct`
-  - [ ] decide how to handle (get rid of / name) commented-out implementation
-        for `partl'` that is given in paper but then overriden
-  - [ ] `ipartl_specification2_correct`
-  - [ ] `ipartl_VCons_specification3_correct`
-  - [ ] `ipartl_VCons_then_specification4_correct`
-  - [ ] `ipartl_VCons_else_specification4_correct`
-  - [ ] `refinement11`
-  - [ ] `ipartl_VCons_specification5_correct`
-- [ ] QuickSort Array (`QuickSortArray.hs`)
-  - [ ] `iqsort_specification1_correct`
-  - [ ] `iqsort_specification2_correct`
-  - [ ] `refinement13`
-  - [ ] `iqsort_specification3_correct`
+`Placeholder.M`:
 
-<!-- old -->
+- [ ] prove `kleisli_associativity`
 
-- [ ] QuickSort List (`QuickSort.hs`)
-  - [x] specify partition function (as function predicate)
-  - [x] implement `partition`
-  - [ ] prove correctness of `partition` implementation
-  - [ ] prove "divide and conquer" property (`divide_and_conquer`)
+`Sort.List`:
+
+- [ ] prove termination `permute`
+- [ ] use auxes for `divide_and_conquer_lemma1_aux`
+- [ ] prove `divide_and_conquer_lemma1`:
+  - [ ] several `bind_associativity`
+  - [ ] several `guard_and`
+  - [ ] rearrange `guard`s
+  - [ ] uses auxes to box `divide_and_conquer_lemma1_aux`
+- [ ] use auxes for `divide_and_conquer_aux`
+- [ ] prove `divide_and_conquer`
+- [ ] prove `divide_and_conquer_lemma2` in `Cons` case
+  - [ ] progress with `guard` properties
+- [ ] prove `quicksort_refines_slowsort` in `Cons` case
+
+`Sort.Array`:
+
+- [ ] prove `ipartl_spec_lemma1`
+- [ ] prove `ipartl_spec_lemma2`
+- [ ] prove `ipartl_spec_lemma3_aux1_Nil`
+- [ ] prove `ipartl_spec_lemma3_aux2_Nil`
+- [ ] prove `ipartl_spec_lemma3_aux1_Cons`
+- [ ] prove `ipartl_spec_lemma3_aux2_Cons`
+- [ ] prove `ipartl_spec_lemma3`
+- [ ] prove `ipartl_spec_steps_1_to_3_lemma`
+- [ ] prove `ipartl_spec_steps_3a_to_4`
+- [ ] prove `permute_kleisli_permute_lemma` in `Cons` case
+- [ ] prove `permute_kleisli_permute` in `Cons` case
+- [ ] prove `iqsort_spec_lemma1`
+- [ ] prove `iqsort_spec_lemma3`
+- [ ] prove `iqsort_spec_lemma4`
+- [ ] prove termination `iqsort`
+- [ ] prove `ipartl_spec_steps_4_to_7`
+  - [ ] prove step5 -> step6
+  - [ ] prove step6 -> step7
 
 <!-- References -->
 

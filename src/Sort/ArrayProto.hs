@@ -60,7 +60,7 @@ ipartl_spec_steps_4_to_7_lemma2 p i x xs ys zs = undefined
           ipartl p i (length ys, length zs', length xs)
 
         %by undefined
-        %{- -- TODO
+        %{- -- ! LH reject
         %by %rewrite ipartl_spec_lemma1_aux2_aux i p ys xs
                  %to \zs' -> writeList i (ys ++ zs') >> ipartl p i (length ys, length zs', length xs)
         %by %reflexivity
@@ -134,7 +134,7 @@ ipartl_spec_steps_4_to_7_lemma2 p i x xs ys zs = undefined
 
 -- uses:
 -- - defn of `dispatch`
--- - function calls distribute into `if` -- TODO: define lemma
+-- - function calls distribute into `if`
 -- - `permute_preserves_length`
 -- - commutativity
 -- - [ref 9]
@@ -174,7 +174,7 @@ ipartl_spec_steps_4_to_7 p i x xs ys zs =
             else ipartl_spec_lemma1_aux2 p i x xs ys zs
 
           %by undefined
-          %[- -- TODO
+          %[- -- ! LH reject
           %by %rewrite ipartl_spec_lemma2_aux2 p i x xs ys zs
                   %to ipartl_spec_steps_4_to_7_lemma1_aux2 p i x xs ys zs
           %by ipartl_spec_steps_4_to_7_lemma1 p i x xs ys zs
@@ -288,7 +288,7 @@ ipartl_spec_steps_4_to_7 p i x xs ys zs =
             writeList (i + length (ys' ++ zs')) xs >>
               ipartl p i (length ys', length zs', length xs)
 
-          %by undefined -- TODO
+          %by undefined -- TODO: not sure...
 
       %==
         undefined
@@ -310,7 +310,7 @@ ipartl_spec_steps_4_to_7 p i x xs ys zs =
             writeList (add i (length ys')) zs' >>
               ipartl p i (length ys', length zs', length xs)
 
-          %by undefined -- TODO
+          %by undefined -- TODO: not sure...
 
       %==
         dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->

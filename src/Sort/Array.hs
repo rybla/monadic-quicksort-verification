@@ -60,13 +60,6 @@ ipartl_aux p i ny nz k x' =
         >> ipartl p i (S ny, nz, k)
     else ipartl p i (ny, S nz, k)
 
--- ipartl p i (length ys, length zs, S (length xs)) =
---   read (i + length ys + length zs) >>=
---     ipartl_aux p i (length ys) (length zs) (length xs)
-
--- ipartl p i (ny, nz, S k) =
---   read (i + ny + nz) >>= ipartl_aux p i ny nz k
-
 --
 -- ### ipartl spec lemmas
 --
@@ -381,11 +374,6 @@ ipartl_spec_step8 p i x xs ys zs =
 ipartl_spec_step9 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
 ipartl_spec_step9 p i x xs ys zs = ipartl_spec_aux2 p i (Cons x xs) ys zs
 
--- TODO: do I need this? or just use `ipartl_spec_aux2` above
--- TODO: pretty sure not
--- partl' p (ys, zs, Cons x xs)
---   >>= writeListToLength2 i
-
 {-@
 ipartl_spec_steps_1_to_3_lemma ::
   (Equality (M (Natural, Natural)), Equality Int) =>
@@ -433,7 +421,7 @@ ipartl_spec_steps_1_to_3 p i x xs ys zs =
             >>= ipartl_aux p i (length ys) (length zs) (length xs)
           %by %rewrite ipartl p i (length ys, length zs, S (length xs))
                    %to read (i + length ys + length zs) >>= ipartl_aux p i (length ys) (length zs) (length xs)
-          %by undefined %-- TODO: %by %reflexivity
+          %by undefined %-- ! LH reject
       %==
         writeList i (ys ++ zs ++ Cons x xs)
           >> read (i + length ys + length zs)
@@ -444,7 +432,7 @@ ipartl_spec_steps_1_to_3 p i x xs ys zs =
               else
                 ipartl p i (length ys, S (length ys), length xs)
           %by undefined
-          %{- -- TODO
+          %{- -- ! LH reject
           %by %rewrite ipartl_aux p i (length ys) (length zs) (length xs)
                    %to \x' -> if x' <= p then swap (i + length ys) (i + length ys + length zs) >> ipartl p i (S (length ys), length ys, length xs) else ipartl p i (length ys, S (length ys), length xs)
           %by %extend x'
@@ -461,7 +449,7 @@ ipartl_spec_steps_1_to_3 p i x xs ys zs =
           %by %rewrite writeList i (ys ++ zs ++ Cons x xs) >> read (i + length ys + length zs)
                    %to writeList i (ys ++ zs ++ Cons x xs) >> pure x
           %by undefined
-          %-- TODO: ipartl_spec_steps_1_to_3_lemma
+          %-- ! LH reject: ipartl_spec_steps_1_to_3_lemma
       %==
         %-- ipartl_spec_step2
         writeList i (ys ++ zs ++ Cons x xs) >>
@@ -472,7 +460,7 @@ ipartl_spec_steps_1_to_3 p i x xs ys zs =
           else 
             ipartl p i (length ys, S (length zs), length xs)
           %by undefined
-          %-- TODO: pure_bind
+          %-- ! LH reject: pure_bind
       %==
         ipartl_spec_step3 p i x xs ys zs
           %by undefined
@@ -500,7 +488,7 @@ ipartl_spec_steps_3_to_3a p i x xs ys zs = refinesplus_substitutability f a b h 
           else a'
     a = ipartl_spec_lemma1_aux1 p i x xs ys zs
     b = ipartl_spec_lemma1_aux2 p i x xs ys zs
-    h = undefined -- TODO: ipartl_spec_lemma1 i p x xs ys zs
+    h = undefined -- ! LH reject: ipartl_spec_lemma1 i p x xs ys zs
 
 -- uses: ipartl_spec_lemma2, refinesplus_substitutability
 {-@
@@ -525,7 +513,7 @@ ipartl_spec_steps_3a_to_4 p i x xs ys zs =
   --         else ipartl_spec_lemma1_aux2 p i x xs ys zs
   --   a = ipartl_spec_lemma2_aux1 i x ys zs
   --   b = ipartl_spec_lemma2_aux2 i x ys zs
-  --   h = undefined -- TODO: ipartl_spec_lemma2 i x ys zs
+  --   h = undefined -- ! LH reject: ipartl_spec_lemma2 i x ys zs
 
 -- uses:
 -- - `ipartl_spec_lemma1`,
@@ -588,21 +576,21 @@ permute_kleisli_permute_lemma (Cons x xs) =
         %by %rewrite permute (Cons x xs)
                  %to split xs >>= \(ys, zs) -> liftM2 (\ys' zs' -> ys' ++ Cons x Nil ++ zs') (permute ys) (permute zs)
         %by undefined
-        %-- TODO: why not? by def of permute
+        %-- ! LH reject: by defn permute
     %==
       bind
         (split xs >>= \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs'))
         permute 
           %by undefined
           %{-
-          -- TODO: doesn't work, even when by undefined
+          -- ! LH reject
           ```
           %by %rewrite \(ys, zs) -> liftM2 (\ys' zs' -> ys' ++ Cons x Nil ++ zs') (permute ys) (permute zs)
                    %to \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs')
           %by %extend (ys, zs)
           %by undefined
           ```
-          -- TODO: very strange error:
+          -- ! ! LH reject: very strange error
             ...
             The sort GHC.Types.Int is not numeric
               because
@@ -637,7 +625,7 @@ permute_kleisli_permute Nil =
       pure Nil >>= permute
         %by %rewrite permute Nil %to pure Nil
         %by undefined
-        %-- TODO: why not by reflexivity?
+        %-- ! LH reject: why not by reflexivity?
     %==
       permute Nil
         %by pure_bind Nil permute
@@ -652,7 +640,7 @@ permute_kleisli_permute (Cons x xs) =
         %by %rewrite permute (Cons x xs)
                  %to split xs >>= permute_aux1 x
         %by undefined
-        %-- TODO: why not by def of permute?
+        %-- ! LH reject: why not by def of permute?
     %==
       split xs >>= (permute_aux1 x >=> permute)
         %by bind_associativity (split xs) (permute_aux1 x) permute
@@ -660,7 +648,7 @@ permute_kleisli_permute (Cons x xs) =
       split xs >>= ((\(ys, zs) -> liftM2 (permute_aux2 x) (permute ys) (permute zs)) >=> permute)
         %by undefined
         %{-
-        -- TODO: this error again: "The sort GHC.Types.Int is not numeric"
+        -- ! LH reject: this error again: "The sort GHC.Types.Int is not numeric"
         %by %rewrite permute_aux1 x
                  %to \(ys, zs) -> liftM2 (permute_aux2 x) (permute ys) (permute zs)
         %by %extend (ys, zs)
@@ -670,7 +658,7 @@ permute_kleisli_permute (Cons x xs) =
       split xs >>= ((\(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (permute_aux2 x ys' zs')) >=> permute)
         %by undefined
         %{-
-        -- TODO: not sure why; parsing error suggesting BlockArguments 
+        -- ! LH reject: not sure why; parsing error suggesting BlockArguments 
         %rewrite liftM2 (permute_aux2 x) (permute ys) (permute zs)
              %to \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (permute_aux2 x ys' zs')
         %by %extend (ys, zs)
@@ -1080,7 +1068,7 @@ ipartl_spec_steps_4_to_7_lemma1 p i x xs ys zs =
         ipartl_spec_lemma2_aux2_aux p i x xs ys zs'
 
         %by undefined
-        %{- -- TODO: eta-equivalence
+        %{- -- ! LH reject: eta-equivalence
         %by %rewrite ipartl_spec_lemma2_aux2_aux p i x xs ys
                  %to \zs' -> ipartl_spec_lemma2_aux2_aux p i x xs ys zs'
         %by %extend zs' 
@@ -1093,7 +1081,7 @@ ipartl_spec_steps_4_to_7_lemma1 p i x xs ys zs =
         ipartl_spec_steps_4_to_7_lemma1_lemma_aux2 p i x xs ys zs'
 
         %by undefined
-        %{- -- TODO: ipartl_spec_steps_4_to_7_lemma1_lemma
+        %{- -- ! LH reject: ipartl_spec_steps_4_to_7_lemma1_lemma
         %by %rewrite \zs' -> ipartl_spec_lemma2_aux2_aux p i x xs ys zs'
                  %to \zs' -> ipartl_spec_steps_4_to_7_lemma1_lemma_aux2 p i x xs ys zs'
         %by %extend zs' 
@@ -1106,7 +1094,7 @@ ipartl_spec_steps_4_to_7_lemma1 p i x xs ys zs =
           ipartl_spec_steps_4_to_7_lemma1_aux2_aux p i
 
       %by undefined
-      %{- -- TODO: defn ipartl_spec_steps_4_to_7_lemma1_lemma_aux2
+      %{- -- ! LH reject: defn ipartl_spec_steps_4_to_7_lemma1_lemma_aux2
       %by %rewrite \zs' -> ipartl_spec_steps_4_to_7_lemma1_lemma_aux2 p i x xs ys zs'
                %to \zs' -> dispatch_aux1 x xs ys zs' >>= ipartl_spec_steps_4_to_7_lemma1_aux2_aux p i
       %by %extend zs'
@@ -1121,7 +1109,7 @@ ipartl_spec_steps_4_to_7_lemma1 p i x xs ys zs =
       %by %rewrite \zs' -> dispatch_aux1 x xs ys zs' >>= ipartl_spec_steps_4_to_7_lemma1_aux2_aux p i
                %to dispatch_aux1 x xs ys >=> ipartl_spec_steps_4_to_7_lemma1_aux2_aux p i
       %by undefined 
-      %{- -- TODO: extend, defn (>=>)
+      %{- -- ! LH reject: extend, defn (>=>)
       %by %extend zs' 
       %by %symmetry
       %by %reflexivity
@@ -1198,8 +1186,8 @@ ipartl_spec_steps_4_to_7_lemma1_lemma p i x xs ys zs' =
         writeList i (ys' ++ zs') >>
           ipartl p i (length ys', length zs', length xs)
       
-        %by undefined -- TODO: pure_bind
-        %{- -- TODO
+        %by undefined
+        %{- -- ! LH reject
         %by %symmetry
         %by pure_bind (ys ++ Cons x Nil, zs', xs) (\(ys', zs', xs) -> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs))
         -}%

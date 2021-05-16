@@ -89,6 +89,7 @@ split_aux x (ys, zs) = pure (Cons x ys, zs) <+> pure (ys, Cons x zs)
 ## Divide-and-Conquer
 -}
 
+-- TODO: uses auxes
 -- [ref] divide and conquer equation chain
 {-@ reflect divide_and_conquer_lemma1_aux @-}
 divide_and_conquer_lemma1_aux :: Int -> List Int -> M (List Int)
@@ -209,19 +210,24 @@ divide_and_conquer_lemma1 x xs =
               guard (sorted zs') >>
               pure (ys' ++ Cons x Nil ++ zs')
         %by undefined
-        %-- TODO: rearrange the sequences guards 
+        %-- TODO: rearrange guards
     %==
       split xs >>= \(ys, zs) ->
         guard (all (leq x) ys && all (geq x) zs) >>
           (permute ys >>= guardBy sorted) >>= \ys' ->
             (permute zs >>= guardBy sorted) >>= \zs' ->
                 pure (ys' ++ Cons x Nil ++ zs')
-        %by undefined
+        %by undefined 
         %-- TODO
     %==
+      undefined
+        %-- TODO: use auxes to box `divide_and_conquer_lemma1_aux`
+    %==
       divide_and_conquer_lemma1_aux x xs
+        %by undefined
   |]
 
+-- TODO: use auxes
 {-@ reflect divide_and_conquer_aux @-}
 divide_and_conquer_aux :: Int -> List Int -> M (List Int)
 divide_and_conquer_aux x xs =
@@ -233,7 +239,6 @@ divide_and_conquer_aux x xs =
             >>= \zs' ->
               pure (ys' ++ Cons x Nil ++ zs')
 
--- TODO: prove
 -- [ref] display 8
 {-@
 divide_and_conquer ::
@@ -244,7 +249,7 @@ divide_and_conquer ::
     {slowsort (Cons x xs)}
 @-}
 divide_and_conquer :: Int -> List Int -> EqualityProp (M (List Int, List Int))
-divide_and_conquer = undefined
+divide_and_conquer = undefined -- TODO
 
 {-@ reflect partition @-}
 partition :: Int -> List Int -> (List Int, List Int)
@@ -282,7 +287,7 @@ divide_and_conquer_lemma2 p Nil =
       pure (partition p Nil) <+> (pure (Nil, Nil) >>= guardBy (divide_and_conquer_lemma2_aux2 p))
         %by %rewrite split Nil %to pure (Nil, Nil)
         %by undefined
-        %-- TODO: why not? by def of split     
+        %-- ! LH reject: defn split     
     %==
       pure (partition p Nil) <+> guardBy (divide_and_conquer_lemma2_aux2 p) (Nil, Nil)
         %by %rewrite pure (Nil, Nil) >>= guardBy (divide_and_conquer_lemma2_aux2 p)
@@ -408,7 +413,7 @@ slowsort_Nil =
     %==
       kleisli permute (guardBy sorted) Nil
         %by undefined
-        %-- TODO: why not? by def of slowsort
+        %-- ! LH reject: why not? by def of slowsort
     %==
       permute Nil >>= guardBy sorted
         %by kleisli_unfold permute (guardBy sorted) Nil
