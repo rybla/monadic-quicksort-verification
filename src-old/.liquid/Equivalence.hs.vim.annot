@@ -1,2 +1,0 @@
-1:1-1:1::$trModule :: "GHC.Types.Module"
-28:1-28:5::toEq :: "forall a .\nx1:a -> x2:a -> {VV : (Equivalence.PBEq a) | peq x1 x2} -> {VV : () | x1 == x2}"

@@ -1,2 +1,0 @@
-1:1-1:1::$trModule :: "GHC.Types.Module"
-7:1-7:8::invalid :: "forall a . [GHC.Types.Char] -> a"
