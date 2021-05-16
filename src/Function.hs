@@ -1,6 +1,11 @@
 module Function where
 
+import Language.Haskell.Liquid.ProofCombinators
 import Prelude hiding (flip, map)
+
+--
+-- utilities
+--
 
 {-@ reflect apply @-}
 apply :: (a -> b) -> (a -> b)
@@ -34,3 +39,15 @@ identity x = x
 {-@ reflect compose @-}
 compose :: (b -> c) -> (a -> b) -> (a -> c)
 compose f g x = f (g x)
+
+--
+-- lemmas
+--
+
+{-
+{-@
+apply_if :: f:(a -> b) -> b:Bool -> a1:a -> a2:a -> {_:Proof | f (if b then a1 else a2) = if b then f a1 else f a2}
+@-}
+apply_if :: (a -> b) -> Bool -> a -> a -> Proof
+apply_if = undefined
+-}

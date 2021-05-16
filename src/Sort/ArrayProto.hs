@@ -153,6 +153,10 @@ ipartl_spec_steps_4_to_7 p i x xs ys zs =
         ipartl_spec_step4 p i x xs ys zs
 
       %==
+        undefined
+      
+      %{-
+      
         %-- step4
         writeList (S (i + length ys + length zs)) xs >>
           if x <= p
@@ -169,9 +173,12 @@ ipartl_spec_steps_4_to_7 p i x xs ys zs =
             then ipartl_spec_steps_4_to_7_lemma1_aux2 p i x xs ys zs
             else ipartl_spec_lemma1_aux2 p i x xs ys zs
 
+          %by undefined
+          %[- -- TODO
           %by %rewrite ipartl_spec_lemma2_aux2 p i x xs ys zs
                   %to ipartl_spec_steps_4_to_7_lemma1_aux2 p i x xs ys zs
           %by ipartl_spec_steps_4_to_7_lemma1 p i x xs ys zs
+          -]%
 
       %==
         writeList (S (i + length ys + length zs)) xs >>
@@ -187,31 +194,81 @@ ipartl_spec_steps_4_to_7 p i x xs ys zs =
         writeList (S (i + length ys + length zs)) xs >>
           if x <= p
             then
-              permute zs
-                >>= dispatch_aux1 x xs ys
-                  >>= \(ys', zs', xs) ->
-                    writeList i (ys' ++ zs')
-                      >> ipartl p i (length ys', length zs', length xs)
-            else
-              permute (zs ++ Cons x Nil)
-                >>= dispatch_aux2 xs ys
-                  >>= \(ys', zs', xs) ->
-                    writeList i (ys' ++ zs')
-                      >> ipartl p i (length ys', length zs', length xs)
+              permute zs >>=
+                dispatch_aux1 x xs ys >>=
+                  ipartl_spec_steps_4_to_7_lemma1_aux2_aux p i
+            else ipartl_spec_steps_4_to_7_lemma2_aux2 p i x xs ys zs
+          
+          %by %rewrite ipartl_spec_steps_4_to_7_lemma1_aux2 p i x xs ys zs
+                   %to permute zs >>= dispatch_aux1 x xs ys >>= ipartl_spec_steps_4_to_7_lemma1_aux2_aux p i
+          %by %reflexivity
+      
+      %==
+        writeList (S (i + length ys + length zs)) xs >>
+          if x <= p
+            then
+              permute zs >>=
+                dispatch_aux1 x xs ys >>= \(ys', zs', xs) ->
+                  writeList i (ys' ++ zs') >>
+                    ipartl p i (length ys', length zs', length xs)
+            else ipartl_spec_steps_4_to_7_lemma2_aux2 p i x xs ys zs
 
-          %by undefined -- TODO: unfold to lambdas, using auxs?
+          %by %rewrite ipartl_spec_steps_4_to_7_lemma1_aux2_aux p i
+                   %to \(ys', zs', xs) -> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)
+          %by %reflexivity
+      
+      %==
+        writeList (S (i + length ys + length zs)) xs >>
+          if x <= p
+            then
+              permute zs >>=
+                dispatch_aux1 x xs ys >>= \(ys', zs', xs) ->
+                  writeList i (ys' ++ zs') >>
+                    ipartl p i (length ys', length zs', length xs)
+            else 
+              permute (zs ++ Cons x Nil) >>=
+                dispatch_aux2 xs ys >>=
+                  ipartl_spec_steps_4_to_7_lemma2_aux2_aux p i
+
+          %by %rewrite ipartl_spec_steps_4_to_7_lemma2_aux2 p i x xs ys zs
+                   %to permute (zs ++ Cons x Nil) >>= dispatch_aux2 xs ys >>= ipartl_spec_steps_4_to_7_lemma2_aux2_aux p i
+          %by %reflexivity
 
       %==
         writeList (S (i + length ys + length zs)) xs >>
-          (if x <= p
-            then permute zs >>= dispatch_aux1 x xs ys
-            else permute (zs ++ Cons x Nil) >>= dispatch_aux2 xs ys)
-            >>= \(ys', zs', xs) ->
-              writeList i (ys' ++ zs') >>
-                ipartl p i (length ys', length zs', length xs)
+          if x <= p
+            then
+              permute zs >>=
+                dispatch_aux1 x xs ys >>= \(ys', zs', xs) ->
+                  writeList i (ys' ++ zs') >>
+                    ipartl p i (length ys', length zs', length xs)
+            else 
+              permute (zs ++ Cons x Nil) >>=
+                dispatch_aux2 xs ys >>= \(ys', zs', xs) ->
+                  writeList i (ys' ++ zs') >>
+                    ipartl p i (length ys', length zs', length xs)
+          
+          %by %rewrite ipartl_spec_steps_4_to_7_lemma2_aux2_aux p i
+                   %to  \(ys', zs', xs) -> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)
+          %by %reflexivity
 
-          %by undefined -- TODO: function calls distribute into `if`
+      %==
+        writeList (S (i + length ys + length zs)) xs >>
+          ( if x <= p
+              then permute zs >>= dispatch_aux1 x xs ys
+              else permute (zs ++ Cons x Nil) >>= dispatch_aux2 xs ys
+          ) >>= \(ys', zs', xs) ->
+            writeList i (ys' ++ zs') >>
+              ipartl p i (length ys', length zs', length xs)
 
+          %by %symmetry
+          %by bind_if
+                (x <= p)
+                (permute zs >>= dispatch_aux1 x xs ys)
+                (permute (zs ++ Cons x Nil) >>= dispatch_aux2 xs ys) 
+                (\(ys', zs', xs) -> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs))
+
+      -}%
       %==
         %-- step5
         writeList (S (i + length ys + length zs)) xs >>
@@ -234,12 +291,170 @@ ipartl_spec_steps_4_to_7 p i x xs ys zs =
           %by undefined -- TODO
 
       %==
+        undefined
+        %{- -- TODO: need to make these two the same somehow
+        
+          writeList i (ys' ++ zs') >>
+            writeList (i + length (ys' ++ zs')) xs >>
+          
+        %==
+        
+          writeList i ys' >>
+            writeList (add i (length ys')) zs' >>
+          
+        -}%
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          writeList i ys' >>
+            writeList (add i (length ys')) zs' >>
+              ipartl p i (length ys', length zs', length xs)
+
+          %by undefined -- TODO
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          ( writeList i ys' >>
+              ( writeList (add i (length ys')) zs' >>
+                  ipartl p i (length ys', length zs', length xs)
+              )
+          )
+
+          %by undefined -- TODO: seq_associativity4
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          ( writeList i ys' >>
+              ( writeList (add i (length ys')) zs' >>= \() ->
+                  ipartl p i (length ys', length zs', length xs)
+              )
+          )
+
+          %by undefined -- TODO: defn (>>)
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          writeList i ys' >>= \() ->
+            writeList (add i (length ys')) zs' >>= \() ->
+              ipartl p i (length ys', length zs', length xs)
+              
+          %by undefined -- TODO: defn (>>)
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          writeList i ys' >>= \() ->
+            writeList (add i (length ys')) zs' >>= \() ->
+              pure (length ys', length zs', length xs) >>=
+                  ipartl p i 
+              
+          %by undefined -- TODO: pure_bind
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          writeList i ys' >>= \() ->
+            writeList (add i (length ys')) zs' >>= \() ->
+              ( (\_ -> pure (length ys', length zs', length xs)) >=>
+                  ipartl p i 
+              ) ()
+
+          %by undefined -- TODO: apply 
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          writeList i ys' >>= \() ->
+            writeList (add i (length ys')) zs' >>=
+              ( (\_ -> pure (length ys', length zs', length xs)) >=>
+                  ipartl p i 
+              )
+
+          %by undefined -- TODO: eta-equivalence
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          writeList i ys' >>= \() ->
+            ( (\_ -> writeList (add i (length ys')) zs') >=>
+                ( (\_ -> pure (length ys', length zs', length xs)) >=>
+                    ipartl p i 
+                )
+            ) ()
+
+          %by undefined -- TODO: apply 
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          writeList i ys' >>=
+            ( (\_ -> writeList (add i (length ys')) zs') >=>
+                ( (\_ -> pure (length ys', length zs', length xs)) >=>
+                    ipartl p i 
+                )
+            )
+
+          %by undefined -- TODO: eta-equivalence
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          writeList i ys' >>=
+            (\_ -> writeList (add i (length ys')) zs') >>=
+              (\_ -> pure (length ys', length zs', length xs)) >>=
+                ipartl p i
+        
+        %by undefined -- TODO: bind_associativity4
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          writeList i ys' >>=
+            (\_ -> writeList (add i (length ys')) zs') >>
+              pure (length ys', length zs', length xs) >>=
+                ipartl p i
+        
+        %by undefined -- TODO: defn (>>)
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          writeList i ys' >> 
+            writeList (add i (length ys')) zs' >>
+              pure (length ys', length zs', length xs) >>=
+                ipartl p i
+        
+        %by undefined -- TODO: defn (>>)
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          writeList i (ys' ++ zs') >>
+            pure (length ys', length zs', length xs) >>=
+              ipartl p i
+        
+        %by undefined -- TODO: writeList_append
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          writeListToLength3 i (ys', zs', xs) >>=
+            ipartl p i
+        
+        %by undefined -- TODO: defn writeListToLength3
+
+      %==
+        dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+          ( writeListToLength3 i >=>
+            ipartl p i
+          ) (ys', zs', xs)
+        
+        %by undefined -- TODO: defn (>=>)
+
+      %==
+        dispatch x p (ys, zs, xs) >>=
+          ( writeListToLength3 i >=>
+            ipartl p i )
+        
+        %by undefined -- TODO: eta-equivalence
+
+      %==
         %-- step7
         dispatch x p (ys, zs, xs) >>=
           writeListToLength3 i >>=
             ipartl p i
 
-          %by undefined -- TODO
+          %by undefined -- TODO: defn (>=>)
 
       %==
         ipartl_spec_step7 p i x xs ys zs

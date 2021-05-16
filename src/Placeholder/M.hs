@@ -245,6 +245,40 @@ seq_identity_left x m =
       m
   |]
 
+-- implied by apply_if
+{-@
+bind_if ::
+  Equality (M b) =>
+  b:Bool -> m1:M a -> m2:M a -> k:(a -> M b) ->
+  EqualProp (M b)
+    {(if b then m1 else m2) >>= k}
+    {if b then m1 >>= k else m2 >>= k}
+@-}
+bind_if :: Equality (M b) => Bool -> M a -> M a -> (a -> M b) -> EqualityProp (M b)
+bind_if b m1 m2 k = undefined -- TODO
+
+{-@
+bind_associativity4 ::
+  Equality (M d) =>
+  m:M a -> k1:(a -> M b) -> k2:(b -> M c) -> k3:(c -> M d) ->
+  EqualProp (M d)
+    {m >>= k1 >>= k2 >>= k3}
+    {m >>= (k1 >=> (k2 >=> k3))}
+@-}
+bind_associativity4 :: Equality (M d) => M a -> (a -> M b) -> (b -> M c) -> (c -> M d) -> EqualityProp (M d)
+bind_associativity4 = undefined -- TODO
+
+{-@
+seq_associativity4 ::
+  Equality (M d) =>
+  ma:M a -> mb:M b -> mc:M c -> md:M d ->
+  EqualProp (M d)
+    {ma >> mb >> mc >> md}
+    {ma >> (mb >> (mc >> md))}
+@-}
+seq_associativity4 :: Equality (M c) => M a -> M b -> M c -> M d -> EqualityProp (M d)
+seq_associativity4 ma mb mc md = undefined -- TODO
+
 -- TODO: other monad lemmas
 
 {-
