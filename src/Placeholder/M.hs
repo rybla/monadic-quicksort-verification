@@ -279,6 +279,39 @@ seq_associativity4 ::
 seq_associativity4 :: Equality (M c) => M a -> M b -> M c -> M d -> EqualityProp (M d)
 seq_associativity4 ma mb mc md = undefined -- TODO
 
+{-@
+seq_pure_bind ::
+  Equality (M c) =>
+  m:M a -> x:b -> k:(b -> M c) ->
+  EqualProp (M c)
+    {m >> (pure x >>= k)}
+    {m >> pure x >>= k}
+@-}
+seq_pure_bind :: Equality (M c) => M a -> b -> (b -> M c) -> EqualityProp (M c)
+seq_pure_bind m x k = undefined -- TODO
+
+{-@
+seq_if_bind ::
+  Equality (M c) =>
+  m:M a -> b:Bool -> m1:M b -> m2:M b -> k:(b -> M c) ->
+  EqualProp (M c)
+    {m >> (if b then m1 else m2) >>= k}
+    {m >> if b then m1 >>= k else m2 >>= k}
+@-}
+seq_if_bind :: Equality (M c) => M a -> Bool -> M b -> M b -> (b -> M c) -> EqualityProp (M c)
+seq_if_bind m b m1 m2 k = undefined -- TODO
+
+{-@
+pure_kleisli ::
+  Equality (M c) =>
+  f:(a -> b) -> k:(b -> M c) -> x:a ->
+  EqualProp (M c)
+    {kleisli (compose pure f) k x}
+    {compose k f x}
+@-}
+pure_kleisli :: Equality (M c) => (a -> b) -> (b -> M c) -> a -> EqualityProp (M c)
+pure_kleisli = undefined
+
 -- TODO: other monad lemmas
 
 {-
@@ -537,3 +570,14 @@ writeList_append ::
 @-}
 writeList_append :: Natural -> List Int -> List Int -> EqualityProp (M ())
 writeList_append = undefined -- TODO: migrate proof from Control.Monad.Array
+
+{-@
+writeList_redundancy ::
+  Equality (M Unit) =>
+  i:Natural -> xs:List Int ->
+  EqualProp (M Unit)
+    {writeList i xs >> writeList i xs}
+    {writeList i xs}
+@-}
+writeList_redundancy :: Equality (M Unit) => Natural -> List Int -> EqualityProp (M ())
+writeList_redundancy = undefined -- TODO
