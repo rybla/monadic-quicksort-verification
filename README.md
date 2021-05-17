@@ -33,18 +33,20 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 - [ ] prove `ipartl_spec_lemma3_aux1_Cons`
 - [ ] prove `ipartl_spec_lemma3_aux2_Cons`
 - [ ] prove `ipartl_spec_lemma3`
-- [ ] prove `ipartl_spec_steps_1_to_3_lemma`
-- [ ] prove `ipartl_spec_steps_3a_to_4`
-- [ ] prove `permute_kleisli_permute_lemma` in `Cons` case
+- [x] prove `ipartl_spec_steps1to3`
+  - [ ] prove `ipartl_spec_steps1to3_lemma`
+- [ ] prove `ipartl_spec_steps3Ato4`
 - [ ] prove `permute_kleisli_permute` in `Cons` case
-- [ ] prove `iqsort_spec_lemma1`
-- [ ] prove `iqsort_spec_lemma3`
-- [ ] prove `iqsort_spec_lemma4`
+  - [ ] prove `permute_kleisli_permute_lemma` in `Cons` case
 - [ ] prove termination `iqsort`
-- [ ] prove `ipartl_spec_steps_4_to_7_lemma3`
-- [ ] prove `ipartl_spec_steps_4_to_7`
-  - [ ] prove step5 -> step6
-  - [ ] prove step6 -> step7
+- [ ] prove `ipartl_spec_steps4to7`
+  - [ ] prove `ipartl_spec_steps4to5`
+    - [x] prove `ipartl_spec_steps4to5_lemma1`
+    - [ ] prove `ipartl_spec_steps4to5_lemma2`
+  - [ ] prove `ipartl_spec_steps5to6`
+  - [ ] prove `ipartl_spec_steps6to7`
+  - [x] prove `ipartl_spec_steps4to7_lemma1`
+  - [x] prove `ipartl_spec_steps4to7_lemma2`
 
 <!-- References -->
 

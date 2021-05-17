@@ -4,7 +4,7 @@ module Data.Refined.List where
 
 import Data.Refined.Natural
 import Language.Haskell.Liquid.ProofCombinators
-import Prelude hiding (all, foldl, length)
+import Prelude hiding (all, foldl, length, (++))
 
 {-
 # List
@@ -32,6 +32,10 @@ length (Cons _ xs) = S (length xs)
 append :: List a -> List a -> List a
 append Nil ys = ys
 append (Cons x xs) ys = Cons x (append xs ys)
+
+{-@ reflect snoc @-}
+snoc :: List a -> a -> List a
+snoc xs x = xs ++ Cons x Nil
 
 {-@ infixr 5 ++ @-}
 infixr 5 ++
