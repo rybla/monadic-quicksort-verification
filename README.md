@@ -12,17 +12,19 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 `Sort.List`:
 
 - [ ] prove termination `permute`
-- [ ] use auxes for `divide_and_conquer_lemma1_aux`
-- [ ] prove `divide_and_conquer_lemma1`:
-  - [ ] several `bind_associativity`
-  - [ ] several `guard_and`
-  - [ ] rearrange `guard`s
-  - [ ] uses auxes to box `divide_and_conquer_lemma1_aux`
-- [ ] use auxes for `divide_and_conquer_aux`
 - [ ] prove `divide_and_conquer`
-- [ ] prove `divide_and_conquer_lemma2` in `Cons` case
-  - [ ] progress with `guard` properties
-- [ ] prove `quicksort_refines_slowsort` in `Cons` case
+  - [ ] use auxes for `divide_and_conquer_aux`
+  - [ ] prove `divide_and_conquer_lemma1`:
+    - [ ] use auxes for `divide_and_conquer_lemma1_aux`
+    - [ ] several `bind_associativity`
+    - [ ] several `guard_and`
+    - [ ] rearrange `guard`s
+    - [ ] uses auxes to box `divide_and_conquer_lemma1_aux`
+  - [ ] prove `divide_and_conquer_lemma2`
+    - [ ] prove `Cons` case
+    - [ ] progress with `guard` properties
+- [ ] prove `quicksort_refines_slowsort`
+  - [ ] prove `Cons` case
 
 `Sort.Array`:
 
