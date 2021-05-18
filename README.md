@@ -40,9 +40,9 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
   - [ ] prove `permute_kleisli_permute_lemma` in `Cons` case
 - [ ] prove termination `iqsort`
 - [ ] prove `ipartl_spec_steps4to7`
-  - [ ] prove `ipartl_spec_steps4to5`
+  - [x] prove `ipartl_spec_steps4to5`
     - [x] prove `ipartl_spec_steps4to5_lemma1`
-    - [ ] prove `ipartl_spec_steps4to5_lemma2`
+    - [x] prove `ipartl_spec_steps4to5_lemma2`
   - [ ] prove `ipartl_spec_steps5to6`
   - [ ] prove `ipartl_spec_steps6to7`
   - [x] prove `ipartl_spec_steps4to7_lemma1`
