@@ -1553,3 +1553,137 @@ ipartl_spec_steps4to5 p i x xs ys zs =
         %by %symmetry
         %by %reflexivity
   |]
+
+--
+-- ipartl_spec_steps6to7_lemma
+--
+
+{-@
+ipartl_spec_steps6to7_lemma ::
+  (Equality (List Int), Equality (M ()), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) =>
+  p:Int -> i:Natural -> ys'_zs'_xs:(List Int, List Int, List Int) ->
+  EqualProp (M (Natural, Natural))
+    {ipartl_spec_step6_aux p i ys'_zs'_xs}
+    {kleisli (writeListToLength3 i) (ipartl p i) ys'_zs'_xs}
+@-}
+ipartl_spec_steps6to7_lemma :: (Equality (List Int), Equality (M ()), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) => Int -> Natural -> (List Int, List Int, List Int) -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps6to7_lemma p i (ys', zs', xs) =
+  [eqpropchain|
+      ipartl_spec_step6_aux p i (ys', zs', xs)
+
+    %==
+      writeList i (ys' ++ zs') >>
+        writeList (i + length (ys' ++ zs')) xs >>
+          ipartl p i (length ys', length zs', length xs)
+
+        %by %reflexivity
+
+    %==
+      writeList i ((ys' ++ zs') ++ xs) >>
+        ipartl p i (length ys', length zs', length xs)
+
+        %by %rewrite writeList i (ys' ++ zs') >> writeList (i + length (ys' ++ zs')) xs
+                 %to writeList i ((ys' ++ zs') ++ xs)
+        %by %symmetry
+        %by writeList_append i (ys' ++ zs') xs
+
+    %==
+      writeList i (ys' ++ zs' ++ xs) >>
+        ipartl p i (length ys', length zs', length xs)
+
+        %by %rewrite (ys' ++ zs') ++ xs
+                 %to ys' ++ zs' ++ xs
+        %by %symmetry
+        %by %smt
+        %by append_associativity ys' zs' xs
+
+    %==
+      writeList i (ys' ++ zs' ++ xs) >>
+        ( pure (length ys', length zs', length xs) >>=
+            ipartl p i
+        )
+
+        %by %rewrite ipartl p i (length ys', length zs', length xs)
+                 %to pure (length ys', length zs', length xs) >>= ipartl p i
+        %by %symmetry
+        %by pure_bind (length ys', length zs', length xs) (ipartl p i)
+
+    %==
+      writeList i (ys' ++ zs' ++ xs) >>
+        pure (length ys', length zs', length xs) >>=
+          ipartl p i
+
+        %by %symmetry
+        %by seq_bind_associativity
+              (writeList i (ys' ++ zs' ++ xs))
+              (pure (length ys', length zs', length xs))
+              (ipartl p i)
+
+    %==
+      writeListToLength3 i (ys', zs', xs) >>=
+        ipartl p i
+
+        %by %rewrite writeList i (ys' ++ zs' ++ xs) >> pure (length ys', length zs', length xs)
+                 %to writeListToLength3 i (ys', zs', xs)
+        %by %symmetry
+        %by %reflexivity
+
+    %==
+      kleisli
+        (writeListToLength3 i)
+        (ipartl p i)
+        (ys', zs', xs)
+
+        %by %symmetry
+        %by %reflexivity
+  |]
+
+--
+-- ipartl_spec_steps6to7
+--
+
+{-@
+ipartl_spec_steps6to7 ::
+  (Equality (M ()), Equality (List Int), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) =>
+  p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+  EqualProp (M (Natural, Natural))
+    {ipartl_spec_step6 p i x xs ys zs}
+    {ipartl_spec_step7 p i x xs ys zs}
+@-}
+ipartl_spec_steps6to7 :: (Equality (M ()), Equality (List Int), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps6to7 p i x xs ys zs =
+  [eqpropchain|
+      ipartl_spec_step6 p i x xs ys zs
+
+    %==
+      dispatch x p (ys, zs, xs) >>=
+        ipartl_spec_step6_aux p i
+
+        %by %reflexivity
+
+    %==
+      dispatch x p (ys, zs, xs) >>=
+        kleisli (writeListToLength3 i) (ipartl p i)
+
+        %by undefined
+        %{- -- ! LH reject: problem with %rewrite then %extend?
+        %by %rewrite ipartl_spec_step6_aux p i
+                 %to kleisli (writeListToLength3 i) (ipartl p i)
+        %by %extend (ys', zs', xs)
+        %by ipartl_spec_steps6to7_lemma p i (ys', zs', xs)
+        -}%
+
+    %==
+      dispatch x p (ys, zs, xs) >>=
+        writeListToLength3 i >>=
+          ipartl p i
+
+        %by %symmetry
+        %by bind_associativity_nofix (dispatch x p (ys, zs, xs)) (writeListToLength3 i) (ipartl p i)
+
+    %== -- defn ipartl_spec_step7
+      ipartl_spec_step7 p i x xs ys zs
+
+        %by %symmetry
+        %by %reflexivity
+  |]

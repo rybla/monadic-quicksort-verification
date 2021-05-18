@@ -185,6 +185,18 @@ bind_associativity ::
 bind_associativity :: Equality (M c) => M a -> (a -> M b) -> (b -> M c) -> EqualityProp (M c)
 bind_associativity _ _ _ = assumedProp
 
+{-@
+assume
+bind_associativity_nofix ::
+  Equality (M c) =>
+  m:M a -> k1:(a -> M b) -> k2:(b -> M c) ->
+  EqualProp (M c)
+    {m >>= k1 >>= k2}
+    {m >>= kleisli k1 k2}
+@-}
+bind_associativity_nofix :: Equality (M c) => M a -> (a -> M b) -> (b -> M c) -> EqualityProp (M c)
+bind_associativity_nofix _ _ _ = assumedProp
+
 -- monad lemmas
 
 {-@
@@ -258,6 +270,17 @@ bind_if :: Equality (M b) => Bool -> M a -> M a -> (a -> M b) -> EqualityProp (M
 bind_if b m1 m2 k = undefined -- TODO
 
 {-@
+seq_bind_associativity ::
+  Equality (M c) =>
+  m1:M a -> m2:M b -> k:(b -> M c) ->
+  EqualProp (M c)
+    {m1 >> m2 >>= k}
+    {m1 >> (m2 >>= k)}
+@-}
+seq_bind_associativity :: Equality (M c) => M a -> M b -> (b -> M c) -> EqualityProp (M c)
+seq_bind_associativity = undefined -- TODO
+
+{-@
 bind_associativity4 ::
   Equality (M d) =>
   m:M a -> k1:(a -> M b) -> k2:(b -> M c) -> k3:(c -> M d) ->
@@ -284,8 +307,8 @@ seq_pure_bind ::
   Equality (M c) =>
   m:M a -> x:b -> k:(b -> M c) ->
   EqualProp (M c)
-    {m >> (pure x >>= k)}
     {m >> pure x >>= k}
+    {m >> (pure x >>= k)}
 @-}
 seq_pure_bind :: Equality (M c) => M a -> b -> (b -> M c) -> EqualityProp (M c)
 seq_pure_bind m x k = undefined -- TODO
