@@ -8,6 +8,20 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 `Placeholder.M`:
 
 - [ ] prove `kleisli_associativity`
+- [ ] prove `bind_if`
+- [ ] prove `seq_bind_associativity`
+- [ ] prove `bind_associativity4`
+- [ ] prove `seq_associativity4`
+- [ ] prove `seq_pure_bind`
+- [ ] prove `seq_if_bind`
+- [ ] prove `pure_kleisli`
+- [ ] prove `refinesplus_equalprop`
+- [ ] prove `refinesplus_reflexivity`
+- [ ] prove `refinesplus_transitivity`
+- [ ] prove `refinesplus_substitutability`
+- [ ] prove `writeList_append`
+  - [ ] migrate from `Control.Monad.Array`
+- [ ] prove `writeList_redundancy` (is this used anywhere?)
 
 `Sort.List`:
 
