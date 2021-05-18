@@ -27,28 +27,28 @@ import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (*)
 -- - monad laws
 -- - inductive hypothesis
 {-@
-ipartl_spec_steps_7_to_8 ::
+ipartl_spec_steps7to8 ::
   Equality (M (Natural, Natural)) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
     {ipartl_spec_step7 p i x xs ys zs}
     {ipartl_spec_step8 p i x xs ys zs}
 @-}
-ipartl_spec_steps_7_to_8 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_steps_7_to_8 = undefined
+ipartl_spec_steps7to8 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps7to8 = undefined -- TODO
 
 -- uses:
 -- - defn of `partl`'
 {-@
-ipartl_spec_steps_8_to_9 ::
+ipartl_spec_steps8to9 ::
   Equality (M (Natural, Natural)) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
     {ipartl_spec_step8 p i x xs ys zs}
     {ipartl_spec_step9 p i x xs ys zs}
 @-}
-ipartl_spec_steps_8_to_9 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_steps_8_to_9 = undefined
+ipartl_spec_steps8to9 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps8to9 = undefined -- TODO
 
 {-@
 ipartl_spec_steps ::
@@ -73,9 +73,9 @@ ipartl_spec_steps p i x xs ys zs = undefined
             (ipartl_spec_steps_4_to_7 p i x xs ys zs)
             ( (refinesplus_transitivity step7 step8 step9)
                 -- 7 refines 8
-                (ipartl_spec_steps_7_to_8 p i x xs ys zs)
+                (ipartl_spec_steps7to8 p i x xs ys zs)
                 -- 8 refines 9
-                (ipartl_spec_steps_8_to_9 p i x xs ys zs)
+                (ipartl_spec_steps8to9 p i x xs ys zs)
             )
         )
     )
@@ -191,29 +191,4 @@ iqsort_spec i (Cons p xs) = undefined
             )
         )
     )
--}
-
-{- -- * definitions
-iqsort_spec_aux1 i xs = writeList i xs >> iqsort i (length xs)
-iqsort_spec_aux1_Cons_aux i p xs =
-  (write i p >> writeList (S i) xs)
-    >> (read i >>= iqsort_aux1 i n)
-  where
-    n = length xs
-
-iqsort_spec_aux2 i xs = slowsort xs >>= writeList i
-iqsort_spec_aux2_Cons_aux i p xs =
-  split xs
-    >>= permute_aux1 p
-    >>= guardBy sorted
-    >>= writeList i
-
-iqsort_spec_lemma1_aux1 i p xs =
-  partl' p (Nil, Nil, xs) >>= iqsort_spec_lemma1_aux2 i p
-iqsort_spec_lemma1_aux2 i p (ys, zs) =
-  permute ys >>= iqsort_spec_lemma1_aux3 i p ys zs
-iqsort_spec_lemma1_aux3 i p ys zs ys' =
-  writeList i (ys' ++ Cons p Nil ++ zs)
-    >> iqsort i (length ys)
-    >> iqsort (S (i + length ys)) (length zs)
 -}

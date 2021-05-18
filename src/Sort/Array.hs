@@ -259,13 +259,14 @@ ipartl_spec_lemma3 i x Nil = undefined
         %by ipartl_spec_lemma3_aux2_Nil i x
   |]
 -}
-ipartl_spec_lemma3 i x (Cons z zs) =
+ipartl_spec_lemma3 i x (Cons z zs) = undefined -- TODO
+{-
   [eqpropchain|
       ipartl_spec_lemma3_aux1 i x (Cons z zs)
     %==
-      
       ipartl_spec_lemma3_aux2 i x (Cons z zs)
   |]
+-}
 
 {- -- * definitions
 ipartl_spec_lemma3_aux1 i x zs =
