@@ -239,7 +239,7 @@ ipartl_spec_steps4to7 p i x xs ys zs = undefined
             writeList (i + length (ys' ++ zs')) xs >>
               ipartl p i (length ys', length zs', length xs)
 
-          %by undefined -- TODO: not sure
+          %by undefined -- TODO: not sure...
 
       %==
         dispatch x p (ys, zs, xs) >>=

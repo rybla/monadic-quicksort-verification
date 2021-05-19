@@ -215,7 +215,7 @@ seq_associativity ma mb mc =
       (ma >>= constant mb) >> mc
     %==
       (ma >>= constant mb) >>= constant mc
-        %by undefined %-- TODO: smt crash: invalid qualiied identifier, sort mismatch
+        %by undefined %-- ! LH reject: SMT crash: invalid qualiied identifier, sort mismatch
     %==
       ma >>= (constant mb >=> constant mc)
         %by bind_associativity ma (constant mb) (constant mc)
@@ -333,7 +333,7 @@ pure_kleisli ::
     {compose k f x}
 @-}
 pure_kleisli :: Equality (M c) => (a -> b) -> (b -> M c) -> a -> EqualityProp (M c)
-pure_kleisli = undefined
+pure_kleisli = undefined -- TODO
 
 -- TODO: other monad lemmas
 
