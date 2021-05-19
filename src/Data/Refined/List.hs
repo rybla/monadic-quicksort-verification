@@ -69,9 +69,8 @@ length_snoc :: xs:List a -> x:a -> {length (xs ++ Cons x Nil) = S (length xs)}
 length_snoc :: List a -> a -> Proof
 length_snoc xs x = undefined -- TODO
 
-{-
-## Utilities
--}
+-- |
+-- == Utilities
 
 {-@ reflect all @-}
 all :: (a -> Bool) -> List a -> Bool

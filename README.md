@@ -25,6 +25,8 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 `Sort.List`:
 
 - [ ] prove termination `permute`
+- [ ] prove `pure_refines_permute`
+- [ ] prove `permute_preserves_length`
 - [ ] prove `divide_and_conquer`
   - [ ] use auxes for `divide_and_conquer_aux`
   - [ ] prove `divide_and_conquer_lemma1`:
@@ -44,7 +46,10 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 - [ ] prove `permute_kleisli_permute` in `Cons` case
   - [ ] prove `permute_kleisli_permute_lemma` in `Cons` case
 - [x] prove `ipartl_spec`
-  - [ ] prove `ipartl_spec_lemma1`
+  - [x] prove `ipartl_spec_lemma1`
+    - [x] prove `ipartl_spec_lemma1_step1`
+    - [x] prove `ipartl_spec_lemma1_step1`
+    - [x] prove `ipartl_spec_lemma1_step1`
   - [ ] prove `ipartl_spec_lemma2`
   - [x] prove `ipartl_spec_lemma3`
     - [ ] prove `ipartl_spec_lemma3_aux1_Nil`

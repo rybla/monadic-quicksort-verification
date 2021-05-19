@@ -461,12 +461,12 @@ refinesplus_transitivity m1 m2 m3 h12 h23 = undefined -- TODO
 
 {-@
 refinesplus_substitutability ::
-  Equality (M a) =>
+  (Equality (M a), Equality (M b)) =>
   f:(M a -> M b) -> x:M a -> y:M a ->
   RefinesPlus (a) {x} {y} ->
   RefinesPlus (b) {f x} {f y}
 @-}
-refinesplus_substitutability :: Equality (M a) => (M a -> M b) -> M a -> M a -> EqualityProp (M a) -> EqualityProp (M b)
+refinesplus_substitutability :: (Equality (M a), Equality (M b)) => (M a -> M b) -> M a -> M a -> EqualityProp (M a) -> EqualityProp (M b)
 refinesplus_substitutability f x y h = undefined -- TODO
 
 {-

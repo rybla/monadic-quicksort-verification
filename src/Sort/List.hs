@@ -70,6 +70,17 @@ permute_preserves_length ::
 permute_preserves_length :: Equality Int => List Int -> EqualityProp Int
 permute_preserves_length xs = undefined -- TODO
 
+{-@
+pure_refines_permute ::
+  Equality (List Int) =>
+  xs:List Int ->
+  RefinesPlus (List Int)
+    {pure xs}
+    {permute xs}
+@-}
+pure_refines_permute :: Equality (List Int) => List Int -> EqualityProp (M (List Int))
+pure_refines_permute xs = undefined -- TODO
+
 {-@ reflect split @-}
 split :: List Int -> M (List Int, List Int)
 split Nil = pure (Nil, Nil)

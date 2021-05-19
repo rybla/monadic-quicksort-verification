@@ -22,6 +22,10 @@ import Sort.Array
 import Sort.List
 import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (*), (+), (++), (>>), (>>=))
 
+--
+-- ipartl_spec_steps5to6
+--
+
 {-@
 ipartl_spec_steps5to6 ::
   (Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) =>
