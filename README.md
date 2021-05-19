@@ -19,8 +19,7 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 - [ ] prove `refinesplus_reflexivity`
 - [ ] prove `refinesplus_transitivity`
 - [ ] prove `refinesplus_substitutability`
-- [ ] prove `writeList_append`
-  - [ ] migrate from `Control.Monad.Array`
+- [ ] prove `writeList_append` (migrate from `Control.Monad.Array`)
 - [ ] prove `writeList_redundancy` (is this used anywhere?)
 
 `Sort.List`:
