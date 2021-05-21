@@ -890,22 +890,100 @@ ipartl_spec_lemma3_aux1_Cons ::
     {ipartl_spec_lemma3_aux1_Cons_aux i x z zs}
 @-}
 ipartl_spec_lemma3_aux1_Cons :: Equality (M Unit) => Natural -> Int -> Int -> List Int -> EqualityProp (M ())
-{-
-ipartl_spec_lemma3_aux1 i x (Cons z zs)
-writeList i (Cons z zs ++ Cons x Nil) >> swap i (i + length (Cons z zs))
-writeList i (Cons z zs ++ Cons x Nil) >> swap i (S (i + length zs))
-writeList i (Cons z zs ++ Cons x Nil) >> swap i (S (i + length zs))
-writeList i (Cons z (zs ++ Cons x Nil)) >> swap i (S (i + length zs))
-(write i z >> writeList (S i) (zs ++ Cons x Nil)) >> swap i (S (i + length zs))
-(write i z >> (writeList (S i) zs >> writeList (i + length zs) (Cons x Nil))) >> swap i (S (i + length zs))
-(write i z >> (writeList (S i) zs >> (write (i + length zs) x >> writeList (S (i + length zs)) Nil))) >> swap i (S (i + length zs))
-(write i z >> (writeList (S i) zs >> (write (i + length zs) x >> pure it))) >> swap i (S (i + length zs))
-((write i z >> writeList (S i) zs) >> (write (i + length zs) x >> pure it)) >> swap i (S (i + length zs))
-(((write i z >> writeList (S i) zs) >> write (i + length zs) x) >> pure it) >> swap i (S (i + length zs))
-(((write i z >> writeList (S i) zs) >> write (i + length zs) x) >> (pure it >> swap i (S (i + length zs)))
-((write i z >> writeList (S i) zs) >> write (i + length zs) x) >> swap i (S (i + length zs))
--}
-ipartl_spec_lemma3_aux1_Cons i x z zs = undefined -- TODO
+ipartl_spec_lemma3_aux1_Cons i x z zs =
+  [eqpropchain|
+      ipartl_spec_lemma3_aux1 i x (Cons z zs)
+
+    %==
+      writeList i (Cons z zs ++ Cons x Nil) >> swap i (i + length (Cons z zs))
+
+        %by %reflexivity
+
+    %==
+      writeList i (Cons z zs ++ Cons x Nil) >> swap i (i + S (length zs))
+        
+        %by %rewrite length (Cons z zs)
+                 %to S (length zs)
+        %by %reflexivity
+
+    %==
+      writeList i (Cons z zs ++ Cons x Nil) >> swap i (S (i + length zs))
+
+        %by %rewrite i + S (length zs)
+                 %to S (i + length zs)
+        %by %smt 
+        %by add_S_right i (length zs)
+
+    %==
+      writeList i (Cons z (zs ++ Cons x Nil)) >> swap i (S (i + length zs))
+
+        %by %rewrite Cons z zs ++ Cons x Nil
+                 %to Cons z (zs ++ Cons x Nil)
+        %by %reflexivity
+
+    %==
+      write i z >> writeList (S i) (zs ++ Cons x Nil) >> swap i (S (i + length zs))
+
+        %by %rewrite writeList i (Cons z (zs ++ Cons x Nil))
+                 %to write i z >> writeList (S i) (zs ++ Cons x Nil)
+        %by %reflexivity
+
+    %==
+      (write i z >> (writeList (S i) zs >> writeList (i + length zs) (Cons x Nil))) >> swap i (S (i + length zs))
+
+        %by %rewrite writeList (S i) (zs ++ Cons x Nil)
+                 %to writeList (S i) zs >> writeList (i + length zs) (Cons x Nil)
+        %by writeList_append (S i) zs (Cons x Nil)
+
+    %==
+      (write i z >> (writeList (S i) zs >> (write (i + length zs) x >> writeList (S (i + length zs)) Nil))) >> swap i (S (i + length zs))
+
+        %by %rewrite writeList (i + length zs) (Cons x Nil)
+                 %to write (i + length zs) x >> writeList (S (i + length zs)) Nil
+        %by %reflexivity
+
+    %==
+      (write i z >> (writeList (S i) zs >> (write (i + length zs) x >> pure it))) >> swap i (S (i + length zs))
+
+        %by %rewrite writeList (S (i + length zs)) Nil
+                %to pure it 
+        %by %reflexivity
+
+    %==
+      write i z >> writeList (S i) zs >> (write (i + length zs) x >> pure it) >> swap i (S (i + length zs))
+
+        %by %rewrite write i z >> (writeList (S i) zs >> (write (i + length zs) x >> pure it))
+                 %to write i z >> writeList (S i) zs >> (write (i + length zs) x >> pure it)
+        %by %symmetry
+        %by seq_associativity
+              (write i z)
+              (writeList (S i) zs)
+              (write (i + length zs) x >> pure it)
+
+    %==
+      write i z >> writeList (S i) zs >> write (i + length zs) x >> pure it >> swap i (S (i + length zs))
+
+        %by %rewrite write i z >> writeList (S i) zs >> (write (i + length zs) x >> pure it)
+                 %to write i z >> writeList (S i) zs >> write (i + length zs) x >> pure it
+        %by %symmetry
+        %by seq_associativity
+              (write i z >> writeList (S i) zs)
+              (write (i + length zs) x)
+              (pure it)
+
+    %==
+      write i z >> writeList (S i) zs >> write (i + length zs) x >> (pure it >> swap i (S (i + length zs)))
+
+        %by seq_associativity
+              (write i z >> writeList (S i) zs >> write (i + length zs) x)
+              (pure it)
+              (swap i (S (i + length zs)))
+
+    %==
+      write i z >> writeList (S i) zs >> write (i + length zs) x >> swap i (S (i + length zs))
+
+        %by seq_identity_left it (swap i (S (i + length zs)))
+  |]
 
 {-@ reflect ipartl_spec_lemma3_aux2_Cons_aux @-}
 ipartl_spec_lemma3_aux2_Cons_aux :: Natural -> Int -> Int -> List Int -> M Unit
