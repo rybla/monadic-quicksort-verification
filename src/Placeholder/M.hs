@@ -335,6 +335,31 @@ pure_kleisli ::
 pure_kleisli :: Equality (M c) => (a -> b) -> (b -> M c) -> a -> EqualityProp (M c)
 pure_kleisli = undefined -- TODO
 
+{-@
+seq_bind_seq_associativity ::
+  m1:M a -> m2:M b -> k:(b -> M c) -> m3:M d ->
+  EqualProp (M d)
+    {m1 >> m2 >>= k >> m3}
+    {m1 >> (m2 >>= k >> m3)}
+@-}
+seq_bind_seq_associativity :: M a -> M b -> (b -> M c) -> M d -> EqualityProp (M d)
+seq_bind_seq_associativity = undefined -- TODO
+
+{-@ reflect kseq @-}
+kseq :: (a -> M b) -> M c -> (a -> M c)
+kseq k m x = k x >> m
+
+{-@
+bind_seq_associativity ::
+  Equality (M c) =>
+  m1:M a -> k:(a -> M b) -> m2:M c ->
+  EqualProp (M c)
+    {m1 >>= k >> m2}
+    {m1 >>= kseq k m2}
+@-}
+bind_seq_associativity :: Equality (M c) => M a -> (a -> M b) -> M c -> EqualityProp (M c)
+bind_seq_associativity = undefined -- TODO
+
 -- TODO: other monad lemmas
 
 {-

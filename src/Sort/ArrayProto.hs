@@ -129,7 +129,7 @@ ipartl_spec_steps4to7 p i x xs ys zs = undefined
             else ipartl_spec_lemma1_aux2 p i x xs ys zs
 
           %by undefined
-          %[- -- ! LH reject
+          %[- -- !LH reject
           %by %rewrite ipartl_spec_lemma2_aux2 p i x xs ys zs
                   %to ipartl_spec_steps4to7_lemma1_aux2 p i x xs ys zs
           %by ipartl_spec_steps4to7_lemma1 p i x xs ys zs

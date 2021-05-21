@@ -70,6 +70,21 @@ permute_preserves_length ::
 permute_preserves_length :: Equality Int => List Int -> EqualityProp Int
 permute_preserves_length xs = undefined -- TODO
 
+{-@ reflect bind_seq_associativity_with_permute_preserved_length_aux @-}
+bind_seq_associativity_with_permute_preserved_length_aux :: (List Int -> M a) -> (Natural -> M b) -> List Int -> M b
+bind_seq_associativity_with_permute_preserved_length_aux k f xs' =
+  k xs' >> f (length xs')
+
+{-@
+bind_seq_associativity_with_permute_preserved_length ::
+  xs:List Int -> k:(List Int -> M a) -> f:(Natural -> M b) ->
+  EqualProp (M b)
+    {bind (permute xs) (kseq k (f (length xs)))}
+    {bind (permute xs) (bind_seq_associativity_with_permute_preserved_length_aux k f)}
+@-}
+bind_seq_associativity_with_permute_preserved_length :: List Int -> (List Int -> M a) -> (Natural -> M b) -> EqualityProp (M b)
+bind_seq_associativity_with_permute_preserved_length = undefined -- TODO
+
 {-@
 pure_refines_permute ::
   Equality (List Int) =>
@@ -80,6 +95,22 @@ pure_refines_permute ::
 @-}
 pure_refines_permute :: Equality (List Int) => List Int -> EqualityProp (M (List Int))
 pure_refines_permute xs = undefined -- TODO
+
+{-@ reflect permute_commutativity_seq_bind_aux @-}
+permute_commutativity_seq_bind_aux :: M a -> (List Int -> M b) -> List Int -> M b
+permute_commutativity_seq_bind_aux m1 k xs' = m1 >> k xs'
+
+-- permute commutes because it has only the nondeterminism effect
+{-@
+permute_commutativity_seq_bind ::
+  Equality (M b) =>
+  m1:M a -> xs:List Int -> k:(List Int -> M b) ->
+  EqualProp (M b)
+    {bind (seq m1 (permute xs)) k}
+    {bind (permute xs) (permute_commutativity_seq_bind_aux m1 k)}
+@-}
+permute_commutativity_seq_bind :: Equality (M b) => M a -> List Int -> (List Int -> M b) -> EqualityProp (M b)
+permute_commutativity_seq_bind = undefined -- TODO
 
 {-@ reflect split @-}
 split :: List Int -> M (List Int, List Int)

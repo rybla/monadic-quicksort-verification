@@ -114,7 +114,7 @@ ipartl_spec_lemma1_step1 p i x xs ys zs =
           ipartl p i (length ys, length zs', length xs)
 
         %by undefined
-        %{- -- ! LH reject
+        %{- -- !LH reject
         %by %symmetry
         %by pure_bind (zs ++ Cons x Nil) (\zs' -> writeList i (ys ++ zs') >> ipartl p i (length ys, length zs', length xs))
         -}%
@@ -124,7 +124,7 @@ ipartl_spec_lemma1_step1 p i x xs ys zs =
         ipartl_spec_step4_aux2_aux p i xs ys
 
         %by undefined
-        %{- -- ! LH reject: again with the rewrite, extend
+        %{- -- !LH reject: again with the rewrite, extend
         %by %rewrite \zs' -> writeList i (ys ++ zs') >> ipartl p i (length ys, length zs', length xs)
                  %to ipartl_spec_step4_aux2_aux p i xs ys
         %by %extend zs' 
@@ -161,7 +161,7 @@ ipartl_spec_lemma1_step2 p i x xs ys zs = refinesplus_substitutability f a b pf 
     f m = bind m (ipartl_spec_step4_aux2_aux p i xs ys)
     a = pure (append zs (Cons x Nil))
     b = permute (append zs (Cons x Nil))
-    pf = undefined -- ! LH reject: pure_refines_permute (append zs (Cons x Nil))
+    pf = undefined -- !LH reject: pure_refines_permute (append zs (Cons x Nil))
 
 {-@
 ipartl_spec_lemma1_step3 ::
@@ -210,7 +210,7 @@ ipartl_spec_lemma1 p i x xs ys zs =
     step1
     ( (refinesplus_transitivity aux2 aux3 aux4)
         step2
-        (step3 ? undefined) -- ! LH reject
+        (step3 ? undefined) -- !LH reject
     )
   where
     aux1 = ipartl_spec_step3_aux2 p i x xs ys zs
@@ -225,16 +225,519 @@ ipartl_spec_lemma1 p i x xs ys zs =
 -- #### ipartl spec lemma 2
 --
 
+{-@ reflect ipartl_spec_lemma2_step1_aux1 @-}
+ipartl_spec_lemma2_step1_aux1 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
+ipartl_spec_lemma2_step1_aux1 p i x xs ys zs' =
+  writeList (i + length ys) (Cons x Nil ++ zs')
+    >> ipartl p i (S (length ys), length zs', length xs)
+
+{-@
+ipartl_spec_lemma2_step1 ::
+  (Equality (M (Natural, Natural)), Equality (M Unit)) =>
+  p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+  RefinesPlus (Natural, Natural)
+    {ipartl_spec_step3_aux1 p i x xs ys zs}
+    {seq (seq (seq (writeList i ys) (writeList (add i (length ys)) (append zs (Cons x Nil)))) (swap (add i (length ys)) (add i (add (length ys) (length zs))))) (ipartl p i (S (length ys), length zs, length xs))}
+@-}
+ipartl_spec_lemma2_step1 :: (Equality (M (Natural, Natural)), Equality (M Unit)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_lemma2_step1 p i x xs ys zs =
+  -- !LH slow
+  [eqpropchain|
+      ipartl_spec_step3_aux1 p i x xs ys zs
+
+    %==
+      writeList i (ys ++ zs ++ Cons x Nil) >>
+        swap (i + length ys) (i + length ys + length zs) >>
+          ipartl p i (S (length ys), length zs, length xs)
+
+        %by %reflexivity
+
+    %==
+      writeList i (ys ++ zs ++ Cons x Nil) >>
+        swap (i + length ys) (add i (add (length ys) (length zs))) >>
+          ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite i + length ys + length zs
+                 %to add i (add (length ys) (length zs))
+        %by %reflexivity
+
+    %==
+      writeList i (ys ++ zs ++ Cons x Nil) >>
+        swap (add i (length ys)) (add i (add (length ys) (length zs))) >>
+          ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite i + length ys
+                 %to add i (length ys)
+        %by %reflexivity
+
+    %==
+      writeList i (ys ++ append zs (Cons x Nil)) >>
+        swap (add i (length ys)) (add i (add (length ys) (length zs))) >>
+          ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite ys ++ zs ++ Cons x Nil
+                 %to ys ++ append zs (Cons x Nil)
+        %by %reflexivity
+
+    %==
+      writeList i ys >>
+        writeList (add i (length ys)) (append zs (Cons x Nil)) >>
+          swap (add i (length ys)) (add i (add (length ys) (length zs))) >>
+            ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite writeList i (ys ++ append zs (Cons x Nil))
+                 %to writeList i ys >> writeList (add i (length ys)) (append zs (Cons x Nil))
+        %by writeList_append i ys (append zs (Cons x Nil))
+
+    %==
+      seq (writeList i ys)
+          (writeList (add i (length ys)) (append zs (Cons x Nil))) >>
+        swap (add i (length ys)) (add i (add (length ys) (length zs))) >>
+          ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite writeList i ys >> writeList (add i (length ys)) (append zs (Cons x Nil))
+                 %to writeList i ys >> writeList (add i (length ys)) (append zs (Cons x Nil))
+        %by %reflexivity
+
+    %==
+      seq (seq (writeList i ys)
+               (writeList (add i (length ys)) (append zs (Cons x Nil))))
+          (swap (add i (length ys)) (add i (add (length ys) (length zs)))) >>
+        ipartl p i (S (length ys), length zs, length xs)
+
+      %by %rewrite seq (writeList i ys) (writeList (add i (length ys)) (append zs (Cons x Nil))) >> swap (add i (length ys)) (add i (add (length ys) (length zs)))
+               %to seq (seq (writeList i ys) (writeList (add i (length ys)) (append zs (Cons x Nil)))) (swap (add i (length ys)) (add i (add (length ys) (length zs))))
+      %by %reflexivity
+
+    %==
+      seq (seq (seq (writeList i ys)
+                    (writeList (add i (length ys)) (append zs (Cons x Nil))))
+               (swap (add i (length ys)) (add i (add (length ys) (length zs)))))
+          (ipartl p i (S (length ys), length zs, length xs))
+
+        %by %reflexivity
+  |]
+
+{-@
+ipartl_spec_lemma2_step2 ::
+  (Equality (M (Natural, Natural)), Equality (M Unit)) =>
+  p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+  RefinesPlus (Natural, Natural)
+    {seq (seq (seq (writeList i ys) (writeList (add i (length ys)) (append zs (Cons x Nil)))) (swap (add i (length ys)) (add i (add (length ys) (length zs))))) (ipartl p i (S (length ys), length zs, length xs))}
+    {bind (seq (writeList i ys) (permute zs)) (ipartl_spec_lemma2_step1_aux1 p i x xs ys)}
+@-}
+ipartl_spec_lemma2_step2 :: (Equality (M (Natural, Natural)), Equality (M Unit)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_lemma2_step2 p i x xs ys zs =
+  -- !LH slow
+  [eqpropchain|
+      seq (seq (seq
+      (writeList i ys)
+        (writeList (add i (length ys)) (append zs (Cons x Nil))))
+          (swap (add i (length ys)) (add i (add (length ys) (length zs)))))
+            (ipartl p i (S (length ys), length zs, length xs))
+
+    %==
+      (seq (seq
+      (writeList i ys)
+        (writeList (add i (length ys)) (append zs (Cons x Nil))))
+          (swap (add i (length ys)) (add i (add (length ys) (length zs))))) >>
+            (ipartl p i (S (length ys), length zs, length xs))
+
+    %==
+      (seq
+      (writeList i ys)
+        (writeList (add i (length ys)) (append zs (Cons x Nil)))) >>
+          swap (add i (length ys)) (add i (add (length ys) (length zs))) >>
+            ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite (seq (seq (writeList i ys) (writeList (add i (length ys)) (append zs (Cons x Nil)))) (swap (add i (length ys)) (add i (add (length ys) (length zs)))))
+                 %to (seq (writeList i ys) (writeList (add i (length ys)) (append zs (Cons x Nil)))) >> swap (add i (length ys)) (add i (add (length ys) (length zs)))
+        %by %reflexivity
+
+    %==
+      writeList i ys >>
+        writeList (add i (length ys)) (append zs (Cons x Nil)) >>
+          swap (add i (length ys)) (add i (add (length ys) (length zs))) >>
+            ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite (seq (writeList i ys) (writeList (add i (length ys)) (append zs (Cons x Nil))))
+                 %to writeList i ys >> writeList (add i (length ys)) (append zs (Cons x Nil))
+        %by %reflexivity
+
+    %==
+      writeList i ys >>
+        writeList (add i (length ys)) (append zs (Cons x Nil)) >>
+          swap (add i (length ys)) (add i (add (length ys) (length zs))) >>
+            ipartl p i (S (length ys), length zs, length xs)
+
+    %==
+      writeList i ys >>
+        writeList (i + length ys) (append zs (Cons x Nil)) >>
+          swap (add i (length ys)) (add i (add (length ys) (length zs))) >>
+            ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite add i (length ys)
+                 %to i + length ys
+        %by %reflexivity
+
+    %==
+      writeList i ys >>
+        writeList (i + length ys) (zs ++ Cons x Nil) >>
+          swap (i + length ys) (add i (add (length ys) (length zs))) >>
+            ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite append zs (Cons x Nil)
+                 %to zs ++ Cons x Nil
+        %by %reflexivity
+
+    %==
+      writeList i ys >>
+        writeList (i + length ys) (zs ++ Cons x Nil) >>
+          swap (i + length ys) (i + length ys + length zs) >>
+            ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite add i (add (length ys) (length zs))
+                 %to i + length ys + length zs
+        %by %reflexivity
+
+    %==
+      writeList i ys >>
+        ( writeList (i + length ys) (zs ++ Cons x Nil) >>
+            swap (i + length ys) (i + length ys + length zs)
+        ) >>
+            ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite writeList i ys >> writeList (i + length ys) (zs ++ Cons x Nil) >> swap (i + length ys) (i + length ys + length zs)
+                 %to writeList i ys >> (writeList (i + length ys) (zs ++ Cons x Nil) >> swap (i + length ys) (i + length ys + length zs))
+        %by seq_associativity (writeList i ys) (writeList (i + length ys) (zs ++ Cons x Nil)) (swap (i + length ys) (i + length ys + length zs))
+
+    %==
+      writeList i ys >>
+        ipartl_spec_lemma3_aux1 (i + length ys) x zs >>
+          ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite writeList (i + length ys) (zs ++ Cons x Nil) >> swap (i + length ys) (i + length ys + length zs)
+                 %to ipartl_spec_lemma3_aux1 (i + length ys) x zs
+        %by %symmetry
+        %by %reflexivity
+
+    %==
+      writeList i ys >>
+        ipartl_spec_lemma3_aux2 (i + length ys) x zs >>
+          ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite ipartl_spec_lemma3_aux1 (i + length ys) x zs
+                 %to ipartl_spec_lemma3_aux2 (i + length ys) x zs
+        %by ipartl_spec_lemma3 (i + length ys) x zs
+
+    %==
+      writeList i ys >>
+        ( permute zs >>=
+            ipartl_spec_lemma3_aux2_aux (i + length ys) x
+        ) >>
+            ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite ipartl_spec_lemma3_aux2 (i + length ys) x zs
+                 %to permute zs >>= ipartl_spec_lemma3_aux2_aux (i + length ys) x
+        %by %reflexivity
+
+    %==
+      writeList i ys >>
+        permute zs >>=
+          ipartl_spec_lemma3_aux2_aux (i + length ys) x >>
+            ipartl p i (S (length ys), length zs, length xs)
+
+        %by %rewrite writeList i ys >> (permute zs >>= ipartl_spec_lemma3_aux2_aux (i + length ys) x)
+                 %to writeList i ys >> permute zs >>= ipartl_spec_lemma3_aux2_aux (i + length ys) x
+        %by %symmetry
+        %by seq_bind_associativity
+              (writeList i ys)
+              (permute zs)
+              (ipartl_spec_lemma3_aux2_aux (i + length ys) x)
+
+    %==
+      ( ( writeList i ys >>
+            permute zs
+        ) >>=
+          ipartl_spec_lemma3_aux2_aux (i + length ys) x
+      ) >>
+        (\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs)
+
+        %by %rewrite ipartl p i (S (length ys), length zs, length xs)
+                 %to (\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs)
+        %by %symmetry
+        %by %reflexivity
+
+    %==
+      writeList i ys >>
+        ( permute zs >>=
+            ipartl_spec_lemma3_aux2_aux (i + length ys) x >>
+              (\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs)
+        )
+
+      %by seq_bind_seq_associativity
+            (writeList i ys)
+            (permute zs)
+            (ipartl_spec_lemma3_aux2_aux (i + length ys) x)
+            ((\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs))
+
+    %==
+      writeList i ys >>
+        ( permute zs >>=
+            ( kseq
+                (ipartl_spec_lemma3_aux2_aux (i + length ys) x)
+                ((\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs))
+            )
+        )
+
+        %by %rewrite permute zs >>= ipartl_spec_lemma3_aux2_aux (i + length ys) x >> (\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs)
+                 %to permute zs >>= kseq (ipartl_spec_lemma3_aux2_aux (i + length ys) x) ((\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs))
+        %by bind_seq_associativity
+              (permute zs)
+              (ipartl_spec_lemma3_aux2_aux (i + length ys) x)
+              ((\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs))
+
+    %==
+      writeList i ys >>
+        ( permute zs >>=
+            bind_seq_associativity_with_permute_preserved_length_aux
+              (ipartl_spec_lemma3_aux2_aux (i + length ys) x)
+              (\nz -> ipartl p i (S (length ys), nz, length xs))
+        )
+
+        %by %rewrite permute zs >>= kseq (ipartl_spec_lemma3_aux2_aux (i + length ys) x) ((\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs))
+                 %to bind (permute zs) (bind_seq_associativity_with_permute_preserved_length_aux (ipartl_spec_lemma3_aux2_aux (i + length ys) x) (\nz -> ipartl p i (S (length ys), nz, length xs)))
+        %by bind_seq_associativity_with_permute_preserved_length
+              zs
+              (ipartl_spec_lemma3_aux2_aux (i + length ys) x)
+              (\nz -> ipartl p i (S (length ys), nz, length xs))
+
+    %==
+      writeList i ys >>
+        permute zs >>=
+          bind_seq_associativity_with_permute_preserved_length_aux
+            (ipartl_spec_lemma3_aux2_aux (i + length ys) x)
+            (\nz -> ipartl p i (S (length ys), nz, length xs))
+
+        %by %symmetry
+        %by seq_bind_associativity
+              (writeList i ys)
+              (permute zs)
+              (bind_seq_associativity_with_permute_preserved_length_aux (ipartl_spec_lemma3_aux2_aux (i + length ys) x) (\nz -> ipartl p i (S (length ys), nz, length xs)))
+
+    %==
+      writeList i ys >>
+        permute zs >>= \zs' ->
+          ipartl_spec_lemma3_aux2_aux (i + length ys) x zs' >>
+            (\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs')
+
+        %by %rewrite bind_seq_associativity_with_permute_preserved_length_aux (ipartl_spec_lemma3_aux2_aux (i + length ys) x) (\nz -> ipartl p i (S (length ys), nz, length xs))
+                 %to \zs' -> ipartl_spec_lemma3_aux2_aux (i + length ys) x zs' >> (\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs')
+        %by %extend zs'
+        %by %reflexivity
+
+    %==
+      writeList i ys >>
+        permute zs >>= \zs' ->
+          ipartl_spec_lemma3_aux2_aux (i + length ys) x zs' >>
+            ipartl p i (S (length ys), length zs', length xs)
+
+        %by undefined
+        %by %rewrite \zs' -> ipartl_spec_lemma3_aux2_aux (i + length ys) x zs' >> (\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs')
+                 %to \zs' -> ipartl_spec_lemma3_aux2_aux (i + length ys) x zs' >> ipartl p i (S (length ys), length zs', length xs)
+        %by %extend zs'
+        %by %rewrite (\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs')
+                 %to ipartl p i (S (length ys), length zs', length xs)
+        %by %reflexivity
+
+    %==
+      writeList i ys >>
+        permute zs >>= \zs' ->
+          writeList (i + length ys) (Cons x Nil ++ zs') >>
+            ipartl p i (S (length ys), length zs', length xs)
+
+        %by %rewrite \zs' -> ipartl_spec_lemma3_aux2_aux (i + length ys) x zs' >> ipartl p i (S (length ys), length zs', length xs)
+                 %to \zs' -> writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs)
+        %by %extend zs'
+        %by %rewrite ipartl_spec_lemma3_aux2_aux (i + length ys) x zs'
+                 %to writeList (i + length ys) (Cons x Nil ++ zs')
+        %by %reflexivity
+
+    %==
+      writeList i ys >>
+        permute zs >>=
+          ipartl_spec_lemma2_step1_aux1 p i x xs ys
+
+        %by %rewrite \zs' -> writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs)
+                 %to ipartl_spec_lemma2_step1_aux1 p i x xs ys
+        %by %extend zs'
+        %by %symmetry
+        %by %reflexivity
+
+    %==
+      seq (writeList i ys) (permute zs) >>= ipartl_spec_lemma2_step1_aux1 p i x xs ys
+
+        %by %rewrite writeList i ys >> permute zs
+                 %to seq (writeList i ys) (permute zs)
+        %by %reflexivity
+
+    %==
+      bind (seq (writeList i ys) (permute zs)) (ipartl_spec_lemma2_step1_aux1 p i x xs ys)
+
+        %by undefined
+        %-- %by %reflexivity
+  |]
+
+{-@
+ipartl_spec_lemma2_step3 ::
+  (Equality (M (Natural, Natural)), Equality (M Unit)) =>
+  p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+  RefinesPlus (Natural, Natural)
+    {bind (seq (writeList i ys) (permute zs)) (ipartl_spec_lemma2_step1_aux1 p i x xs ys)}
+    {ipartl_spec_step4_aux1 p i x xs ys zs}
+@-}
+ipartl_spec_lemma2_step3 :: (Equality (M (Natural, Natural)), Equality (M Unit)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_lemma2_step3 p i x xs ys zs =
+  [eqpropchain|
+      bind (seq 
+      (writeList i ys) 
+        (permute zs)) 
+          (ipartl_spec_lemma2_step1_aux1 p i x xs ys)
+
+    %==
+      seq 
+      (writeList i ys) 
+        (permute zs) >>=
+          ipartl_spec_lemma2_step1_aux1 p i x xs ys
+
+    %==
+      writeList i ys >>
+        permute zs >>=
+          ipartl_spec_lemma2_step1_aux1 p i x xs ys
+      
+        %by %rewrite seq (writeList i ys) (permute zs) 
+                 %to writeList i ys >> permute zs
+        %by %reflexivity
+
+    %==
+      writeList i ys >>
+        permute zs >>= \zs' ->
+          writeList (i + length ys) (Cons x Nil ++ zs') >>
+            ipartl p i (S (length ys), length zs', length xs)
+
+        %by %rewrite ipartl_spec_lemma2_step1_aux1 p i x xs ys
+                 %to \zs' -> writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs)
+        %by %extend zs' 
+        %by %reflexivity
+
+    %==
+      permute zs >>= 
+        permute_commutativity_seq_bind_aux 
+          (writeList i ys)
+          (\zs' ->
+            writeList (i + length ys) (Cons x Nil ++ zs') >>
+              ipartl p i (S (length ys), length zs', length xs))
+        
+        %by permute_commutativity_seq_bind
+              (writeList i ys)
+              zs 
+              (\zs' -> writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs))
+
+    %==
+      permute zs >>= \zs' ->
+        writeList i ys >>
+          (\zs' ->
+            writeList (i + length ys) (Cons x Nil ++ zs') >>
+              ipartl p i (S (length ys), length zs', length xs))
+            zs'
+
+        %by %rewrite permute_commutativity_seq_bind_aux (writeList i ys) (\zs' -> writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs))
+                 %to \zs' -> writeList i ys >> (\zs' -> writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs)) zs'
+        %by %extend zs'
+        %by %reflexivity
+
+    %==
+      permute zs >>= \zs' ->
+        writeList i ys >>
+          ( writeList (i + length ys) (Cons x Nil ++ zs') >>
+              ipartl p i (S (length ys), length zs', length xs)
+          )
+
+        %by %rewrite \zs' -> writeList i ys >> (\zs' -> writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs)) zs'
+                 %to \zs' -> writeList i ys >> (writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs))
+        %by %extend zs'
+        %by %rewrite (\zs' -> writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs)) zs'
+                 %to writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs)
+        %by %reflexivity
+
+    %==
+      permute zs >>= \zs' ->
+        writeList i ys >>
+          writeList (i + length ys) (Cons x Nil ++ zs') >>
+            ipartl p i (S (length ys), length zs', length xs)
+        
+        %by %rewrite \zs' -> writeList i ys >> (writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs))
+                 %to \zs' -> writeList i ys >> writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs)
+        %by %extend zs' 
+        %by %symmetry
+        %by seq_associativity
+              (writeList i ys)
+              (writeList (i + length ys) (Cons x Nil ++ zs'))
+              (ipartl p i (S (length ys), length zs', length xs))
+
+    %==
+      permute zs >>= \zs' ->
+        writeList i (ys ++ Cons x Nil ++ zs') >>
+          ipartl p i (S (length ys), length zs', length xs)
+
+        %by %rewrite \zs' -> writeList i ys >> writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs)
+                 %to \zs' -> writeList i (ys ++ Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs)
+        %by %extend zs' 
+        %by %symmetry
+        %by %rewrite writeList i ys >> writeList (i + length ys) (Cons x Nil ++ zs')
+                 %to writeList i (ys ++ Cons x Nil ++ zs')
+        %by writeList_append i ys (Cons x Nil ++ zs')
+
+    %==
+      permute zs >>= ipartl_spec_step4_aux1_aux p i x xs ys
+
+        %by %rewrite \zs' -> writeList i (ys ++ Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs)
+                 %to ipartl_spec_step4_aux1_aux p i x xs ys
+        %by %extend zs' 
+        %by %symmetry
+        %by %reflexivity
+
+    %==
+      ipartl_spec_step4_aux1 p i x xs ys zs
+
+        %by %symmetry
+        %by %reflexivity
+  |]
+
 {-@
 ipartl_spec_lemma2 ::
   (Equality (M (Natural, Natural)), Equality (M Unit)) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
-  RefinesPlus (Unit)
+  RefinesPlus (Natural, Natural)
     {ipartl_spec_step3_aux1 p i x xs ys zs}
     {ipartl_spec_step4_aux1 p i x xs ys zs}
 @-}
-ipartl_spec_lemma2 :: (Equality (M (Natural, Natural)), Equality (M Unit)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M ())
-ipartl_spec_lemma2 i x ys zs = undefined -- TODO
+ipartl_spec_lemma2 :: (Equality (M (Natural, Natural)), Equality (M Unit)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_lemma2 p i x xs ys zs =
+  (refinesplus_transitivity aux1 aux2 aux4)
+    step1
+    ( (refinesplus_transitivity aux2 aux3 aux4)
+        step2
+        step3
+    )
+  where
+    aux1 = ipartl_spec_step3_aux1 p i x xs ys zs
+    step1 = ipartl_spec_lemma2_step1 p i x xs ys zs
+    aux2 = seq (seq (seq (writeList i ys) (writeList (add i (length ys)) (append zs (Cons x Nil)))) (swap (add i (length ys)) (add i (add (length ys) (length zs))))) (ipartl p i (S (length ys), length zs, length xs))
+    step2 = ipartl_spec_lemma2_step2 p i x xs ys zs
+    aux3 = bind (seq (writeList i ys) (permute zs)) (ipartl_spec_lemma2_step1_aux1 p i x xs ys)
+    step3 = ipartl_spec_lemma2_step3 p i x xs ys zs
+    aux4 = ipartl_spec_step4_aux1 p i x xs ys zs
 
 --
 -- #### ipartl spec lemma 3
@@ -608,7 +1111,7 @@ ipartl_spec_steps1to3 p i x xs ys zs =
             >>= ipartl_aux p i (length ys) (length zs) (length xs)
           %by %rewrite ipartl p i (length ys, length zs, S (length xs))
                    %to read (i + length ys + length zs) >>= ipartl_aux p i (length ys) (length zs) (length xs)
-          %by undefined %-- ! LH reject
+          %by undefined %-- !LH reject
       %==
         writeList i (ys ++ zs ++ Cons x xs)
           >> read (i + length ys + length zs)
@@ -619,7 +1122,7 @@ ipartl_spec_steps1to3 p i x xs ys zs =
               else
                 ipartl p i (length ys, S (length ys), length xs)
           %by undefined
-          %{- -- ! LH reject
+          %{- -- !LH reject
           %by %rewrite ipartl_aux p i (length ys) (length zs) (length xs)
                    %to \x' -> if x' <= p then swap (i + length ys) (i + length ys + length zs) >> ipartl p i (S (length ys), length ys, length xs) else ipartl p i (length ys, S (length ys), length xs)
           %by %extend x'
@@ -636,7 +1139,7 @@ ipartl_spec_steps1to3 p i x xs ys zs =
           %by %rewrite writeList i (ys ++ zs ++ Cons x xs) >> read (i + length ys + length zs)
                    %to writeList i (ys ++ zs ++ Cons x xs) >> pure x
           %by undefined
-          %-- ! LH reject: ipartl_spec_steps1to3_lemma
+          %-- !LH reject: ipartl_spec_steps1to3_lemma
       %==
         %-- ipartl_spec_step2
         writeList i (ys ++ zs ++ Cons x xs) >>
@@ -647,7 +1150,7 @@ ipartl_spec_steps1to3 p i x xs ys zs =
           else 
             ipartl p i (length ys, S (length zs), length xs)
           %by undefined
-          %-- ! LH reject: pure_bind
+          %-- !LH reject: pure_bind
       %==
         ipartl_spec_step3 p i x xs ys zs
           %by undefined
@@ -675,7 +1178,7 @@ ipartl_spec_steps3to3a p i x xs ys zs = refinesplus_substitutability f a b pf ? 
           else a'
     a = ipartl_spec_step3_aux2 p i x xs ys zs
     b = ipartl_spec_step4_aux2 p i x xs ys zs
-    pf = undefined -- ! LH reject: ipartl_spec_lemma1 p i x xs ys zs
+    pf = undefined -- !LH reject: ipartl_spec_lemma1 p i x xs ys zs
 
 -- uses: ipartl_spec_lemma2, refinesplus_substitutability
 {-@
@@ -700,7 +1203,7 @@ ipartl_spec_steps3Ato4 p i x xs ys zs =
   --         else ipartl_spec_step4_aux2 p i x xs ys zs
   --   a = ipartl_spec_step3_aux1 i x ys zs
   --   b = ipartl_spec_step4_aux1 i x ys zs
-  --   pf = undefined -- ! LH reject: ipartl_spec_lemma2 i x ys zs
+  --   pf = undefined -- !LH reject: ipartl_spec_lemma2 i x ys zs
 
 -- uses:
 -- - `ipartl_spec_lemma1`,
@@ -763,21 +1266,21 @@ permute_kleisli_permute_lemma (Cons x xs) =
         %by %rewrite permute (Cons x xs)
                  %to split xs >>= \(ys, zs) -> liftM2 (\ys' zs' -> ys' ++ Cons x Nil ++ zs') (permute ys) (permute zs)
         %by undefined
-        %-- ! LH reject: by defn permute
+        %-- !LH reject: by defn permute
     %==
       bind
         (split xs >>= \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs'))
         permute 
           %by undefined
           %{-
-          -- ! LH reject
+          -- !LH reject
           ```
           %by %rewrite \(ys, zs) -> liftM2 (\ys' zs' -> ys' ++ Cons x Nil ++ zs') (permute ys) (permute zs)
                    %to \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs')
           %by %extend (ys, zs)
           %by undefined
           ```
-          -- ! ! LH reject: very strange error
+          -- ! !LH reject: very strange error
             ...
             The sort GHC.Types.Int is not numeric
               because
@@ -812,7 +1315,7 @@ permute_kleisli_permute Nil =
       pure Nil >>= permute
         %by %rewrite permute Nil %to pure Nil
         %by undefined
-        %-- ! LH reject: why not by reflexivity?
+        %-- !LH reject: why not by reflexivity?
     %==
       permute Nil
         %by pure_bind Nil permute
@@ -827,7 +1330,7 @@ permute_kleisli_permute (Cons x xs) =
         %by %rewrite permute (Cons x xs)
                  %to split xs >>= permute_aux1 x
         %by undefined
-        %-- ! LH reject: why not by def of permute?
+        %-- !LH reject: why not by def of permute?
     %==
       split xs >>= (permute_aux1 x >=> permute)
         %by bind_associativity (split xs) (permute_aux1 x) permute
@@ -835,7 +1338,7 @@ permute_kleisli_permute (Cons x xs) =
       split xs >>= ((\(ys, zs) -> liftM2 (permute_aux2 x) (permute ys) (permute zs)) >=> permute)
         %by undefined
         %{-
-        -- ! LH reject: this error again: "The sort GHC.Types.Int is not numeric"
+        -- !LH reject: this error again: "The sort GHC.Types.Int is not numeric"
         %by %rewrite permute_aux1 x
                  %to \(ys, zs) -> liftM2 (permute_aux2 x) (permute ys) (permute zs)
         %by %extend (ys, zs)
@@ -845,7 +1348,7 @@ permute_kleisli_permute (Cons x xs) =
       split xs >>= ((\(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (permute_aux2 x ys' zs')) >=> permute)
         %by undefined
         %{-
-        -- ! LH reject: not sure why; parsing error suggesting BlockArguments 
+        -- !LH reject: not sure why; parsing error suggesting BlockArguments 
         %rewrite liftM2 (permute_aux2 x) (permute ys) (permute zs)
              %to \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (permute_aux2 x ys' zs')
         %by %extend (ys, zs)
@@ -1255,7 +1758,7 @@ ipartl_spec_steps4to7_lemma1 p i x xs ys zs =
         ipartl_spec_step4_aux1_aux p i x xs ys zs'
 
         %by undefined
-        %{- -- ! LH reject: eta-equivalence
+        %{- -- !LH reject: eta-equivalence
         %by %rewrite ipartl_spec_step4_aux1_aux p i x xs ys
                  %to \zs' -> ipartl_spec_step4_aux1_aux p i x xs ys zs'
         %by %extend zs' 
@@ -1268,7 +1771,7 @@ ipartl_spec_steps4to7_lemma1 p i x xs ys zs =
         ipartl_spec_steps4to7_lemma1_lemma_aux2 p i x xs ys zs'
 
         %by undefined
-        %{- -- ! LH reject: ipartl_spec_steps4to7_lemma1_lemma
+        %{- -- !LH reject: ipartl_spec_steps4to7_lemma1_lemma
         %by %rewrite \zs' -> ipartl_spec_step4_aux1_aux p i x xs ys zs'
                  %to \zs' -> ipartl_spec_steps4to7_lemma1_lemma_aux2 p i x xs ys zs'
         %by %extend zs' 
@@ -1281,7 +1784,7 @@ ipartl_spec_steps4to7_lemma1 p i x xs ys zs =
           ipartl_spec_steps4to7_lemma1_aux2_aux p i
 
       %by undefined
-      %{- -- ! LH reject: defn ipartl_spec_steps4to7_lemma1_lemma_aux2
+      %{- -- !LH reject: defn ipartl_spec_steps4to7_lemma1_lemma_aux2
       %by %rewrite \zs' -> ipartl_spec_steps4to7_lemma1_lemma_aux2 p i x xs ys zs'
                %to \zs' -> dispatch_aux1 x xs ys zs' >>= ipartl_spec_steps4to7_lemma1_aux2_aux p i
       %by %extend zs'
@@ -1296,7 +1799,7 @@ ipartl_spec_steps4to7_lemma1 p i x xs ys zs =
       %by %rewrite \zs' -> dispatch_aux1 x xs ys zs' >>= ipartl_spec_steps4to7_lemma1_aux2_aux p i
                %to dispatch_aux1 x xs ys >=> ipartl_spec_steps4to7_lemma1_aux2_aux p i
       %by undefined 
-      %{- -- ! LH reject: extend, defn (>=>)
+      %{- -- !LH reject: extend, defn (>=>)
       %by %extend zs' 
       %by %symmetry
       %by %reflexivity
@@ -1374,7 +1877,7 @@ ipartl_spec_steps4to7_lemma1_lemma p i x xs ys zs' =
           ipartl p i (length ys', length zs', length xs)
       
         %by undefined
-        %{- -- ! LH reject
+        %{- -- !LH reject
         %by %symmetry
         %by pure_bind (ys ++ Cons x Nil, zs', xs) (\(ys', zs', xs) -> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs))
         -}%
@@ -1809,7 +2312,7 @@ ipartl_spec_steps6to7 p i x xs ys zs =
         kleisli (writeListToLength3 i) (ipartl p i)
 
         %by undefined
-        %{- -- ! LH reject: problem with %rewrite then %extend?
+        %{- -- !LH reject: problem with %rewrite then %extend?
         %by %rewrite ipartl_spec_step6_aux p i
                  %to kleisli (writeListToLength3 i) (ipartl p i)
         %by %extend (ys', zs', xs)
