@@ -542,7 +542,6 @@ ipartl_spec_lemma2_step2 p i x xs ys zs =
           ipartl_spec_lemma3_aux2_aux (i + length ys) x zs' >>
             ipartl p i (S (length ys), length zs', length xs)
 
-        %by undefined
         %by %rewrite \zs' -> ipartl_spec_lemma3_aux2_aux (i + length ys) x zs' >> (\nz -> ipartl p i (S (length ys), nz, length xs)) (length zs')
                  %to \zs' -> ipartl_spec_lemma3_aux2_aux (i + length ys) x zs' >> ipartl p i (S (length ys), length zs', length xs)
         %by %extend zs'
@@ -584,8 +583,7 @@ ipartl_spec_lemma2_step2 p i x xs ys zs =
     %==
       bind (seq (writeList i ys) (permute zs)) (ipartl_spec_lemma2_step1_aux1 p i x xs ys)
 
-        %by undefined
-        %-- %by %reflexivity
+        %by %reflexivity
   |]
 
 {-@
@@ -767,18 +765,60 @@ ipartl_spec_lemma3_aux1_Nil ::
     {seq (write i x) (pure it)}
 @-}
 ipartl_spec_lemma3_aux1_Nil :: Equality (M Unit) => Natural -> Int -> EqualityProp (M Unit)
-{-
-ipartl_spec_lemma3_aux1 i x Nil
-writeList i (Nil ++ Cons x Nil) >> swap i (i + length Nil)
-writeList i (Nil ++ Cons x Nil) >> swap i i
-writeList i (Cons x Nil) >> swap i i
-(write i x >> writeList (S i) Nil) >> swap i i
-(write i x >> pure it) >> swap i i
-(write i x >> pure it) >> pure it
-write i x >> (pure it >> pure it)
-write i x >> pure it
--}
-ipartl_spec_lemma3_aux1_Nil i x = undefined -- TODO
+ipartl_spec_lemma3_aux1_Nil i x =
+  [eqpropchain|
+      ipartl_spec_lemma3_aux1 i x Nil
+
+    %==
+      writeList i (Nil ++ Cons x Nil) >> swap i (i + length Nil)
+
+    %==
+      writeList i (Nil ++ Cons x Nil) >> swap i i
+
+        %by %rewrite i + length Nil
+                 %to i
+        %by %reflexivity
+
+    %==
+      writeList i (Cons x Nil) >> swap i i
+
+        %by %rewrite Nil ++ Cons x Nil 
+                 %to Cons x Nil
+        %by %smt
+        %by append_identity (Cons x Nil)
+
+    %==
+      (write i x >> writeList (S i) Nil) >> swap i i
+
+        %by %rewrite writeList i (Cons x Nil)
+                 %to write i x >> writeList (S i) Nil
+        %by %reflexivity
+
+    %==
+      (write i x >> pure it) >> swap i i
+
+        %by %rewrite writeList (S i) Nil
+                 %to pure it 
+        %by %reflexivity
+
+    %==
+      (write i x >> pure it) >> pure it
+
+        %by %rewrite swap i i 
+                 %to pure it 
+        %by swap_id i
+
+    %==
+      write i x >> (pure it >> pure it)
+
+        %by seq_associativity (write i x) (pure it) (pure it)
+
+    %==
+      write i x >> pure it
+
+        %by %symmetry
+        %by seq_identity_left it (pure it)
+  |]
 
 {-@
 ipartl_spec_lemma3_aux2_Nil ::
