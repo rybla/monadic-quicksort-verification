@@ -829,17 +829,49 @@ ipartl_spec_lemma3_aux2_Nil ::
     {seq (write i x) (pure it)}
 @-}
 ipartl_spec_lemma3_aux2_Nil :: Equality (M Unit) => Natural -> Int -> EqualityProp (M Unit)
-{-
-ipartl_spec_lemma3_aux2 i x Nil
-permute Nil >>= ipartl_spec_lemma3_aux2_aux i x
-pure Nil >>= ipartl_spec_lemma3_aux2_aux i x
-ipartl_spec_lemma3_aux2_aux i x Nil
-writeList i (Cons x Nil ++ Nil)
-writeList i (Cons x Nil)
-write i x >> writeList (S i) Nil
-write i x >> pure it
--}
-ipartl_spec_lemma3_aux2_Nil i x = undefined -- TODO
+ipartl_spec_lemma3_aux2_Nil i x =
+  [eqpropchain|
+      ipartl_spec_lemma3_aux2 i x Nil
+
+    %==
+      permute Nil >>= ipartl_spec_lemma3_aux2_aux i x
+
+    %==
+      pure Nil >>= ipartl_spec_lemma3_aux2_aux i x
+        %by %rewrite permute Nil 
+                 %to pure Nil 
+        %by %reflexivity
+
+    %==
+      ipartl_spec_lemma3_aux2_aux i x Nil
+
+        %by pure_bind Nil (ipartl_spec_lemma3_aux2_aux i x)
+
+    %==
+      writeList i (Cons x Nil ++ Nil)
+
+        %by %reflexivity
+
+    %==
+      writeList i (Cons x Nil)
+
+        %by %rewrite Cons x Nil ++ Nil 
+                 %to Cons x Nil
+        %by %smt
+        %by append_identity (Cons x Nil)
+
+    %==
+      write i x >> writeList (S i) Nil
+
+        %by %reflexivity
+
+    %==
+      write i x >> pure it
+
+        %by %rewrite writeList (S i) Nil
+                 %to pure it
+        %by %reflexivity
+  |]
 
 {-@ reflect ipartl_spec_lemma3_aux1_Cons_aux @-}
 ipartl_spec_lemma3_aux1_Cons_aux :: Natural -> Int -> Int -> List Int -> M ()
