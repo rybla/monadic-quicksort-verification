@@ -1019,7 +1019,6 @@ ipartl_spec_lemma3_aux2_aux i x zs' =
 -}
 
 -- [ref 11]
--- TODO: do they give a proof of this somewhere? try
 {-@
 ipartl_spec_lemma3 ::
   Equality (M Unit) =>
@@ -1031,9 +1030,9 @@ ipartl_spec_lemma3 ::
     {ipartl_spec_lemma3_aux2 i x zs}
 @-}
 ipartl_spec_lemma3 :: Equality (M ()) => Natural -> Int -> List Int -> EqualityProp (M ())
-ipartl_spec_lemma3 i x Nil = undefined
-{- --* correct
-  [eqpropchain|
+ipartl_spec_lemma3 i x Nil =
+  undefined
+    [eqpropchain|
       ipartl_spec_lemma3_aux1 i x Nil <+> ipartl_spec_lemma3_aux2 i x Nil
     %==
       ipartl_spec_lemma3_aux1 i x Nil <+> (write i x >> pure it)
@@ -1053,7 +1052,6 @@ ipartl_spec_lemma3 i x Nil = undefined
         %by %symmetry
         %by ipartl_spec_lemma3_aux2_Nil i x
   |]
--}
 ipartl_spec_lemma3 i x (Cons z zs) = undefined -- TODO
 {-
   [eqpropchain|
