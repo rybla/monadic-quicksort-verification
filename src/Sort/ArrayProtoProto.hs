@@ -24,20 +24,6 @@ import Sort.List
 import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (*), (+), (++), (>>), (>>=))
 
 -- uses:
--- - monad laws
--- - inductive hypothesis
-{-@
-ipartl_spec_steps7to8 ::
-  Equality (M (Natural, Natural)) =>
-  p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
-  RefinesPlus (Natural, Natural)
-    {ipartl_spec_step7 p i x xs ys zs}
-    {ipartl_spec_step8 p i x xs ys zs}
-@-}
-ipartl_spec_steps7to8 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_steps7to8 = undefined -- TODO
-
--- uses:
 -- - defn of `partl`'
 {-@
 ipartl_spec_steps8to9 ::

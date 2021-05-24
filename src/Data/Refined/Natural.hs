@@ -59,7 +59,8 @@ add_identity (S n) = add_identity n
 
 {-@ automatic-instances add_S_right @-}
 {-@
-add_S_right :: m:Natural -> n:Natural -> {add m (S n) = S (add m n)}
+add_S_right :: m:Natural -> n:Natural ->
+  {add m (S n) = S (add m n)}
 @-}
 add_S_right :: Natural -> Natural -> Proof
 add_S_right Z n = add_identity (S n) &&& add_identity n

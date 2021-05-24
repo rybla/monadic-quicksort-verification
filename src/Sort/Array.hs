@@ -36,6 +36,8 @@ dispatch x p (ys, zs, xs) =
     then permute zs >>= dispatch_aux1 x xs ys
     else permute (zs ++ Cons x Nil) >>= dispatch_aux2 xs ys
 
+-- TODO: figure out how to phrase this so it can properly be used in `ipartl_spec_steps5to6`
+
 -- {-@ reflect dispatch_preserves_length_append_ys_zs_aux @-}
 -- dispatch_preserves_length_append_ys_zs_aux :: (List Int, List Int, List Int) -> M Natural
 -- dispatch_preserves_length_append_ys_zs_aux (ys', zs', xs) =
@@ -52,23 +54,24 @@ dispatch x p (ys, zs, xs) =
 -- dispatch_preserves_length_append_ys_zs :: Equality (M Int) => Int -> Int -> List Int -> List Int -> List Int -> EqualityProp (M Natural)
 -- dispatch_preserves_length_append_ys_zs = undefined -- TODO
 
-{-@ reflect dispatch_preserves_length_append_ys_zs_aux @-}
-dispatch_preserves_length_append_ys_zs_aux :: (Natural -> M a) -> ((List Int, List Int, List Int) -> M a)
-dispatch_preserves_length_append_ys_zs_aux k (ys', zs', xs) =
-  k (length (append ys' zs'))
+-- {-@ reflect dispatch_preserves_length_append_ys_zs_aux @-}
+-- dispatch_preserves_length_append_ys_zs_aux :: (Natural -> M a) -> ((List Int, List Int, List Int) -> M a)
+-- dispatch_preserves_length_append_ys_zs_aux k (ys', zs', xs) =
+--   k (length (append ys' zs'))
 
-{-@
-dispatch_preserves_length_append_ys_zs ::
-  Equality (M a) =>
-  x:Int -> p:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
-  k:(Natural -> M a) ->
-  EqualProp (M a)
-    {bind (dispatch x p (ys, zs, xs)) (dispatch_preserves_length_append_ys_zs_aux k)}
-    {bind (dispatch x p (ys, zs, xs)) ()}
-    {k (length (append ys zs))}
-@-}
-dispatch_preserves_length_append_ys_zs :: Equality (M a) => Int -> Int -> List Int -> List Int -> List Int -> (Natural -> M a) -> EqualityProp (M a)
-dispatch_preserves_length_append_ys_zs = undefined -- TODO
+-- {-@
+-- dispatch_preserves_length_append_ys_zs ::
+--   Equality (M a) =>
+--   x:Int -> p:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+--   k:(Natural -> M a) ->
+--   EqualProp (M a)
+--     {bind (dispatch x p (ys, zs, xs)) (dispatch_preserves_length_append_ys_zs_aux k)}
+--     {bind (dispatch x p (ys, zs, xs)) ()}
+--     {k (length (append ys zs))}
+-- @-}
+-- dispatch_preserves_length_append_ys_zs :: Equality (M a) => Int -> Int -> List Int -> List Int -> List Int -> (Natural -> M a) -> EqualityProp (M a)
+-- dispatch_preserves_length_append_ys_zs = undefined -- TODO
+
 
 {-@
 dispatch_commutativity_seq_bind ::
@@ -2686,3 +2689,37 @@ ipartl_spec_steps6to7 p i x xs ys zs =
         %by %symmetry
         %by %reflexivity
   |]
+
+--
+-- ipartl_spec_steps4to7
+--
+
+-- uses:
+-- - defn of `dispatch`
+-- - function calls distribute into `if`
+-- - `permute_preserves_length`
+-- - commutativity
+-- - [ref 9]
+{-@
+ipartl_spec_steps4to7 ::
+  (Equality (List Int), Equality (M Unit), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) =>
+  p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+  RefinesPlus (Natural, Natural)
+    {ipartl_spec_step4 p i x xs ys zs}
+    {ipartl_spec_step7 p i x xs ys zs}
+@-}
+ipartl_spec_steps4to7 :: (Equality (List Int), Equality (M Unit), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps4to7 p i x xs ys zs =
+  (refinesplus_equalprop (ipartl_spec_step4 p i x xs ys zs) (ipartl_spec_step7 p i x xs ys zs))
+    [eqpropchain|
+        ipartl_spec_step4 p i x xs ys zs
+      %==
+        ipartl_spec_step5 p i x xs ys zs
+          %by undefined %-- TODO: either this is wrong: ipartl_spec_steps4to5 p i x xs ys zs
+      %==
+        ipartl_spec_step6 p i x xs ys zs
+          %by undefined %-- TODO: or this is wrong: ipartl_spec_steps5to6 p i x xs ys zs
+      %==
+        ipartl_spec_step7 p i x xs ys zs
+          %by ipartl_spec_steps6to7 p i x xs ys zs
+    |]

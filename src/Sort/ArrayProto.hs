@@ -25,34 +25,15 @@ import Sort.List
 import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (*), (+), (++), (>>), (>>=))
 
 -- uses:
--- - defn of `dispatch`
--- - function calls distribute into `if`
--- - `permute_preserves_length`
--- - commutativity
--- - [ref 9]
+-- - monad laws
+-- - inductive hypothesis
 {-@
-ipartl_spec_steps4to7 ::
-  (Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) =>
+ipartl_spec_steps7to8 ::
+  Equality (M (Natural, Natural)) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
-    {ipartl_spec_step4 p i x xs ys zs}
     {ipartl_spec_step7 p i x xs ys zs}
+    {ipartl_spec_step8 p i x xs ys zs}
 @-}
-ipartl_spec_steps4to7 :: (Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_steps4to7 p i x xs ys zs = undefined
-
-{- -- * correct
-  (refinesplus_equalprop (ipartl_spec_step4 p i x xs ys zs) (ipartl_spec_step7 p i x xs ys zs))
-    [eqpropchain|
-        ipartl_spec_step4 p i x xs ys zs
-      %==
-        ipartl_spec_step5 p i x xs ys zs
-          %by undefined %-- TODO: either this is wrong: ipartl_spec_steps4to5 p i x xs ys zs
-      %==
-        ipartl_spec_step6 p i x xs ys zs
-          %by undefined %-- TODO: or this is wrong: ipartl_spec_steps5to6 p i x xs ys zs
-      %==
-        ipartl_spec_step7 p i x xs ys zs
-          %by ipartl_spec_steps6to7 p i x xs ys zs
-    |]
--}
+ipartl_spec_steps7to8 :: Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps7to8 = undefined -- TODO
