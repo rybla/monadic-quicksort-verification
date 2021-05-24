@@ -96,9 +96,9 @@ pure_refines_permute ::
 pure_refines_permute :: Equality (List Int) => List Int -> EqualityProp (M (List Int))
 pure_refines_permute xs = undefined -- TODO
 
-{-@ reflect permute_commutativity_seq_bind_aux @-}
-permute_commutativity_seq_bind_aux :: M a -> (List Int -> M b) -> List Int -> M b
-permute_commutativity_seq_bind_aux m1 k xs' = m1 >> k xs'
+-- {-@ reflect permute_commutativity_seq_bind_aux @-}
+-- permute_commutativity_seq_bind_aux :: M a -> (List Int -> M b) -> List Int -> M b
+-- permute_commutativity_seq_bind_aux m1 k xs' = m1 >> k xs'
 
 -- permute commutes because it has only the nondeterminism effect
 {-@
@@ -107,7 +107,7 @@ permute_commutativity_seq_bind ::
   m1:M a -> xs:List Int -> k:(List Int -> M b) ->
   EqualProp (M b)
     {bind (seq m1 (permute xs)) k}
-    {bind (permute xs) (permute_commutativity_seq_bind_aux m1 k)}
+    {bind (permute xs) (seqk m1 k)}
 @-}
 permute_commutativity_seq_bind :: Equality (M b) => M a -> List Int -> (List Int -> M b) -> EqualityProp (M b)
 permute_commutativity_seq_bind = undefined -- TODO

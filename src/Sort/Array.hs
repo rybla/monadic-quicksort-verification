@@ -36,6 +36,51 @@ dispatch x p (ys, zs, xs) =
     then permute zs >>= dispatch_aux1 x xs ys
     else permute (zs ++ Cons x Nil) >>= dispatch_aux2 xs ys
 
+-- {-@ reflect dispatch_preserves_length_append_ys_zs_aux @-}
+-- dispatch_preserves_length_append_ys_zs_aux :: (List Int, List Int, List Int) -> M Natural
+-- dispatch_preserves_length_append_ys_zs_aux (ys', zs', xs) =
+--   pure (length (append ys' zs'))
+
+-- {-@
+-- dispatch_preserves_length_append_ys_zs ::
+--   Equality (M Natural) =>
+--   x:Int -> p:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+--   EqualProp (M Natural)
+--     {bind (dispatch x p (ys, zs, xs)) dispatch_preserves_length_append_ys_zs_aux}
+--     {pure (length (append ys zs))}
+-- @-}
+-- dispatch_preserves_length_append_ys_zs :: Equality (M Int) => Int -> Int -> List Int -> List Int -> List Int -> EqualityProp (M Natural)
+-- dispatch_preserves_length_append_ys_zs = undefined -- TODO
+
+{-@ reflect dispatch_preserves_length_append_ys_zs_aux @-}
+dispatch_preserves_length_append_ys_zs_aux :: (Natural -> M a) -> ((List Int, List Int, List Int) -> M a)
+dispatch_preserves_length_append_ys_zs_aux k (ys', zs', xs) =
+  k (length (append ys' zs'))
+
+{-@
+dispatch_preserves_length_append_ys_zs ::
+  Equality (M a) =>
+  x:Int -> p:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+  k:(Natural -> M a) ->
+  EqualProp (M a)
+    {bind (dispatch x p (ys, zs, xs)) (dispatch_preserves_length_append_ys_zs_aux k)}
+    {bind (dispatch x p (ys, zs, xs)) ()}
+    {k (length (append ys zs))}
+@-}
+dispatch_preserves_length_append_ys_zs :: Equality (M a) => Int -> Int -> List Int -> List Int -> List Int -> (Natural -> M a) -> EqualityProp (M a)
+dispatch_preserves_length_append_ys_zs = undefined -- TODO
+
+{-@
+dispatch_commutativity_seq_bind ::
+  Equality (M a) =>
+  i:Natural -> xs:List Int -> x:Int -> p:Int -> ys_zs_xs:(List Int, List Int, List Int) -> k:((List Int, List Int, List Int) -> M a) ->
+  EqualProp (M a)
+    {bind (seq (writeList (S i) xs) (dispatch x p ys_zs_xs)) k}
+    {bind (dispatch x p ys_zs_xs) (seqk (writeList i xs) k)}
+@-}
+dispatch_commutativity_seq_bind :: Equality (M a) => Natural -> List Int -> Int -> Int -> (List Int, List Int, List Int) -> ((List Int, List Int, List Int) -> M a) -> EqualityProp (M a)
+dispatch_commutativity_seq_bind = undefined -- TODO
+
 {-@ reflect dispatch_aux1 @-}
 dispatch_aux1 :: Int -> List Int -> List Int -> List Int -> M (List Int, List Int, List Int)
 dispatch_aux1 x xs ys zs' = pure (ys ++ Cons x Nil, zs', xs)
@@ -630,7 +675,7 @@ ipartl_spec_lemma2_step3 p i x xs ys zs =
 
     %==
       permute zs >>= 
-        permute_commutativity_seq_bind_aux 
+        seqk 
           (writeList i ys)
           (\zs' ->
             writeList (i + length ys) (Cons x Nil ++ zs') >>
@@ -649,7 +694,7 @@ ipartl_spec_lemma2_step3 p i x xs ys zs =
               ipartl p i (S (length ys), length zs', length xs))
             zs'
 
-        %by %rewrite permute_commutativity_seq_bind_aux (writeList i ys) (\zs' -> writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs))
+        %by %rewrite seqk (writeList i ys) (\zs' -> writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs))
                  %to \zs' -> writeList i ys >> (\zs' -> writeList (i + length ys) (Cons x Nil ++ zs') >> ipartl p i (S (length ys), length zs', length xs)) zs'
         %by %extend zs'
         %by %reflexivity
@@ -2430,6 +2475,166 @@ ipartl_spec_steps6to7_lemma p i (ys', zs', xs) =
 
         %by %symmetry
         %by %reflexivity
+  |]
+
+--
+-- ipartl_spec_steps5to6
+--
+
+{-@
+ipartl_spec_steps5to6 ::
+  (Equality (M Unit), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) =>
+  p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+  EqualProp (M (Natural, Natural))
+    {ipartl_spec_step5 p i x xs ys zs}
+    {ipartl_spec_step6 p i x xs ys zs}
+@-}
+ipartl_spec_steps5to6 :: (Equality (M Unit), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps5to6 p i x xs ys zs =
+  [eqpropchain|
+    ipartl_spec_step5 p i x xs ys zs
+
+  %==
+    writeList (S (i + length ys + length zs)) xs >>
+      dispatch x p (ys, zs, xs) >>=
+        ipartl_spec_step5_aux p i
+      
+      %-- defn ipartl_spec_step5
+      %by %reflexivity
+
+  %== 
+    writeList (S (i + length ys + length zs)) xs >>
+      dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+        writeList i (ys' ++ zs') >>
+          ipartl p i (length ys', length zs', length xs)
+      
+      %-- defn ipartl_spec_step5_aux
+      %by %rewrite ipartl_spec_step5_aux p i
+               %to \(ys', zs', xs) -> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)
+      %{- -- !LH reject: type mismatch 
+      %by %extend ys'_zs'_xs
+      %by %reflexivity
+      -}%
+      %by undefined
+
+  %== 
+    writeList (S (i + length (ys ++ zs))) xs >>
+      dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+        writeList i (ys' ++ zs') >>
+          ipartl p i (length ys', length zs', length xs)
+      
+      %-- length_append
+      %by %rewrite length ys + length zs
+               %to length (ys ++ zs)
+      %by %smt
+      %by length_append ys zs
+
+  %==
+    dispatch x p (ys, zs, xs) >>=
+      seqk
+        (writeList (i + length (ys ++ zs)) xs)
+        ( \(ys', zs', xs) ->
+            writeList i (ys' ++ zs') >>
+              ipartl p i (length ys', length zs', length xs)
+        )
+
+      %-- dispatch_commutativity_seq_bind
+      %by dispatch_commutativity_seq_bind
+            (i + length (ys ++ zs))
+            xs
+            x
+            p
+            (ys, zs, xs)
+            (\(ys', zs', xs) -> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs))
+
+  %==
+    dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+      writeList (i + length (ys ++ zs)) xs >>
+        ( \(ys', zs', xs) ->
+            writeList i (ys' ++ zs') >>
+              ipartl p i (length ys', length zs', length xs)
+        ) (ys', zs', xs)
+
+      %by %rewrite seqk (writeList (i + length (ys ++ zs)) xs) (\(ys', zs', xs) -> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs))
+               %to \(ys', zs', xs) -> writeList (i + length (ys ++ zs)) xs >> (\(ys', zs', xs) -> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)) (ys', zs', xs)
+      %by %extend (ys', zs', xs)
+      %by %reflexivity
+
+  %== 
+    dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+      writeList (i + length (ys ++ zs)) xs >>
+        ( writeList i (ys' ++ zs') >>
+            ipartl p i (length ys', length zs', length xs)
+        )
+
+      %-- extend, eta-equivalence
+      %by %rewrite \(ys', zs', xs) -> writeList (i + length (ys ++ zs)) xs >> (\(ys', zs', xs) -> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)) (ys', zs', xs)
+               %to \(ys', zs', xs) -> writeList (i + length (ys ++ zs)) xs >> (writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs))
+      %by %extend (ys', zs', xs)
+      %by %rewrite (\(ys', zs', xs) -> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)) (ys', zs', xs)
+               %to writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)
+      %by %reflexivity
+
+  %==
+    dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+      writeList (i + length (ys ++ zs)) xs >>
+        writeList i (ys' ++ zs') >>
+          ipartl p i (length ys', length zs', length xs)
+
+      %-- extend, seq_associativity
+      %by %rewrite \(ys', zs', xs) -> writeList (i + length (ys ++ zs)) xs >> (writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs))
+               %to \(ys', zs', xs) -> writeList (i + length (ys ++ zs)) xs >> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)
+      %by %extend (ys', zs', xs)
+      %by seq_associativity
+            (writeList (i + length (ys ++ zs)) xs)
+            (writeList i (ys' ++ zs'))
+            (ipartl p i (length ys', length zs', length xs))
+
+  %==
+    dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+      writeList (i + length (ys' ++ zs')) xs >>
+        writeList i (ys' ++ zs') >>
+          ipartl p i (length ys', length zs', length xs)
+
+      %-- extend, 
+      %by %rewrite \(ys', zs', xs) -> writeList (i + length (ys ++ zs)) xs >> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)
+               %to \(ys', zs', xs) -> writeList (i + length (ys' ++ zs')) xs >> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)
+      %by %extend (ys', zs', xs)
+      %by undefined -- TODO: dispatch_preserves_length_append_ys_zs
+
+  %==
+    dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
+      writeList i (ys' ++ zs') >>
+        writeList (i + length (ys' ++ zs')) xs >>
+          ipartl p i (length ys', length zs', length xs)
+
+      %-- extend, writeList_commutativity
+      %by %rewrite \(ys', zs', xs) -> writeList (i + length (ys' ++ zs')) xs >> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)
+               %to \(ys', zs', xs) -> writeList i (ys' ++ zs') >> writeList (i + length (ys' ++ zs')) xs >> ipartl p i (length ys', length zs', length xs)
+      %by %extend (ys', zs', xs)
+      %by %rewrite writeList (i + length (ys' ++ zs')) xs >> writeList i (ys' ++ zs')
+               %to writeList i (ys' ++ zs') >> writeList (i + length (ys' ++ zs')) xs
+      %by %symmetry
+      %by writeList_commutativity  i (ys' ++ zs') xs
+
+  %== 
+    dispatch x p (ys, zs, xs) >>=
+      ipartl_spec_step6_aux p i
+
+      %-- defn ipartl_spec_step6_aux
+      %by %rewrite \(ys', zs', xs) -> writeList i (ys' ++ zs') >> writeList (i + length (ys' ++ zs')) xs >> ipartl p i (length ys', length zs', length xs)
+               %to ipartl_spec_step6_aux p i
+      %by %extend (ys', zs', xs)
+      %by %symmetry
+      %by %reflexivity
+
+  %== 
+    ipartl_spec_step6 p i x xs ys zs
+    
+      %-- defn ipartl_spec_step6
+      %by %symmetry
+      %by %reflexivity
+
   |]
 
 --

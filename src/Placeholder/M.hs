@@ -349,6 +349,10 @@ seq_bind_seq_associativity = undefined -- TODO
 kseq :: (a -> M b) -> M c -> (a -> M c)
 kseq k m x = k x >> m
 
+{-@ reflect seqk @-}
+seqk :: M a -> (b -> M c) -> (b -> M c)
+seqk m k x = m >> k x
+
 {-@
 bind_seq_associativity ::
   Equality (M c) =>
@@ -629,3 +633,14 @@ writeList_redundancy ::
 @-}
 writeList_redundancy :: Equality (M Unit) => Natural -> List Int -> EqualityProp (M ())
 writeList_redundancy = undefined -- TODO
+
+{-@
+writeList_commutativity ::
+  Equality (M Unit) =>
+  i:Natural -> xs:List Int -> ys:List Int ->
+  EqualProp (M Unit)
+    {seq (writeList i xs) (writeList (add i (length xs)) ys)}
+    {seq (writeList (add i (length xs)) ys) (writeList i xs)}
+@-}
+writeList_commutativity :: Equality (M ()) => Natural -> List Int -> List Int -> EqualityProp (M ())
+writeList_commutativity = undefined -- TODO

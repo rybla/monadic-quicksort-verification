@@ -4,7 +4,7 @@ module Data.Refined.List where
 
 import Data.Refined.Natural
 import Language.Haskell.Liquid.ProofCombinators
-import Prelude hiding (all, foldl, length, (++))
+import Prelude hiding (all, foldl, length, (+), (++))
 
 {-
 # List
@@ -68,6 +68,12 @@ length_snoc :: xs:List a -> x:a -> {length (xs ++ Cons x Nil) = S (length xs)}
 @-}
 length_snoc :: List a -> a -> Proof
 length_snoc xs x = undefined -- TODO
+
+{-@
+length_append :: xs:List a -> ys:List a -> {add (length xs) (length ys) = length (xs ++ ys)}
+@-}
+length_append :: List a -> List a -> Proof
+length_append xs ys = undefined -- TODO
 
 -- |
 -- == Utilities
