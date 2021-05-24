@@ -498,6 +498,16 @@ refinesplus_substitutability ::
 refinesplus_substitutability :: (Equality (M a), Equality (M b)) => (M a -> M b) -> M a -> M a -> EqualityProp (M a) -> EqualityProp (M b)
 refinesplus_substitutability f x y h = undefined -- TODO
 
+{-@
+refinesplus_substitutabilityF ::
+  (Equality (M a), Equality (M b)) =>
+  f:((c -> M a) -> M b) -> k1:(c -> M a) -> k2:(c -> M a) ->
+  RefinesPlusF (c) (a) {k1} {k2} ->
+  RefinesPlus (b) {f k1} {f k2}
+@-}
+refinesplus_substitutabilityF :: (Equality (M a), Equality (M b)) => ((c -> M a) -> M b) -> (c -> M a) -> (c -> M a) -> (c -> EqualityProp (M a)) -> EqualityProp (M b)
+refinesplus_substitutabilityF f k1 k2 h = undefined -- TODO
+
 {-
 ## Array interface
 -}
