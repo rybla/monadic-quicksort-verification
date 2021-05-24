@@ -215,7 +215,7 @@ seq_associativity ma mb mc =
       (ma >>= constant mb) >> mc
     %==
       (ma >>= constant mb) >>= constant mc
-        %by undefined %-- ! LH reject: SMT crash: invalid qualiied identifier, sort mismatch
+        %by undefined %-- !LH reject: SMT crash: invalid qualiied identifier, sort mismatch
     %==
       ma >>= (constant mb >=> constant mc)
         %by bind_associativity ma (constant mb) (constant mc)
