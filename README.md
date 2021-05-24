@@ -47,6 +47,9 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 - [ ] prove `permute_kleisli_permute` in `Cons` case
   - [ ] prove `permute_kleisli_permute_lemma` in `Cons` case
 - [x] prove `ipartl_spec`
+  - [ ] prove `dispatch_preserves_length_append_ys_zs`
+    - [ ] formalize
+  - [ ] prove `dispatch_commutativity_seq_bind`
   - [x] prove `ipartl_spec_lemma1`
     - [x] prove `ipartl_spec_lemma1_step1`
     - [x] prove `ipartl_spec_lemma1_step1`
@@ -77,6 +80,9 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
   - [x] prove `ipartl_spec_steps`
 - [ ] prove termination `iqsort`
 - [x] prove `iqsort_spec`
+  - [ ] prove `iqsort_spec_lemma1`
+  - [ ] prove `iqsort_spec_lemma3`
+  - [ ] prove `iqsort_spec_lemma4`
 
 <!-- References -->
 

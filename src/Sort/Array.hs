@@ -1373,32 +1373,31 @@ ipartl_spec_steps3to3a p i x xs ys zs = refinesplus_substitutability f a b pf ? 
           else a'
     a = ipartl_spec_step3_aux2 p i x xs ys zs
     b = ipartl_spec_step4_aux2 p i x xs ys zs
-    pf = undefined -- !LH reject: ipartl_spec_lemma1 p i x xs ys zs
+    pf = ipartl_spec_lemma1 p i x xs ys zs -- !LH reject
 
 -- uses: ipartl_spec_lemma2, refinesplus_substitutability
 {-@
 ipartl_spec_steps3Ato4 ::
-  (Equality (M Unit)) =>
+  (Equality (M (Natural, Natural)), Equality (M Unit)) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
     {ipartl_spec_step3A p i x xs ys zs}
     {ipartl_spec_step4 p i x xs ys zs}
 @-}
-ipartl_spec_steps3Ato4 :: (Equality (M Unit)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps3Ato4 :: (Equality (M (Natural, Natural)), Equality (M Unit)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec_steps3Ato4 p i x xs ys zs =
-  undefined -- TODO
-  -- refinesplus_substitutability f a b pf ? f a ? f b
-  -- where
-  --   f a' =
-  --     writeList (S (i + length ys + length zs)) xs
-  --       >> if x <= p
-  --         then
-  --           a'
-  --             >> ipartl p i (S (length ys), length zs, length xs)
-  --         else ipartl_spec_step4_aux2 p i x xs ys zs
-  --   a = ipartl_spec_step3_aux1 i x ys zs
-  --   b = ipartl_spec_step4_aux1 i x ys zs
-  --   pf = undefined -- !LH reject: ipartl_spec_lemma2 i x ys zs
+  refinesplus_substitutability f a b pf ? f a ? f b
+  where
+    f a' =
+      writeList (S (i + length ys + length zs)) xs
+        >> if x <= p
+          then
+            a'
+              >> ipartl p i (S (length ys), length zs, length xs)
+          else ipartl_spec_step4_aux2 p i x xs ys zs
+    a = ipartl_spec_step3_aux1 p i x xs ys zs
+    b = ipartl_spec_step4_aux1 p i x xs ys zs
+    pf = ipartl_spec_lemma2 p i x xs ys zs -- !LH reject
 
 -- uses:
 -- - `ipartl_spec_lemma1`,
@@ -1421,8 +1420,6 @@ ipartl_spec_steps3to4 p i x xs ys zs =
     (ipartl_spec_steps3to3a p i x xs ys zs)
     -- 3a refines 4
     (ipartl_spec_steps3Ato4 p i x xs ys zs)
-
--- !INSERT ipartl_spec
 
 --
 -- ## iqsort
@@ -2712,14 +2709,20 @@ ipartl_spec_steps4to7 p i x xs ys zs =
   (refinesplus_equalprop (ipartl_spec_step4 p i x xs ys zs) (ipartl_spec_step7 p i x xs ys zs))
     [eqpropchain|
         ipartl_spec_step4 p i x xs ys zs
+
       %==
         ipartl_spec_step5 p i x xs ys zs
-          %by undefined %-- TODO: either this is wrong: ipartl_spec_steps4to5 p i x xs ys zs
+
+          %by ipartl_spec_steps4to5 p i x xs ys zs
+
       %==
         ipartl_spec_step6 p i x xs ys zs
-          %by undefined %-- TODO: or this is wrong: ipartl_spec_steps5to6 p i x xs ys zs
+
+          %by ipartl_spec_steps5to6 p i x xs ys zs
+
       %==
         ipartl_spec_step7 p i x xs ys zs
+
           %by ipartl_spec_steps6to7 p i x xs ys zs
     |]
 
