@@ -665,3 +665,14 @@ writeList_read ::
 @-}
 writeList_read :: Equality (M Int) => Natural -> Int -> List Int -> EqualityProp (M Int)
 writeList_read i x xs = undefined
+
+{-@
+writeList_singleton ::
+  Equality (M Unit) =>
+  i:Natural -> x:Int ->
+  EqualProp (M Unit)
+    {writeList i (Cons x Nil)}
+    {write i x}
+@-}
+writeList_singleton :: Equality (M Unit) => Natural -> Int -> EqualityProp (M ())
+writeList_singleton i x = undefined

@@ -1048,22 +1048,31 @@ ipartl_spec_lemma3_aux2_Cons ::
     {ipartl_spec_lemma3_aux2_Cons_aux i x z zs}
 @-}
 ipartl_spec_lemma3_aux2_Cons :: Equality (M ()) => Natural -> Int -> Int -> List Int -> EqualityProp (M ())
-{-
-ipartl_spec_lemma3_aux2 i x (Cons z zs)
-permute (Cons z zs) >>= ipartl_spec_lemma3_aux2_aux i x
-split zs >>= permute_aux1 z >>= ipartl_spec_lemma3_aux2_aux i x
--}
-ipartl_spec_lemma3_aux2_Cons i x z zs = undefined -- TODO
+ipartl_spec_lemma3_aux2_Cons i x z zs =
+  [eqpropchain|
+      ipartl_spec_lemma3_aux2 i x (Cons z zs)
 
-{-
-permute (Cons x xs) = split xs >>= permute_aux1 x
+    %== -- defn ipartl_spec_lemma3_aux2
+      permute (Cons z zs) >>=
+        ipartl_spec_lemma3_aux2_aux i x
 
-ipartl_spec_lemma3_aux2 i x zs =
-  permute zs >>= ipartl_spec_lemma3_aux2_aux i x
+        %by %reflexivity
+    
+    %== -- defn permute
+      split zs >>=
+        permute_aux1 z >>=
+          ipartl_spec_lemma3_aux2_aux i x
 
-ipartl_spec_lemma3_aux2_aux i x zs' =
-  writeList i (Cons x Nil ++ zs')
--}
+        %by %rewrite permute (Cons z zs)
+                 %to split zs >>= permute_aux1 z
+        %by %reflexivity
+
+    %== -- defn ipartl_spec_lemma3_aux2_Cons_aux
+      ipartl_spec_lemma3_aux2_Cons_aux i x z zs
+
+        %by %symmetry
+        %by %reflexivity
+  |]
 
 -- [ref 11]
 {-@
@@ -1078,42 +1087,79 @@ ipartl_spec_lemma3 ::
 @-}
 ipartl_spec_lemma3 :: Equality (M ()) => Natural -> Int -> List Int -> EqualityProp (M ())
 ipartl_spec_lemma3 i x Nil =
-  undefined
+  refinesplus_equalprop
+    (ipartl_spec_lemma3_aux1 i x Nil)
+    (ipartl_spec_lemma3_aux2 i x Nil)
     [eqpropchain|
-      ipartl_spec_lemma3_aux1 i x Nil <+> ipartl_spec_lemma3_aux2 i x Nil
-    %==
-      ipartl_spec_lemma3_aux1 i x Nil <+> (write i x >> pure it)
-        %by %rewrite ipartl_spec_lemma3_aux2 i x Nil
-                 %to write i x >> pure it
-        %by ipartl_spec_lemma3_aux2_Nil i x
-    %==
-      (write i x >> pure it) <+> (write i x >> pure it)
-        %by %rewrite ipartl_spec_lemma3_aux1 i x Nil
-                 %to write i x >> pure it
-        %by ipartl_spec_lemma3_aux1_Nil i x
-    %==
-      write i x >> pure it
-        %by refinesplus_reflexivity (write i x >> pure it)
-    %==
-      ipartl_spec_lemma3_aux2 i x Nil
-        %by %symmetry
+        ipartl_spec_lemma3_aux1 i x Nil <+> ipartl_spec_lemma3_aux2 i x Nil
+      %==
+        ipartl_spec_lemma3_aux1 i x Nil <+> (write i x >> pure it)
+          %by %rewrite ipartl_spec_lemma3_aux2 i x Nil
+                  %to write i x >> pure it
+          %by ipartl_spec_lemma3_aux2_Nil i x
+      %==
+        (write i x >> pure it) <+> (write i x >> pure it)
+          %by %rewrite ipartl_spec_lemma3_aux1 i x Nil
+                  %to write i x >> pure it
+          %by ipartl_spec_lemma3_aux1_Nil i x
+      %==
+        write i x >> pure it
+          %by refinesplus_reflexivity (write i x >> pure it)
+      %==
+        ipartl_spec_lemma3_aux2 i x Nil
+          %by %symmetry
         %by ipartl_spec_lemma3_aux2_Nil i x
   |]
 ipartl_spec_lemma3 i x (Cons z zs) = undefined -- TODO
 {-
-  [eqpropchain|
-      ipartl_spec_lemma3_aux1 i x (Cons z zs)
-    %==
-      ipartl_spec_lemma3_aux2 i x (Cons z zs)
-  |]
--}
-
-{- -- * definitions
-ipartl_spec_lemma3_aux1 i x zs =
-  writeList i (zs ++ Cons x Nil) >> swap i (i + length zs)
-
-ipartl_spec_lemma3_aux2 i x zs =
-  permute zs >>= ipartl_spec_lemma3_aux2_aux i x
+ipartl_spec_lemma3_aux1 i x (Cons z zs)
+--
+ipartl_spec_lemma3_aux1_Cons_aux i x z zs
+--
+write i z >>
+  writeList (S i) zs >>
+    write (i + length zs) x >>
+      swap i (S (i + length zs))
+--
+-- TODO: how to progress?
+--
+split zs >>=
+  ( \(ys', zs') ->
+      liftM2 (\ys' zs' -> ys' ++ Cons z Nil ++ zs') (permute ys') (permute zs')
+  ) >>= \zs' ->
+    write i x >>
+      writeList (S i) zs'
+-- writeList_singleton i x
+split zs >>=
+  ( \(ys', zs') ->
+      liftM2 (\ys' zs' -> ys' ++ Cons z Nil ++ zs') (permute ys') (permute zs')
+  ) >>= \zs' ->
+    writeList i (Cons x Nil) >>
+      writeList (S i) zs'
+-- writeList_append i (Cons x Nil) zs'
+split zs >>=
+  ( \(ys', zs') ->
+      liftM2 (\ys' zs' -> ys' ++ Cons z Nil ++ zs') (permute ys') (permute zs')
+  ) >>= \zs' ->
+    writeList i (Cons x Nil ++ zs')
+--
+split zs >>=
+  ( \(ys', zs') ->
+      liftM2 (permute_aux2 z) (permute ys') (permute zs')
+  ) >>= \zs' ->
+    writeList i (Cons x Nil ++ zs')
+--
+split zs >>=
+  permute_aux1 z >>= \zs' ->
+    writeList i (Cons x Nil ++ zs')
+--
+split zs >>=
+  permute_aux1 z >>=
+    ipartl_spec_lemma3_aux2_aux i x
+--
+ipartl_spec_lemma3_aux2_Cons_aux i x z zs
+--
+ipartl_spec_lemma3_aux2 i x (Cons z zs)
 -}
 
 --
