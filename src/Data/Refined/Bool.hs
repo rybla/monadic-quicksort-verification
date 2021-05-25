@@ -19,6 +19,3 @@ if_distributive ::
 
 @-}
 -}
-
-instance Equality Bool where
-  __Equality = Nothing

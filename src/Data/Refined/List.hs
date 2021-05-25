@@ -4,6 +4,7 @@ module Data.Refined.List where
 
 import Data.Refined.Natural
 import Language.Haskell.Liquid.ProofCombinators
+import Relation.Equality.Prop
 import Prelude hiding (all, foldl, length, (+), (++))
 
 {-
@@ -82,3 +83,11 @@ length_append xs ys = undefined -- TODO
 all :: (a -> Bool) -> List a -> Bool
 all p Nil = True
 all p (Cons x xs) = p x && all p xs
+
+-- |
+-- == Instances
+
+--
+instance (EqSMT a, Equality a) => Equality (List a) where
+  symmetry = undefined
+  transitivity = undefined

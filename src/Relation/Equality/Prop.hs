@@ -2,7 +2,9 @@
 
 module Relation.Equality.Prop where
 
-import Data.Void (Void)
+import Data.Refined.Constant
+import Data.Refined.Unit
+import Data.Void
 import Function
 import Language.Haskell.Liquid.ProofCombinators
 
@@ -83,12 +85,15 @@ Combines together the equality properties:
 - substitutability
 -}
 
+-- TODO: parsing error when I tried to use type synonym
 {-@
-class (Symmetry a, Transitivity a) => Equality a where
-  __Equality :: {v:Maybe a | v = Nothing}
+class Equality a where
+  symmetry :: x:a -> y:a -> {_:EqualityProp a | eqprop x y} -> {_:EqualityProp a | eqprop y x}
+  transitivity :: x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> EqualProp a {x} {z}
 @-}
-class (Symmetry a, Transitivity a) => Equality a where
-  __Equality :: Maybe a
+class Equality a where
+  symmetry :: a -> a -> EqualityProp a -> EqualityProp a
+  transitivity :: a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
 
 {-
 ### SMT Equality
@@ -145,48 +150,48 @@ instance Retractability a b where
       ? (given x (g)) -- instantiate `g x`
 
 {-
-### Symmetry
+### Symmetry'
 -}
 
 {-@
-class Symmetry a where
-  symmetry :: x:a -> y:a -> EqualProp a {x} {y} -> EqualProp a {y} {x}
+class Symmetry' a where
+  symmetry' :: x:a -> y:a -> EqualProp a {x} {y} -> EqualProp a {y} {x}
 @-}
-class Symmetry a where
-  symmetry :: a -> a -> EqualityProp a -> EqualityProp a
+class Symmetry' a where
+  symmetry' :: a -> a -> EqualityProp a -> EqualityProp a
 
-instance Concreteness a => Symmetry a where
-  symmetry x y exy =
+instance Concreteness a => Symmetry' a where
+  symmetry' x y exy =
     reflexivity x ? concreteness x y exy
 
-instance (Symmetry b, Retractability a b) => Symmetry (a -> b) where
-  symmetry f g efg =
+instance (Symmetry' b, Retractability a b) => Symmetry' (a -> b) where
+  symmetry' f g efg =
     let efxgx = retractability f g efg
-        egxfx x = symmetry (f x) (g x) (efxgx x)
+        egxfx x = symmetry' (f x) (g x) (efxgx x)
      in extensionality g f egxfx
 
 {-
-### Transitivity
+### Transitivity'
 -}
 
 {-@
-class Transitivity a where
-  transitivity :: x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> EqualProp a {x} {z}
+class Transitivity' a where
+  transitivity' :: x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> EqualProp a {x} {z}
 @-}
-class Transitivity a where
-  transitivity :: a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
+class Transitivity' a where
+  transitivity' :: a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
 
-instance Concreteness a => Transitivity a where
-  transitivity x y z exy eyz =
+instance Concreteness a => Transitivity' a where
+  transitivity' x y z exy eyz =
     reflexivity x
       ? concreteness x y exy
       ? concreteness y z eyz
 
-instance (Transitivity b, Retractability a b) => Transitivity (a -> b) where
-  transitivity f g h efg egh =
+instance (Transitivity' b, Retractability a b) => Transitivity' (a -> b) where
+  transitivity' f g h efg egh =
     let es_fx_gx = retractability f g efg
         es_gx_hx = retractability g h egh
-        es_fx_hx x = transitivity (f x) (g x) (h x) (es_fx_gx x) (es_gx_hx x)
+        es_fx_hx x = transitivity' (f x) (g x) (h x) (es_fx_gx x) (es_gx_hx x)
      in extensionality f h es_fx_hx
 
 {-
@@ -207,3 +212,19 @@ etaEquivalency :: Equality b => x:a -> y:b -> EqualProp b {y} {apply (\_:a -> y)
 etaEquivalency :: Equality b => a -> b -> EqualityProp b
 etaEquivalency x y =
   reflexivity y ? apply (\_ -> y) x
+
+{-
+## Basic instances
+-}
+
+instance Equality Bool where
+  symmetry = undefined
+  transitivity = undefined
+
+instance Equality Int where
+  symmetry = undefined
+  transitivity = undefined
+
+instance Equality () where
+  symmetry = undefined
+  transitivity = undefined

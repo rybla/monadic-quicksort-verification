@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: dea55421a21832fa68461e49da615e5783bc21eb8c50f09c836668f36e355d47
+-- hash: a66d1ba4663d1caf4a6f01bed7f12e65c616d229c73a691a3f1ebcf7c2fcd1a0
 
 name:           monadic-quicksort-verification
 version:        0.1.0.0
@@ -48,10 +48,11 @@ library
       Relation.Equality.PropBlind
       Relation.Equality.PropOld
       Sort.Array
-      Sort.ArrayOld
       Sort.ArrayProto
+      Sort.ArrayProtoProto
       Sort.List
       Sort.ListProto
+      Sort.ListProtoOld
   other-modules:
       Paths_monadic_quicksort_verification
   hs-source-dirs:

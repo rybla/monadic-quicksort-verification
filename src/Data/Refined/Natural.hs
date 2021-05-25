@@ -32,8 +32,10 @@ fromInt :: Int -> Natural
 fromInt 0 = Z
 fromInt n = S (fromInt (n - 1))
 
+--
 instance Equality Natural where
-  __Equality = Prelude.Nothing
+  symmetry = undefined
+  transitivity = undefined
 
 {-
 ## Addition and Multiplication

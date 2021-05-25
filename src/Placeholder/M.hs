@@ -654,3 +654,14 @@ writeList_commutativity ::
 @-}
 writeList_commutativity :: Equality (M ()) => Natural -> List Int -> List Int -> EqualityProp (M ())
 writeList_commutativity = undefined -- TODO
+
+{-@
+writeList_read ::
+  Equality (M Int) =>
+  i:Natural -> x:Int -> xs:List Int ->
+  EqualProp (M Int)
+    {seq (writeList i (Cons x xs)) (read (add i (length xs)))}
+    {seq (writeList i (Cons x xs)) (pure x)}
+@-}
+writeList_read :: Equality (M Int) => Natural -> Int -> List Int -> EqualityProp (M Int)
+writeList_read i x xs = undefined

@@ -16,7 +16,9 @@ proj2 :: Pair a b -> b
 proj2 (x, y) = y
 
 instance (Eq a, Eq b, Equality a, Equality b) => Equality (a, b) where
-  __Equality = Nothing
+  symmetry = undefined
+  transitivity = undefined
 
 instance (Eq a, Eq b, Eq c, Equality a, Equality b, Equality c) => Equality (a, b, c) where
-  __Equality = Nothing
+  symmetry = undefined
+  transitivity = undefined
