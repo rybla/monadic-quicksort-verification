@@ -591,6 +591,18 @@ plus_identity_left _ = assumedProp
 
 {-@
 assume
+plus_associativity ::
+  (Equality (M a)) =>
+  m1:M a -> m2:M a -> m3:M a ->
+  EqualProp (M a)
+    {m1 <+> m2 <+> m3}
+    {m1 <+> (m2 <+> m3)}
+@-}
+plus_associativity :: (Equality (M a)) => M a -> M a -> M a -> EqualityProp (M a)
+plus_associativity _ _ _ = assumedProp
+
+{-@
+assume
 plus_distributivity_left :: m1:M a -> m2:M a -> k:(a -> M b) -> EqualProp (M b) {(m1 <+> m2) >>= k} {(m1 >>= k) <+> (m2 >>= k)}
 @-}
 plus_distributivity_left :: M a -> M a -> (a -> M b) -> EqualityProp (M b)
@@ -641,18 +653,12 @@ refinesplus_equalprop :: Equality (M a) => M a -> M a -> EqualityProp (M a) -> E
 refinesplus_equalprop = undefined -- TODO
 
 {-@
+assume
 refinesplus_reflexivity :: Equality (M a) =>
   m:M a -> RefinesPlus a {m} {m}
 @-}
 refinesplus_reflexivity :: Equality (M a) => M a -> EqualityProp (M a)
-refinesplus_reflexivity m =
-  [eqpropchain|
-      m <+> m
-    %==
-      m 
-        %by undefined 
-        %-- TODO: not sure...
-  |]
+refinesplus_reflexivity m = assumedProp -- !ASSUMED
 
 -- TODO: other lemmas about RefinesPlus
 
@@ -665,7 +671,23 @@ refinesplus_transitivity ::
   RefinesPlus a {m1} {m3}
 @-}
 refinesplus_transitivity :: Equality (M a) => M a -> M a -> M a -> EqualityProp (M a) -> EqualityProp (M a) -> EqualityProp (M a)
-refinesplus_transitivity m1 m2 m3 h12 h23 = undefined -- TODO
+refinesplus_transitivity m1 m2 m3 h12 h23 =
+  [eqpropchain|
+      m1 <+> m3
+    %==
+      m1 <+> (m2 <+> m3)
+    %==
+      m1 <+> m2 <+> m3
+        %by plus_associativity m1 m2 m3
+    %==
+      m2 <+> m3
+        %by %rewrite m1 <+> m2 
+                 %to m2
+        %by h12
+    %==
+      m3 
+        %by h23
+  |]
 
 {-@
 refinesplus_substitutability ::
