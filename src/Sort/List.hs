@@ -77,13 +77,34 @@ bind_seq_associativity_with_permute_preserved_length_aux k f xs' =
 
 {-@
 bind_seq_associativity_with_permute_preserved_length ::
+  Equality (M b) =>
   xs:List Int -> k:(List Int -> M a) -> f:(Natural -> M b) ->
   EqualProp (M b)
     {bind (permute xs) (kseq k (f (length xs)))}
     {bind (permute xs) (bind_seq_associativity_with_permute_preserved_length_aux k f)}
 @-}
-bind_seq_associativity_with_permute_preserved_length :: List Int -> (List Int -> M a) -> (Natural -> M b) -> EqualityProp (M b)
-bind_seq_associativity_with_permute_preserved_length = undefined -- TODO
+bind_seq_associativity_with_permute_preserved_length :: Equality (M b) => List Int -> (List Int -> M a) -> (Natural -> M b) -> EqualityProp (M b)
+bind_seq_associativity_with_permute_preserved_length =
+  -- TODO: explanations
+  [eqpropchain|
+      bind (permute xs) (kseq k (f (length xs)))
+    %== %-- infix
+      permute xs >>= kseq k (f (length xs))
+    %== %-- eta-equivalence
+      permute xs >>= \xs' -> kseq k (f (length xs)) xs'
+    %== %--
+      permute xs >>= \xs' -> k xs' >> f (length xs')
+    %== %--
+      permute xs >>= \xs' -> k xs' >> f (length xs')
+    %== %-- defn bind_seq_associativity_with_permute_preserved_length_aux
+      permute xs >>= \xs' -> k xs' >> f (length xs')
+    %== %-- eta-equivalence
+      permute xs >>= \xs' -> bind_seq_associativity_with_permute_preserved_length_aux k f xs'
+    %== %--
+      permute xs >>= bind_seq_associativity_with_permute_preserved_length_aux k f
+    %== %-- infix
+      bind (permute xs) (bind_seq_associativity_with_permute_preserved_length_aux k f)
+  |]
 
 {-@
 pure_Nil_xs_refines_split_xs ::
