@@ -334,8 +334,17 @@ seq_associativity4 ::
     {ma >> mb >> mc >> md}
     {ma >> (mb >> (mc >> md))}
 @-}
-seq_associativity4 :: Equality (M c) => M a -> M b -> M c -> M d -> EqualityProp (M d)
-seq_associativity4 ma mb mc md = undefined -- TODO
+seq_associativity4 :: Equality (M d) => M a -> M b -> M c -> M d -> EqualityProp (M d)
+seq_associativity4 ma mb mc md =
+  [eqpropchain|
+      ma >> mb >> mc >> md
+    %==
+      ma >> mb >> (mc >> md)
+        %by seq_associativity (ma >> mb) mc md
+    %==
+      ma >> (mb >> (mc >> md))
+        %by seq_associativity ma mb (mc >> md)
+  |]
 
 {-@
 seq_pure_bind ::
