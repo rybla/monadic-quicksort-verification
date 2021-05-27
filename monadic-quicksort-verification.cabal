@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a66d1ba4663d1caf4a6f01bed7f12e65c616d229c73a691a3f1ebcf7c2fcd1a0
+-- hash: 7fd6203e8bbc733799d9cab782445b9ad3f6644db90d119703d9fd7f23435658
 
 name:           monadic-quicksort-verification
 version:        0.1.0.0
@@ -32,6 +32,7 @@ library
       Control.Refined.Monad.ArrayPlus
       Control.Refined.Monad.Plus
       Data.Refined.Bool
+      Data.Refined.Constant
       Data.Refined.List
       Data.Refined.Nat
       Data.Refined.Natural

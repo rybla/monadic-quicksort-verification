@@ -1782,7 +1782,13 @@ iqsort_spec_lemma2 ::
     {iqsort_spec_lemma2_aux1 p i ys}
 @-}
 iqsort_spec_lemma2 :: Equality (M Unit) => Int -> Natural -> List Int -> EqualityProp (M Unit)
-iqsort_spec_lemma2 = undefined
+iqsort_spec_lemma2 p i ys =
+  -- !ADMITTED
+  [eqpropchain|
+      seq (writeList i (append (Cons p Nil) ys)) (swap i (add i (length ys)))
+    %== 
+      iqsort_spec_lemma2_aux1 p i ys
+  |]
 
 --
 -- #### lemma 3
@@ -1816,29 +1822,29 @@ iqsort_spec_lemma3 ::
     {iqsort_spec_lemma1_aux p i xs}
 @-}
 iqsort_spec_lemma3 :: Equality (M ()) => Int -> Natural -> List Int -> EqualityProp (M ())
-iqsort_spec_lemma3 = undefined -- TODO
-{-
-iqsort_spec_aux2 i (Cons p xs)
---
-slowsort xs >>=
-  writeList i
-
---
-partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
-  permute ys >>= \ys' ->
-    writeList i (ys' ++ Cons p Nil ++ zs) >>
-      iqsort i (length ys) >>
-        iqsort (S (i + length ys)) (length zs)
---
-partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
-  permute ys >>=
-    iqsort_spec_lemma1_aux_aux_aux p i ys zs
---
-partl' p (Nil, Nil, xs) >>=
-  iqsort_spec_lemma1_aux_aux p i
---
-iqsort_spec_lemma1_aux p i xs
--}
+iqsort_spec_lemma3 p i xs =
+  -- !ADMITTED
+  [eqpropchain|
+      iqsort_spec_aux2 i (Cons p xs)
+    %== --
+      slowsort xs >>=
+        writeList i
+    %== --
+      partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
+        permute ys >>= \ys' ->
+          writeList i (ys' ++ Cons p Nil ++ zs) >>
+            iqsort i (length ys) >>
+              iqsort (S (i + length ys)) (length zs)
+    %== --
+      partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
+        permute ys >>=
+          iqsort_spec_lemma1_aux_aux_aux p i ys zs
+    %== --
+      partl' p (Nil, Nil, xs) >>=
+        iqsort_spec_lemma1_aux_aux p i
+    %== --
+      iqsort_spec_lemma1_aux p i xs
+  |]
 
 --
 -- #### lemma 4

@@ -61,6 +61,7 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
   - [x] prove `ipartl_spec_lemma3`
     - [x] prove `ipartl_spec_lemma3_aux1_Nil`
     - [x] prove `ipartl_spec_lemma3_aux2_Nil`
+    - [ ] case `Cons`
     - [x] prove `ipartl_spec_lemma3_aux1_Cons`
     - [ ] prove `ipartl_spec_lemma3_aux2_Cons`
   - [x] prove `ipartl_spec_steps1to3`
@@ -81,7 +82,8 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 - [ ] prove termination `iqsort`
 - [x] prove `iqsort_spec`
   - [ ] prove `iqsort_spec_lemma1`
-  - [ ] prove `iqsort_spec_lemma3`
+  - [o] prove `iqsort_spec_lemma2`
+  - [o] prove `iqsort_spec_lemma3`
   - [ ] prove `iqsort_spec_lemma4`
 
 <!-- References -->
