@@ -1750,7 +1750,13 @@ iqsort_spec_lemma1 ::
     {iqsort_spec_aux2 i (Cons p xs)}
 @-}
 iqsort_spec_lemma1 :: Equality (M ()) => Int -> Natural -> List Int -> EqualityProp (M ())
-iqsort_spec_lemma1 = undefined -- TODO: this seems hard
+iqsort_spec_lemma1 =
+  -- !ADMITTED
+  [eqpropchain|
+      iqsort_spec_lemma1_aux p i xs
+    %==
+      iqsort_spec_aux2 i (Cons p xs)
+  |]
 
 --
 -- #### lemma 2
@@ -1860,7 +1866,13 @@ iqsort_spec_lemma4 ::
     {iqsort_spec_lemma3_aux p i xs}
 @-}
 iqsort_spec_lemma4 :: Equality (M ()) => Int -> Natural -> List Int -> EqualityProp (M ())
-iqsort_spec_lemma4 = undefined -- TODO
+iqsort_spec_lemma4 p i xs =
+  -- !ADMITTED
+  [eqpropchain|
+      iqsort_spec_aux1 i (Cons p xs)
+    %==
+      iqsort_spec_lemma3_aux p i xs
+  |]
 
 --
 -- #### iqsort
