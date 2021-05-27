@@ -348,14 +348,50 @@ seq_associativity4 ma mb mc md =
 
 {-@
 seq_pure_bind ::
-  Equality (M c) =>
+  (Equality (M c), Equality (a -> M c)) =>
   m:M a -> x:b -> k:(b -> M c) ->
   EqualProp (M c)
     {m >> pure x >>= k}
     {m >> (pure x >>= k)}
 @-}
-seq_pure_bind :: Equality (M c) => M a -> b -> (b -> M c) -> EqualityProp (M c)
-seq_pure_bind m x k = undefined -- TODO
+seq_pure_bind :: (Equality (M c), Equality (a -> M c)) => M a -> b -> (b -> M c) -> EqualityProp (M c)
+seq_pure_bind m x k =
+  [eqpropchain|
+      m >> pure x >>= k 
+    %==
+      m >>= (\_ -> pure x) >>= k
+        %by %rewrite m >> pure x
+                 %to m >>= (\_ -> pure x)
+        %by %reflexivity
+    %==
+      m >>= ((\_ -> pure x) >=> k)
+        %by bind_associativity m (\_ -> pure x) k
+    %==
+      m >>= \y -> ((\_ -> pure x) >=> k) y
+        %by %rewrite ((\_ -> pure x) >=> k)
+                 %to \y -> ((\_ -> pure x) >=> k) y
+        %by %symmetry
+        %by %reflexivity
+    %==
+      m >>= \y -> (\_ -> pure x) y >>= k
+        %by %rewrite \y -> ((\_ -> pure x) >=> k) y
+                 %to \y -> (\_ -> pure x) y >>= k
+        %by %extend y
+        %by %reflexivity
+    %==
+      m >>= \y -> pure x >>= k
+        %by %rewrite \y -> (\_ -> pure x) y >>= k
+                 %to \y -> pure x >>= k
+        %by %extend y
+        %by %rewrite (\_ -> pure x) y
+                 %to pure x
+        %by %reflexivity
+    %==
+      m >> (pure x >>= k)
+        %by %symmetry
+        %by %reflexivity
+  
+  |]
 
 {-@
 seq_if_bind ::
