@@ -45,33 +45,6 @@ data M :: * -> * where
   Read :: Natural -> M Int
   Write :: Natural -> Int -> M ()
 
--- TODO: this all doesn't really work, since can't really get `Eq (M a)` without
--- `Typeable`, and for `Equality` class and such will have issues anyway with
--- overlapping instances.
-
--- instance Eq a => Eq (M a) where
---   Pure x == Pure x' = x == x'
---   Bind ma k == Bind ma' k' = ma == ma' && k == k'
---   Epsilon == Epsilon = True
---   Plus ma1 ma2 == Plus ma1' ma2' = ma1 == ma1' && ma2 == ma2'
---   Read i == Read i' = i == i'
---   Write i x == Write i' x' = i == i' && x == x'
-
--- instance EqSMT a => EqSMT (M a) where
---   eqSMT = undefined
-
--- instance Eq a => Eq (M a) where
---   (==) = undefined
-
--- instance Transitivity a => Transitivity (M a) where
---   transitivity = undefined
-
--- instance Symmetry a => Symmetry (M a) where
---   symmetry = undefined
-
--- instance Equality a => Equality (M a) where
---   __Equality = Nothing
-
 -- TODO
 -- interpretM :: Monad m -> Plus m -> Array m a -> M a -> m a
 -- interpretM _ pls ary _m = undefined
@@ -267,7 +240,24 @@ bind_if ::
     {if b then m1 >>= k else m2 >>= k}
 @-}
 bind_if :: Equality (M b) => Bool -> M a -> M a -> (a -> M b) -> EqualityProp (M b)
-bind_if b m1 m2 k = undefined -- TODO
+bind_if True m1 m2 k =
+  [eqpropchain|
+      (if True then m1 else m2) >>= k
+    %==
+      m1 >>= k
+        %by %rewrite if True then m1 else m2 
+                 %to m1
+        %by %reflexivity
+  |]
+bind_if False m1 m2 k =
+  [eqpropchain|
+      (if False then m1 else m2) >>= k
+    %==
+      m2 >>= k
+        %by %rewrite if False then m1 else m2
+                 %to m2
+        %by %reflexivity
+  |]
 
 {-@
 seq_bind_associativity ::
