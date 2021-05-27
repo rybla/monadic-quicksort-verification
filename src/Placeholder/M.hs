@@ -927,6 +927,18 @@ writeList_append i (Cons x xs) ys =
   |]
 
 {-@
+assume
+write_redundancy ::
+  Equality (M Unit) =>
+  i:Natural -> x:Int ->
+  EqualProp (M Unit)
+    {write i x >> write i x}
+    {write i x}
+@-}
+write_redundancy :: Equality (M Unit) => Natural -> Int -> EqualityProp (M Unit)
+write_redundancy i x = assumedProp -- !ASSUMED
+
+{-@
 writeList_redundancy ::
   Equality (M Unit) =>
   i:Natural -> xs:List Int ->
@@ -935,7 +947,56 @@ writeList_redundancy ::
     {writeList i xs}
 @-}
 writeList_redundancy :: Equality (M Unit) => Natural -> List Int -> EqualityProp (M ())
-writeList_redundancy = undefined -- TODO
+writeList_redundancy i Nil =
+  [eqpropchain|
+      writeList i Nil >> writeList i Nil
+    %==
+      pure it >> pure it
+    %==
+      pure it 
+        %by seq_identity_left it (pure it)
+    %==
+      writeList i Nil
+        %by %symmetry
+        %by %reflexivity
+  |]
+writeList_redundancy i (Cons x xs) =
+  [eqpropchain|
+      writeList i (Cons x xs) >> writeList i (Cons x xs)
+    %==
+      write i x >> writeList (S i) xs >> (write i x >> writeList (S i) xs)
+    %==
+      write i x >> writeList (S i) xs >> (writeList (S i) xs >> write i x)
+        %-- TODO
+    %==
+      write i x >> (writeList (S i) xs >> (writeList (S i) xs >> write i x))
+        %by seq_associativity (write i x) (writeList (S i) xs) (writeList (S i) xs >> write i x)
+    %==
+      write i x >> (writeList (S i) xs >> writeList (S i) xs >> write i x)
+        %by %rewrite (writeList (S i) xs >> (writeList (S i) xs >> write i x))
+                 %to (writeList (S i) xs >> writeList (S i) xs >> write i x)
+        %by %symmetry
+        %by seq_associativity (writeList (S i) xs) (writeList (S i) xs) (write i x)
+    %==
+      write i x >> (writeList (S i) xs >> write i x)
+        %by %rewrite writeList (S i) xs >> writeList (S i) xs >> write i x
+                 %to writeList (S i) xs >> write i x
+        %by writeList_redundancy (S i) xs
+    %==
+      write i x >> (write i x >> writeList (S i) xs)
+        %-- TODO
+    %== 
+      write i x >> write i x >> writeList (S i) xs
+        %by seq_associativity (write i x) (write i x) (writeList (S i) xs)
+    %==
+      write i x >> writeList (S i) xs
+        %by %rewrite write i x >> write i x
+                 %to write i x
+        %by write_redundancy i x
+    %==
+      writeList i (Cons x xs)
+        %-- TODO
+  |]
 
 {-@
 writeList_commutativity ::
