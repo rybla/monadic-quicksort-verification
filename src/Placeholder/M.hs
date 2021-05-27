@@ -47,7 +47,7 @@ data M :: * -> * where
 
 -- TODO
 -- interpretM :: Monad m -> Plus m -> Array m a -> M a -> m a
--- interpretM _ pls ary _m = undefined
+-- interpretM _ pls _m = undefined
 
 {-
 ## Monad interface
@@ -835,8 +835,96 @@ writeList_append ::
     {writeList i (append xs ys)}
     {writeList i xs >> writeList (add i (length xs)) ys}
 @-}
-writeList_append :: Natural -> List Int -> List Int -> EqualityProp (M ())
-writeList_append = undefined -- TODO: migrate proof from Control.Monad.Array
+writeList_append :: Equality (M Unit) => Natural -> List Int -> List Int -> EqualityProp (M ())
+writeList_append i Nil ys =
+  [eqpropchain|
+      writeList i (Nil ++ ys)
+    %==
+      writeList i ys
+        %by %rewrite Nil ++ ys %to ys
+        %by %smt
+        %by append_identity ys
+    %==
+      apply (\_ -> writeList i ys) it
+        %by %smt
+        %by etaEquivalency it (writeList i ys)
+          ? apply (\_ -> writeList i ys) it
+    %==
+      pure it >>= apply (\_ -> writeList i ys)
+        %by %symmetry
+        %by pure_bind it (apply (\_ -> writeList i ys))
+    %==
+      pure it >> writeList i ys
+        %by %smt
+        %by pure it >>= apply (\_ -> writeList i ys)
+    %==
+      writeList i Nil >> writeList i ys
+        %by %smt
+        %by pure it >> writeList i ys
+    %==
+      writeList i Nil >> writeList (i + Z) ys
+        %by %smt
+        %by add_identity i
+    %==
+      writeList i Nil >> writeList (i + length Nil) ys
+        %by %smt
+        %by writeList i Nil >> writeList (i + Z) ys
+  |]
+--
+writeList_append i (Cons x xs) ys =
+  [eqpropchain|
+      writeList i (Cons x xs ++ ys)
+    %==
+      writeList i (Cons x (xs ++ ys))
+        %by %rewrite Cons x xs ++ ys
+                 %to Cons x (xs ++ ys)
+        %by %smt
+        %by Cons x (xs ++ ys)
+    %==
+      write i x >> writeList (S i) (xs ++ ys)
+        %by %smt
+        %by writeList i (Cons x (xs ++ ys))
+    %==
+      write i x >> (writeList (S i) xs >> writeList (S i + length xs) ys)
+        %by %rewrite writeList (S i) (xs ++ ys)
+                 %to writeList (S i) xs >> writeList (S i + length xs) ys
+        %by writeList_append (S i) xs ys
+    %==
+      write i x >> (writeList (S i) xs >> writeList (S (i + length xs)) ys)
+        %by %rewrite S i + length xs
+                 %to S (i + length xs)
+        %by %smt
+        %by S i + length xs
+          ? S (i + length xs)
+    %==
+      (write i x >> writeList (S i) xs) >> writeList (S (i + length xs)) ys
+        %by %symmetry
+        %by seq_associativity
+              (write i x)
+              (writeList (S i) xs)
+              (writeList (S (i + length xs)) ys)
+    %==
+      (write i x >> writeList (S i) xs) >> writeList (i + S (length xs)) ys
+        %by %rewrite S (i + length xs)
+                 %to i + S (length xs)
+        %by %smt
+        %by i + S (length xs)
+          ? add_S_right i (length xs)
+    %==
+      (write i x >> writeList (S i) xs) >> writeList (i + length (Cons x xs)) ys
+        %by %rewrite S (length xs)
+                 %to length (Cons x xs)
+        %by %smt
+        %by S (length xs)
+          ? length (Cons x xs)
+    %==
+      writeList i (Cons x xs) >> writeList (i + length (Cons x xs)) ys
+        %by %rewrite write i x >> writeList (S i) xs
+                 %to writeList i (Cons x xs)
+        %by %smt
+        %by write i x >> writeList (S i) xs
+          ? writeList i (Cons x xs)
+  |]
 
 {-@
 writeList_redundancy ::
