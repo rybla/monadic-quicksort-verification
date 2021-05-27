@@ -86,15 +86,98 @@ bind_seq_associativity_with_permute_preserved_length :: List Int -> (List Int ->
 bind_seq_associativity_with_permute_preserved_length = undefined -- TODO
 
 {-@
+pure_Nil_xs_refines_split_xs ::
+  Equality (M (List Int, List Int)) =>
+  xs:List Int ->
+  RefinesPlus (List Int, List Int)
+    {pure (Nil, xs)}
+    {split xs}
+@-}
+pure_Nil_xs_refines_split_xs :: Equality (M (List Int, List Int)) => List Int -> EqualityProp (M (List Int, List Int))
+pure_Nil_xs_refines_split_xs Nil =
+  (refinesplus_equalprop (pure (Nil, Nil)) (split Nil))
+    [eqpropchain|
+        pure (Nil, Nil)
+      %==
+        split Nil
+          %by %symmetry
+          %by %reflexivity
+    |]
+pure_Nil_xs_refines_split_xs (Cons x xs) =
+  -- TODO
+  [eqpropchain|
+      pure (Nil, Cons x xs)
+    %== -- refinesplus_reflexivity
+      pure (Cons x Nil, xs) <+> pure (Nil, Cons x xs)
+    %== -- 
+      (\(ys, zs) -> pure (Cons x ys, zs) <+> pure (ys, Cons x zs)) (Nil, xs)
+    %== -- 
+      pure (Nil, xs) >>= \(ys, zs) -> pure (Cons x ys, zs) <+> pure (ys, Cons x zs)
+    %== -- pure_Nil_xs_refines_split_xs
+      split xs >>= \(ys, zs) -> pure (Cons x ys, zs) <+> pure (ys, Cons x zs)
+    %== -- 
+      split xs >>= split_aux x
+    %== -- 
+      split (Cons x xs)
+  |]
+
+{-@
 pure_refines_permute ::
-  Equality (List Int) =>
+  Equality (M (List Int)) =>
   xs:List Int ->
   RefinesPlus (List Int)
     {pure xs}
     {permute xs}
 @-}
-pure_refines_permute :: Equality (List Int) => List Int -> EqualityProp (M (List Int))
-pure_refines_permute xs = undefined -- TODO
+pure_refines_permute :: Equality (M (List Int)) => List Int -> EqualityProp (M (List Int))
+pure_refines_permute Nil =
+  (refinesplus_equalprop (pure Nil) (permute Nil))
+    [eqpropchain|
+        pure Nil
+      %==
+        permute Nil
+          %by %symmetry
+          %by %reflexivity
+    |]
+pure_refines_permute (Cons x xs) =
+  -- TODO
+  [eqpropchain|
+      pure (Cons x xs)
+    %==
+      pure (Nil ++ Cons x Nil ++ xs)
+    %==
+      pure (Nil, xs) >>= \(ys, zs) ->
+        pure (ys ++ Cons x Nil ++ zs)
+    %== %-- pure (Nil, xs) refines split xs
+      split xs >>= \(ys, zs) ->
+        pure (ys ++ Cons x Nil ++ zs)
+    %==
+      split xs >>= \(ys, zs) ->
+        pure ys >>= \ys' ->
+          pure zs >>= \zs' ->
+            pure (ys' ++ Cons x Nil ++ zs')
+    %== %-- pure_refines_permute (x2)
+      split xs >>= \(ys, zs) ->
+        permute ys >>= \ys' ->
+          permute zs >>= \zs' ->
+            pure (ys' ++ Cons x Nil ++ zs')
+    %== 
+      split xs >>= \(ys, zs) ->
+        permute ys >>= \ys' ->
+          permute zs >>= \zs' ->
+            pure ((\ys' zs' -> ys' ++ Cons x Nil ++ zs')  ys' zs')
+    %== 
+      split xs >>= \(ys, zs) ->
+        liftM2 (\ys' zs' -> ys' ++ Cons x Nil ++ zs') (permute ys) (permute zs)
+    %== 
+      split xs >>= \(ys, zs) ->
+        liftM2 (permute_aux2 x) (permute ys) (permute zs)
+    %== 
+      split xs >>=
+        permute_aux1 x
+    %== 
+      permute (Cons x xs)
+  |]
 
 -- {-@ reflect permute_commutativity_seq_bind_aux @-}
 -- permute_commutativity_seq_bind_aux :: M a -> (List Int -> M b) -> List Int -> M b
@@ -102,6 +185,7 @@ pure_refines_permute xs = undefined -- TODO
 
 -- permute commutes because it has only the nondeterminism effect
 {-@
+assume
 permute_commutativity_seq_bind ::
   Equality (M b) =>
   m1:M a -> xs:List Int -> k:(List Int -> M b) ->
@@ -110,7 +194,7 @@ permute_commutativity_seq_bind ::
     {bind (permute xs) (seqk m1 k)}
 @-}
 permute_commutativity_seq_bind :: Equality (M b) => M a -> List Int -> (List Int -> M b) -> EqualityProp (M b)
-permute_commutativity_seq_bind = undefined -- TODO
+permute_commutativity_seq_bind = undefined -- !ASSUMED
 
 {-@ reflect split @-}
 split :: List Int -> M (List Int, List Int)
@@ -285,13 +369,65 @@ divide_and_conquer_aux x xs =
 {-@
 divide_and_conquer ::
   Equality (M (List Int, List Int)) =>
-  x:Int -> xs:List Int ->
+  p:Int -> xs:List Int ->
   RefinesPlus (List Int, List Int)
-    {divide_and_conquer_aux x xs}
-    {slowsort (Cons x xs)}
+    {divide_and_conquer_aux p xs}
+    {slowsort (Cons p xs)}
 @-}
 divide_and_conquer :: Int -> List Int -> EqualityProp (M (List Int, List Int))
-divide_and_conquer = undefined -- TODO
+divide_and_conquer =
+  -- TODO
+  [eqpropchain|
+      divide_and_conquer_aux p xs
+    %==
+      pure (partition p xs) >>= \(ys, zs) ->
+        slowsort ys >>= \ys' ->
+          slowsort zs >>= \zs' ->
+            pure (ys' ++ Cons p Nil ++ zs')
+    %==
+      split xs >>=
+        guardBy (\(ys, zs) -> all (geq p) ys && all (leq p) zs) >>= \(ys, zs) ->
+          slowsort ys >>= \ys' ->
+            slowsort zs >>= \zs' ->
+              pure (ys' ++ Cons p Nil ++ zs')
+    %==
+      split xs >>= \(ys, zs) ->
+        guardBy (\(ys, zs) -> all (geq p) ys && all (leq p) zs) (ys, zs) >>= \(ys, zs) ->
+          slowsort ys >>= \ys' ->
+            slowsort zs >>= \zs' ->
+              pure (ys' ++ Cons p Nil ++ zs')
+    %==
+      split xs >>= \(ys, zs) ->
+        guard (all (geq p) ys && all (leq p) zs) >> 
+          pure (ys, zs) >>= \(ys, zs) ->
+            slowsort ys >>= \ys' ->
+              slowsort zs >>= \zs' ->
+                pure (ys' ++ Cons p Nil ++ zs')
+    %== %-- seq_bind_associativity
+      split xs >>= \(ys, zs) ->
+        guard (all (geq p) ys && all (leq p) zs) >> 
+          ( pure (ys, zs) >>= \(ys, zs) ->
+              slowsort ys >>= \ys' ->
+                slowsort zs >>= \zs' ->
+                  pure (ys' ++ Cons p Nil ++ zs')
+          )
+    %== %-- pure_bind 
+      split xs >>= \(ys, zs) ->
+        guard (all (geq p) ys && all (leq p) zs) >>
+          slowsort ys >>= \ys' ->
+            slowsort zs >>= \zs' ->
+              pure (ys' ++ Cons p Nil ++ zs')
+    %== %-- defn slowsort
+      split xs >>= \(ys, zs) ->
+        guard (all (leq p) ys && all (geq p) zs) >>
+          (permute ys >>= guardBy sorted) >>= \ys' ->
+            (permute zs >>= guardBy sorted) >>= \zs' ->
+              pure (ys' ++ Cons p Nil ++ zs')
+    %==
+      divide_and_conquer_lemma1_aux p xs
+    %==
+      slowsort (Cons p xs)
+  |]
 
 {-@ reflect partition @-}
 partition :: Int -> List Int -> (List Int, List Int)

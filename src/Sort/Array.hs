@@ -90,7 +90,7 @@ dispatch_commutativity_seq_bind ::
     {bind (dispatch x p ys_zs_xs) (seqk (writeList i xs) k)}
 @-}
 dispatch_commutativity_seq_bind :: Equality (M a) => Natural -> List Int -> Int -> Int -> (List Int, List Int, List Int) -> ((List Int, List Int, List Int) -> M a) -> EqualityProp (M a)
-dispatch_commutativity_seq_bind = undefined -- !assumed
+dispatch_commutativity_seq_bind = undefined -- !ASSUMED
 
 -- final derivation of `ipartl`
 {-@ reflect ipartl @-}
