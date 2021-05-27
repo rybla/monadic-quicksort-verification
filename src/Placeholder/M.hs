@@ -395,14 +395,49 @@ seq_pure_bind m x k =
 
 {-@
 seq_if_bind ::
-  Equality (M c) =>
+  (Equality (M c), Equality (a -> M c)) =>
   m:M a -> b:Bool -> m1:M b -> m2:M b -> k:(b -> M c) ->
   EqualProp (M c)
     {m >> (if b then m1 else m2) >>= k}
     {m >> if b then m1 >>= k else m2 >>= k}
 @-}
-seq_if_bind :: Equality (M c) => M a -> Bool -> M b -> M b -> (b -> M c) -> EqualityProp (M c)
-seq_if_bind m b m1 m2 k = undefined -- TODO
+seq_if_bind :: (Equality (M c), Equality (a -> M c)) => M a -> Bool -> M b -> M b -> (b -> M c) -> EqualityProp (M c)
+seq_if_bind m True m1 m2 k =
+  [eqpropchain|
+      m >> (if True then m1 else m2) >>= k
+    %==
+      m >> m1 >>= k
+        %by %rewrite if True then m1 else m2
+                 %to m1
+        %by %reflexivity
+    %==
+      m >> (m1 >>= k)
+        %by seq_bind_associativity m m1 k
+    %==
+      m >> if True then m1 >>= k else m2 >>= k
+        %by %rewrite m1 >>= k
+                 %to if True then m1 >>= k else m2 >>= k
+        %by %symmetry
+        %by %reflexivity
+  |]
+seq_if_bind m b m1 m2 k =
+  [eqpropchain|
+      m >> (if True then m1 else m2) >>= k
+    %==
+      m >> m2 >>= k
+        %by %rewrite if False then m1 else m2
+                 %to m2
+        %by %reflexivity
+    %==
+      m >> (m2 >>= k)
+        %by seq_bind_associativity m m2 k
+    %==
+      m >> if False then m1 >>= k else m2 >>= k
+        %by %rewrite m1 >>= k
+                 %to if False then m1 >>= k else m2 >>= k
+        %by %symmetry
+        %by %reflexivity
+  |]
 
 {-@
 pure_kleisli ::
