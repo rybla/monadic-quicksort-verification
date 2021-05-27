@@ -313,7 +313,18 @@ bind_associativity4 ::
     {m >>= (k1 >=> (k2 >=> k3))}
 @-}
 bind_associativity4 :: Equality (M d) => M a -> (a -> M b) -> (b -> M c) -> (c -> M d) -> EqualityProp (M d)
-bind_associativity4 = undefined -- TODO
+bind_associativity4 m k1 k2 k3 =
+  [eqpropchain|
+      m >>= k1 >>= k2 >>= k3
+    %==
+      m >>= k1 >>= (k2 >=> k3)
+    %==
+      m >>= k1 >>= (k2 >=> k3)
+        %by bind_associativity (m >>= k1) k2 k3
+    %==
+      m >>= (k1 >=> (k2 >=> k3))
+        %by bind_associativity m k1 (k2 >=> k3)
+  |]
 
 {-@
 seq_associativity4 ::
