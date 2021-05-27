@@ -29,6 +29,14 @@ partl' :: Int -> (List Int, List Int, List Int) -> M (List Int, List Int)
 partl' p (ys, zs, Nil) = pure (ys, zs)
 partl' p (ys, zs, Cons x xs) = dispatch x p (ys, zs, xs) >>= partl' p
 
+{-@ reflect dispatch_aux1 @-}
+dispatch_aux1 :: Int -> List Int -> List Int -> List Int -> M (List Int, List Int, List Int)
+dispatch_aux1 x xs ys zs' = pure (ys ++ Cons x Nil, zs', xs)
+
+{-@ reflect dispatch_aux2 @-}
+dispatch_aux2 :: List Int -> List Int -> List Int -> M (List Int, List Int, List Int)
+dispatch_aux2 xs ys zs' = pure (ys, zs', xs)
+
 {-@ reflect dispatch @-}
 dispatch :: Int -> Int -> (List Int, List Int, List Int) -> M (List Int, List Int, List Int)
 dispatch x p (ys, zs, xs) =
@@ -73,6 +81,7 @@ dispatch x p (ys, zs, xs) =
 -- dispatch_preserves_length_append_ys_zs = undefined -- TODO
 
 {-@
+assume
 dispatch_commutativity_seq_bind ::
   Equality (M a) =>
   i:Natural -> xs:List Int -> x:Int -> p:Int -> ys_zs_xs:(List Int, List Int, List Int) -> k:((List Int, List Int, List Int) -> M a) ->
@@ -81,15 +90,7 @@ dispatch_commutativity_seq_bind ::
     {bind (dispatch x p ys_zs_xs) (seqk (writeList i xs) k)}
 @-}
 dispatch_commutativity_seq_bind :: Equality (M a) => Natural -> List Int -> Int -> Int -> (List Int, List Int, List Int) -> ((List Int, List Int, List Int) -> M a) -> EqualityProp (M a)
-dispatch_commutativity_seq_bind = undefined -- TODO
-
-{-@ reflect dispatch_aux1 @-}
-dispatch_aux1 :: Int -> List Int -> List Int -> List Int -> M (List Int, List Int, List Int)
-dispatch_aux1 x xs ys zs' = pure (ys ++ Cons x Nil, zs', xs)
-
-{-@ reflect dispatch_aux2 @-}
-dispatch_aux2 :: List Int -> List Int -> List Int -> M (List Int, List Int, List Int)
-dispatch_aux2 xs ys zs' = pure (ys, zs', xs)
+dispatch_commutativity_seq_bind = undefined -- !assumed
 
 -- final derivation of `ipartl`
 {-@ reflect ipartl @-}
