@@ -261,14 +261,48 @@ bind_if False m1 m2 k =
 
 {-@
 seq_bind_associativity ::
-  Equality (M c) =>
+  (Equality (M c), Equality (a -> M c)) =>
   m1:M a -> m2:M b -> k:(b -> M c) ->
   EqualProp (M c)
     {m1 >> m2 >>= k}
     {m1 >> (m2 >>= k)}
 @-}
-seq_bind_associativity :: Equality (M c) => M a -> M b -> (b -> M c) -> EqualityProp (M c)
-seq_bind_associativity = undefined -- TODO
+seq_bind_associativity :: (Equality (M c), Equality (a -> M c)) => M a -> M b -> (b -> M c) -> EqualityProp (M c)
+seq_bind_associativity m1 m2 k =
+  [eqpropchain|
+      m1 >> m2 >>= k
+    %==
+      m1 >>= (\_ -> m2) >>= k
+        %by %rewrite m1 >> m2
+                %to m1 >>= \_ -> m2
+        %by %reflexivity
+    %==
+      m1 >>= ((\_ -> m2) >=> k)
+        %by bind_associativity m1 (\_ -> m2) k
+    %==
+      m1 >>= \x -> ((\_ -> m2) >=> k) x
+        %by %rewrite (\_ -> m2) >=> k
+                %to \x -> ((\_ -> m2) >=> k) x
+        %by %symmetry
+        %by %reflexivity
+    %==
+      m1 >>= \x -> (\_ -> m2) x >>= k
+        %by %rewrite \x -> ((\_ -> m2) >=> k) x
+                %to \x -> (\_ -> m2) x >>= k
+        %by %extend x
+        %by %reflexivity
+    %==
+      m1 >>= \x -> m2 >>= k
+        %by %rewrite \x -> (\_ -> m2) x >>= k
+                 %to \x -> m2 >>= k
+        %by %extend x
+        %by %symmetry
+        %by %reflexivity
+    %==
+      m1 >> (m2 >>= k)
+        %by %symmetry
+        %by %reflexivity
+  |]
 
 {-@
 bind_associativity4 ::
