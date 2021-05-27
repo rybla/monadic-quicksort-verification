@@ -470,13 +470,25 @@ pure_kleisli f k x =
 
 {-@
 seq_bind_seq_associativity ::
+  (Equality (a -> M c), Equality (M d), Equality (M c)) =>
   m1:M a -> m2:M b -> k:(b -> M c) -> m3:M d ->
   EqualProp (M d)
     {m1 >> m2 >>= k >> m3}
     {m1 >> (m2 >>= k >> m3)}
 @-}
-seq_bind_seq_associativity :: M a -> M b -> (b -> M c) -> M d -> EqualityProp (M d)
-seq_bind_seq_associativity = undefined -- TODO
+seq_bind_seq_associativity :: (Equality (a -> M c), Equality (M d), Equality (M c)) => M a -> M b -> (b -> M c) -> M d -> EqualityProp (M d)
+seq_bind_seq_associativity m1 m2 k m3 =
+  [eqpropchain|
+      m1 >> m2 >>= k >> m3
+    %==
+      m1 >> (m2 >>= k) >> m3
+        %by %rewrite m1 >> m2 >>= k 
+                 %to m1 >> (m2 >>= k)
+        %by seq_bind_associativity m1 m2 k 
+    %==
+      m1 >> (m2 >>= k >> m3)
+        %by seq_associativity m1 (m2 >>= k) m3
+  |]
 
 {-@ reflect kseq @-}
 kseq :: (a -> M b) -> M c -> (a -> M c)
