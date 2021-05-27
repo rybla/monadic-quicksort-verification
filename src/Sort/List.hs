@@ -104,7 +104,7 @@ pure_Nil_xs_refines_split_xs Nil =
           %by %reflexivity
     |]
 pure_Nil_xs_refines_split_xs (Cons x xs) =
-  -- TODO
+  -- TODO: explanations
   [eqpropchain|
       pure (Nil, Cons x xs)
     %== -- refinesplus_reflexivity
@@ -140,7 +140,7 @@ pure_refines_permute Nil =
           %by %reflexivity
     |]
 pure_refines_permute (Cons x xs) =
-  -- TODO
+  -- TODO: explanations
   [eqpropchain|
       pure (Cons x xs)
     %==
@@ -201,12 +201,6 @@ split :: List Int -> M (List Int, List Int)
 split Nil = pure (Nil, Nil)
 split (Cons x xs) = split xs >>= split_aux x
 
-{-- TODO
-I've found that I needed to un-lambda some functions for
-`divide_and_conquer_lemma2` to work. maybe there are others I need to do this to
-as well. it seems to come up when I am for some reason unable to unfold a
-definition (where the definition has lambdas in it).
--}
 {-@ reflect split_aux @-}
 split_aux :: Int -> (List Int, List Int) -> M (List Int, List Int)
 split_aux x (ys, zs) = pure (Cons x ys, zs) <+> pure (ys, Cons x zs)
@@ -215,7 +209,6 @@ split_aux x (ys, zs) = pure (Cons x ys, zs) <+> pure (ys, Cons x zs)
 ## Divide-and-Conquer
 -}
 
--- TODO: uses auxes
 -- [ref] divide and conquer equation chain
 {-@ reflect divide_and_conquer_lemma1_aux @-}
 divide_and_conquer_lemma1_aux :: Int -> List Int -> M (List Int)
@@ -376,7 +369,7 @@ divide_and_conquer ::
 @-}
 divide_and_conquer :: Equality (M (List Int)) => Int -> List Int -> EqualityProp (M (List Int))
 divide_and_conquer p xs =
-  -- TODO
+  -- TODO: explanations
   [eqpropchain|
       divide_and_conquer_aux p xs
     %==
