@@ -500,14 +500,48 @@ seqk m k x = m >> k x
 
 {-@
 bind_seq_associativity ::
-  Equality (M c) =>
+  (Equality (M c), Equality (a -> M c)) =>
   m1:M a -> k:(a -> M b) -> m2:M c ->
   EqualProp (M c)
     {m1 >>= k >> m2}
     {m1 >>= kseq k m2}
 @-}
-bind_seq_associativity :: Equality (M c) => M a -> (a -> M b) -> M c -> EqualityProp (M c)
-bind_seq_associativity = undefined -- TODO
+bind_seq_associativity :: (Equality (M c), Equality (a -> M c)) => M a -> (a -> M b) -> M c -> EqualityProp (M c)
+bind_seq_associativity m1 k m2 =
+  [eqpropchain|
+      m1 >>= k >> m2 
+    %==
+      m1 >>= k >>= \_ -> m2
+    %==
+      m1 >>= (k >=> (\_ -> m2))
+        %by bind_associativity m1 k (\_ -> m2)
+    %==
+      m1 >>= \x -> (k >=> (\_ -> m2)) x 
+        %by %rewrite (k >=> (\_ -> m2))
+                 %to \x -> (k >=> (\_ -> m2)) x 
+        %by %symmetry
+        %by %reflexivity
+    %==
+      m1 >>= \x -> (k x >>= (\_ -> m2))
+        %by %rewrite \x -> (k >=> (\_ -> m2)) x 
+                 %to \x -> (k x >>= (\_ -> m2))
+        %by %extend x
+        %by %reflexivity
+    %==
+      m1 >>= \x -> (k x >> m2)
+        %by %rewrite \x -> (k x >>= (\_ -> m2))
+                 %to \x -> (k x >> m2)
+        %by %extend x 
+        %by %symmetry
+        %by %reflexivity
+    %==
+      m1 >>= kseq k m2
+        %by %rewrite \x -> (k x >> m2)
+                 %to kseq k m2
+        %by %extend x 
+        %by %symmetry
+        %by %reflexivity
+  |]
 
 -- TODO: other monad lemmas
 
