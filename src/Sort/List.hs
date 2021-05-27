@@ -368,14 +368,14 @@ divide_and_conquer_aux x xs =
 -- [ref] display 8
 {-@
 divide_and_conquer ::
-  Equality (M (List Int, List Int)) =>
+  Equality (M (List Int)) =>
   p:Int -> xs:List Int ->
-  RefinesPlus (List Int, List Int)
+  RefinesPlus (List Int)
     {divide_and_conquer_aux p xs}
     {slowsort (Cons p xs)}
 @-}
-divide_and_conquer :: Int -> List Int -> EqualityProp (M (List Int, List Int))
-divide_and_conquer =
+divide_and_conquer :: Equality (M (List Int)) => Int -> List Int -> EqualityProp (M (List Int))
+divide_and_conquer p xs =
   -- TODO
   [eqpropchain|
       divide_and_conquer_aux p xs
