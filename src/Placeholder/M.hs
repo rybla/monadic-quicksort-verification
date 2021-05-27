@@ -448,7 +448,25 @@ pure_kleisli ::
     {compose k f x}
 @-}
 pure_kleisli :: Equality (M c) => (a -> b) -> (b -> M c) -> a -> EqualityProp (M c)
-pure_kleisli = undefined -- TODO
+pure_kleisli f k x =
+  [eqpropchain|
+      kleisli (compose pure f) k x
+    %==
+      (compose pure f) x >>= k
+        %by %reflexivity
+    %==
+      pure (f x) >>= k
+        %by %rewrite (compose pure f) x
+                 %to pure (f x)
+        %by %reflexivity
+    %==
+      k (f x)
+        %by pure_bind (f x) k
+    %==
+      compose k f x
+        %by %symmetry
+        %by %reflexivity
+  |]
 
 {-@
 seq_bind_seq_associativity ::
