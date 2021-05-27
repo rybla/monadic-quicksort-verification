@@ -689,7 +689,9 @@ refinesplus_transitivity m1 m2 m3 h12 h23 =
         %by h23
   |]
 
+-- TODO: does this need to be assumed? i have no idea how you would prove it...
 {-@
+assume
 refinesplus_substitutability ::
   (Equality (M a), Equality (M b)) =>
   f:(M a -> M b) -> x:M a -> y:M a ->
@@ -697,9 +699,11 @@ refinesplus_substitutability ::
   RefinesPlus (b) {f x} {f y}
 @-}
 refinesplus_substitutability :: (Equality (M a), Equality (M b)) => (M a -> M b) -> M a -> M a -> EqualityProp (M a) -> EqualityProp (M b)
-refinesplus_substitutability f x y h = undefined -- TODO
+refinesplus_substitutability f x y h = assumedProp -- !ASSUMED
 
+-- TODO: same for this one as with `refinesplus_substitutability`...
 {-@
+assume
 refinesplus_substitutabilityF ::
   (Equality (M a), Equality (M b)) =>
   f:((c -> M a) -> M b) -> k1:(c -> M a) -> k2:(c -> M a) ->
@@ -707,7 +711,7 @@ refinesplus_substitutabilityF ::
   RefinesPlus (b) {f k1} {f k2}
 @-}
 refinesplus_substitutabilityF :: (Equality (M a), Equality (M b)) => ((c -> M a) -> M b) -> (c -> M a) -> (c -> M a) -> (c -> EqualityProp (M a)) -> EqualityProp (M b)
-refinesplus_substitutabilityF f k1 k2 h = undefined -- TODO
+refinesplus_substitutabilityF f k1 k2 h = undefined -- !ASSUMED
 
 {-
 ## Array interface
