@@ -604,7 +604,7 @@ plus_idempotency _ = assumedProp
 
 {-@
 assume
-plus_commutativity :: m1:M a -> m2:M a -> EqualProp (M a) {m <+> n} {n <+> m}
+plus_commutativity :: m1:M a -> m2:M a -> EqualProp (M a) {m1 <+> m2} {m2 <+> m1}
 @-}
 plus_commutativity :: M a -> M a -> EqualityProp (M a)
 plus_commutativity _ _ = assumedProp
@@ -763,22 +763,14 @@ writeListToLength3 i (xs, ys, zs) = writeList i (xs ++ ys ++ zs) >> pure (length
 swap :: Natural -> Natural -> M ()
 swap i j = read i >>= \x -> read j >>= \y -> write i y >> write j x
 
-{-@
-swap_id ::
-  Equality (M Unit) =>
-  i:Natural ->
-  EqualProp (M Unit)
-    {swap i i}
-    {pure it}
-@-}
-swap_id :: Natural -> EqualityProp (M ())
-swap_id = undefined
-
 -- array laws
 
 {-@
 assume
-bind_read_write :: i:Natural -> EqualProp (m ()) {read i >>= write i} {pure it}
+bind_read_write ::
+  i:Natural -> EqualProp (m ())
+    {read i >>= write i}
+    {pure it}
 @-}
 bind_read_write :: Natural -> EqualityProp (m ())
 bind_read_write _ = assumedProp
@@ -807,6 +799,25 @@ seq_write_write _ _ _ = assumedProp
 
 {-@
 assume
+seq_read_read ::
+  i:Natural -> f:(Int -> Int -> M a) ->
+  EqualProp (M Int)
+      {seq_read_read_aux1 i f}
+      {seq_read_read_aux2 i f}
+@-}
+seq_read_read :: Natural -> (Int -> Int -> M a) -> EqualityProp (M Int)
+seq_read_read _ _ = assumedProp
+
+{-@ reflect seq_read_read_aux1 @-}
+seq_read_read_aux1 :: Natural -> (Int -> Int -> M a) -> M a
+seq_read_read_aux1 i f = read i >>= \x -> read i >>= \x' -> f x x'
+
+{-@ reflect seq_read_read_aux2 @-}
+seq_read_read_aux2 :: Natural -> (Int -> Int -> M a) -> M a
+seq_read_read_aux2 i f = read i >>= \x -> read i >>= \_ -> f x x
+
+{-@
+assume
 liftM_read ::
   i:Natural -> f:(Int -> Int -> Int) ->
   EqualProp (M Int)
@@ -818,19 +829,38 @@ liftM_read _ _ = assumedProp
 
 {-@
 assume
-seq_commutativity_write :: i:Natural -> j:{j:Natural | i /= j} -> x:Int -> y:Int -> EqualProp (M Unit) {write i x >> write j y} {write j y >> write i x}
+seq_commutativity_write ::
+  i:Natural -> j:{j:Natural | i /= j} -> x:Int -> y:Int ->
+  EqualProp (M Unit)
+    {write i x >> write j y}
+    {write j y >> write i x}
 @-}
 seq_commutativity_write :: Natural -> Natural -> Int -> Int -> EqualityProp (M ())
 seq_commutativity_write _ _ _ _ = assumedProp
 
 {-@
 assume
-seq_associativity_write :: i:Natural -> j:{j:Natural | i /= j} -> x:Int -> y:Int -> EqualProp (m Unit) {(read i >> pure it) >> write j x} {write j x >> (read i >> pure it)}
+seq_associativity_write ::
+  i:Natural -> j:{j:Natural | i /= j} -> x:Int -> y:Int ->
+  EqualProp (m Unit)
+    {(read i >> pure it) >> write j x}
+    {write j x >> (read i >> pure it)}
 @-}
 seq_associativity_write :: Natural -> Natural -> Int -> Int -> EqualityProp (m Unit)
 seq_associativity_write _ _ _ _ = assumedProp
 
 -- array lemmas
+
+{-@
+swap_id ::
+  Equality (M Unit) =>
+  i:Natural ->
+  EqualProp (M Unit)
+    {swap i i}
+    {pure it}
+@-}
+swap_id :: Natural -> EqualityProp (M ())
+swap_id = undefined
 
 -- [ref 9]
 {-@
