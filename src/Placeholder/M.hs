@@ -597,6 +597,20 @@ plus_associativity _ _ _ = assumedProp
 
 {-@
 assume
+plus_idempotency :: m:M a -> EqualProp (M a) {m <+> m} {m}
+@-}
+plus_idempotency :: M a -> EqualityProp (M a)
+plus_idempotency _ = assumedProp
+
+{-@
+assume
+plus_commutativity :: m1:M a -> m2:M a -> EqualProp (M a) {m <+> n} {n <+> m}
+@-}
+plus_commutativity :: M a -> M a -> EqualityProp (M a)
+plus_commutativity _ _ = assumedProp
+
+{-@
+assume
 plus_distributivity_left :: m1:M a -> m2:M a -> k:(a -> M b) -> EqualProp (M b) {(m1 <+> m2) >>= k} {(m1 >>= k) <+> (m2 >>= k)}
 @-}
 plus_distributivity_left :: M a -> M a -> (a -> M b) -> EqualityProp (M b)
