@@ -16,10 +16,10 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 - [x] prove `seq_pure_bind`
 - [x] prove `seq_if_bind`
 - [x] prove `pure_kleisli`
-- [ ] prove `refinesplus_equalprop` -
+- [ ] prove `refinesplus_equalprop`
 - [x] prove `refinesplus_reflexivity`
 - [x] prove `refinesplus_transitivity`
-- [ ] prove `refinesplus_substitutability` -
+- [ ] prove `refinesplus_substitutability`
 - [x] prove `writeList_append`
 - [x] prove `writeList_redundancy`
 - [ ] prove `writeList_commutativity`
