@@ -818,17 +818,6 @@ seq_read_read_aux2 i f = read i >>= \x -> read i >>= \_ -> f x x
 
 {-@
 assume
-liftM_read ::
-  i:Natural -> f:(Int -> Int -> Int) ->
-  EqualProp (M Int)
-    {liftM2 f (read i) (read i)}
-    {liftM (diagonalize f) (read i)}
-@-}
-liftM_read :: Natural -> (Int -> Int -> Int) -> EqualityProp (M Int)
-liftM_read _ _ = assumedProp
-
-{-@
-assume
 seq_commutativity_write ::
   i:Natural -> j:{j:Natural | i /= j} -> x:Int -> y:Int ->
   EqualProp (M Unit)
