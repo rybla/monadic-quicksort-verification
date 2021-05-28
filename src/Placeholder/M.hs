@@ -126,12 +126,6 @@ pure_bind :: x:a -> k:(a -> M b) -> EqualProp (M b) {pure x >>= k} {k x}
 pure_bind :: a -> (a -> M b) -> EqualityProp (M b)
 pure_bind _ _ = assumedProp
 
-{-- TODO
-I hate that I seem to have to do this, because apparently I need to use the
-outfixed  notation sometimes due to parsing bugs. And because of a parsing bug
-I can't prove or make use of an extensional equality between `bind` and `(>>=)`.
-But I'm hoping that I don't need to have toooo many `_outfix` proxy lemmas.
--}
 {-@
 assume
 pure_bind_outfix :: x:a -> k:(a -> M b) -> EqualProp (M b) {bind (pure x) k} {k x}
@@ -728,8 +722,6 @@ write :: Natural -> Int -> M ()
 write = Write
 
 -- array methods
-
--- TODO
 
 {-@ reflect readList @-}
 readList :: Natural -> Natural -> M (List Int)
