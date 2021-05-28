@@ -54,7 +54,7 @@ data Array m a = Array
       i:Index ->
       j:Index ->
       {_:EqualityProp (m a) | eqprop (seq arrayMonad (read i) (read j)) (seq arrayMonad (read j) (read i))},
-    seq_commutativity_write ::
+    write_commutativity ::
       i:Index ->
       j:{j:Index | i /= j} ->
       x:a ->
@@ -92,7 +92,7 @@ data Array m a = Array
       Index ->
       Index ->
       EqualityProp (m a),
-    seq_commutativity_write ::
+    write_commutativity ::
       Index ->
       Index ->
       a ->

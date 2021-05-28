@@ -117,6 +117,14 @@ liftM2 f ma mb = ma >>= \x -> mb >>= \y -> pure (f x y)
 second :: (b -> M c) -> (a, b) -> M (a, c)
 second k (x, y) = k y >>= \y' -> pure (x, y')
 
+{-@ reflect bind2 @-}
+bind2 :: M a -> M b -> (a -> b -> M c) -> M c
+bind2 ma mb k = ma >>= \x -> mb >>= \y -> k x y
+
+{-@ reflect bindFirst @-}
+bindFirst :: M a -> M b -> (a -> M c) -> M c
+bindFirst ma mb k = ma >>= \x -> mb >> k x
+
 -- monad laws
 
 {-@
@@ -818,25 +826,36 @@ seq_read_read_aux2 i f = read i >>= \x -> read i >>= \_ -> f x x
 
 {-@
 assume
-seq_commutativity_write ::
+read_commutivity ::
+  i:Natural -> j:Natural -> k:(Int -> Int -> M a) ->
+  EqualProp (M a)
+    {bind2 (read i) (read j) k}
+    {bind2 (read j) (read i) (flip k)}
+@-}
+read_commutivity :: Natural -> Natural -> (Int -> Int -> M a) -> EqualityProp (M a)
+read_commutivity _ _ _ = assumedProp
+
+{-@
+assume
+write_commutativity ::
   i:Natural -> j:{j:Natural | i /= j} -> x:Int -> y:Int ->
   EqualProp (M Unit)
     {write i x >> write j y}
     {write j y >> write i x}
 @-}
-seq_commutativity_write :: Natural -> Natural -> Int -> Int -> EqualityProp (M ())
-seq_commutativity_write _ _ _ _ = assumedProp
+write_commutativity :: Natural -> Natural -> Int -> Int -> EqualityProp (M ())
+write_commutativity _ _ _ _ = assumedProp
 
 {-@
 assume
-seq_associativity_write ::
-  i:Natural -> j:{j:Natural | i /= j} -> x:Int -> y:Int ->
-  EqualProp (m Unit)
-    {(read i >> pure it) >> write j x}
-    {write j x >> (read i >> pure it)}
+read_write_commutivity ::
+  i:Natural -> j:{j:Natural | j /= i} -> x:Int -> k:(Int -> M a) ->
+  EqualProp (M a)
+    {bindFirst (read i) (write j x) k}
+    {write j x >> read i >>= k}
 @-}
-seq_associativity_write :: Natural -> Natural -> Int -> Int -> EqualityProp (m Unit)
-seq_associativity_write _ _ _ _ = assumedProp
+read_write_commutivity :: Natural -> Natural -> Int -> (Int -> M a) -> EqualityProp (M a)
+read_write_commutivity _ _ _ _ = assumedProp
 
 -- array lemmas
 
