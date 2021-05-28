@@ -545,6 +545,16 @@ bind_seq_associativity m1 k m2 =
         %by %reflexivity
   |]
 
+{-@
+seq_pure_unit ::
+  m:M Unit ->
+  EqualProp (M Unit)
+    {m}
+    {m >> pure it}
+@-}
+seq_pure_unit :: M Unit -> EqualityProp (M Unit)
+seq_pure_unit m = undefined -- TODO
+
 -- TODO: other monad lemmas
 
 {-
@@ -1043,6 +1053,148 @@ writeList_redundancy i (Cons x xs) =
   |]
 
 {-@
+write_writeList_commutativity ::
+  Equality (M Unit) =>
+  i:Natural -> x:Int -> xs:List Int ->
+  EqualProp (M Unit)
+    {write i x >> writeList (S i) xs}
+    {writeList (S i) xs >> write i x}
+@-}
+write_writeList_commutativity :: Equality (M Unit) => Natural -> Int -> List Int -> EqualityProp (M Unit)
+write_writeList_commutativity = undefined -- TODO
+
+{-@
+write_writeList_commutativity' ::
+  Equality (M Unit) =>
+  i:Natural -> x:Int -> xs:List Int -> j:Natural ->
+  EqualProp (M Unit)
+    {write i x >> writeList (add (S i) j) xs}
+    {writeList (add (S i) j) xs >> write i x}
+@-}
+write_writeList_commutativity' :: Equality (M Unit) => Natural -> Int -> List Int -> Natural -> EqualityProp (M Unit)
+write_writeList_commutativity' i x xs Z =
+  [eqpropchain|
+      write i x >> writeList (add (S i) Z) xs
+
+    %==
+      write i x >> writeList (S i) xs
+
+        %by %rewrite add (S i) Z
+                 %to S i
+        %by %smt
+        %by add_identity (S i)
+
+    %==
+      writeList (S i) xs >> write i x
+
+        %by write_writeList_commutativity i x xs
+
+    %==
+      writeList (add (S i) Z) xs >> write i x
+
+        %by %rewrite S i 
+                 %to add (S i) Z
+        %by %smt
+        %by add_identity (S i)
+  |]
+write_writeList_commutativity' i x Nil (S j) =
+  [eqpropchain|
+      write i x >> writeList (add (S i) (S j)) Nil
+
+    %==
+      write i x >> pure it
+        %by %rewrite writeList (add (S i) (S j)) Nil
+                 %to pure it 
+        %by %reflexivity
+
+    %==
+      write i x
+        %by %symmetry
+        %by seq_pure_unit (write i x)
+
+    %==
+      pure it >> write i x
+        %by %symmetry
+        %by seq_identity_left it (write i x)
+
+    %==
+      writeList (add (S i) (S j)) Nil >> write i x
+        %by %rewrite pure it 
+                 %to writeList (add (S i) (S j)) Nil
+        %by %symmetry
+        %by %reflexivity
+  |]
+write_writeList_commutativity' i x (Cons y ys) (S j) =
+  [eqpropchain|
+      write i x >> writeList (add (S i) (S j)) (Cons y ys)
+
+    %==
+      write i x >> (write (add (S i) (S j)) y >> writeList (S (add (S i) (S j))) ys)
+  
+    %==
+      write i x >> write (add (S i) (S j)) y >> writeList (S (add (S i) (S j))) ys
+        %by %symmetry
+        %by seq_associativity
+              (write i x)
+              (write (add (S i) (S j)) y)
+              (writeList (S (add (S i) (S j))) ys)
+    %==
+      write (add (S i) (S j)) y >> write i x >> writeList (S (add (S i) (S j))) ys
+        %by %rewrite write i x >> write (add (S i) (S j)) y
+                 %to write (add (S i) (S j)) y >> write i x
+        %by write_commutativity i (add (S i) (S j)) x y
+          ? m_neq_S_add_Sm_Sn i j
+    
+    %==
+      write (add (S i) (S j)) y >> write i x >> writeList (add (S i) (S (S j))) ys
+        %by %rewrite (S (add (S i) (S j)))
+                 %to (add (S i) (S (S j)))
+        %by undefined -- TODO
+
+    %==
+      write (add (S i) (S j)) y >> (write i x >> writeList (add (S i) (S (S j))) ys)
+        %by seq_associativity
+              (write (add (S i) (S j)) y)
+              (write i x)
+              (writeList (add (S i) (S (S j))) ys)
+    
+    %==
+      write (add (S i) (S j)) y >> (writeList (add (S i) (S (S j))) ys >> write i x)
+        %by %rewrite write i x >> writeList (add (S i) (S (S j))) ys
+                 %to writeList (add (S i) (S (S j))) ys >> write i x
+        %by write_writeList_commutativity' i x ys (S (S j))
+    
+    %==
+      write (add (S i) (S j)) y >> writeList (add (S i) (S (S j))) ys >> write i x
+        %by %symmetry
+        %by seq_associativity
+              (write (add (S i) (S j)) y)
+              (writeList (add (S i) (S (S j))) ys)
+              (write i x)
+    
+    %==
+      write (add (S i) (S j)) y >> writeList (add (S i) (S (S j))) ys >> write i x
+        
+    %==
+      writeList (add (S i) (S j)) (Cons y ys) >> write i x 
+        %by %rewrite write (add (S i) (S j)) y >> writeList (add (S i) (S (S j))) ys
+                 %to writeList (add (S i) (S j)) (Cons y ys)
+        %by %symmetry
+        %by %reflexivity
+  |]
+
+-- {-@
+-- writeList_write_commutativity ::
+--   Equality (M Unit) =>
+--   i:Natural -> xs:List Int -> x:Int ->
+--   EqualProp (M Unit)
+--     {writeList i xs >> write (S (add i (length xs))) x}
+--     {write (S (add i (length xs))) x >> writeList i xs}
+-- @-}
+-- writeList_write_commutativity :: Equality (M Unit) => Natural -> List Int -> Int -> EqualityProp (M Unit)
+-- writeList_write_commutativity = undefined -- TODO; needed?
+
+{-@
 writeList_commutativity ::
   Equality (M Unit) =>
   i:Natural -> xs:List Int -> ys:List Int ->
@@ -1051,7 +1203,68 @@ writeList_commutativity ::
     {seq (writeList (add i (length xs)) ys) (writeList i xs)}
 @-}
 writeList_commutativity :: Equality (M ()) => Natural -> List Int -> List Int -> EqualityProp (M ())
-writeList_commutativity = undefined -- TODO
+writeList_commutativity i Nil ys =
+  [eqpropchain|
+      writeList i Nil >> writeList (i + length Nil) ys
+
+    %==
+      pure it >> writeList (i + length Nil) ys
+        %by %rewrite writeList i Nil 
+                 %to pure it
+        %by %reflexivity
+    
+    %==
+      writeList (i + length Nil) ys
+        %by seq_identity_left it (writeList (i + length Nil) ys)
+
+    %==
+      writeList (i + length Nil) ys >> pure it
+        %by seq_pure_unit (writeList (i + length Nil) ys)
+
+    %==
+      writeList (i + length Nil) ys >> writeList i Nil
+        %by %rewrite pure it 
+                 %to writeList i Nil
+        %by %symmetry
+        %by %reflexivity
+  |]
+writeList_commutativity i (Cons x xs) ys =
+  -- TODO: explanations
+  [eqpropchain|
+      writeList i (Cons x xs) >> writeList (i + length (Cons x xs)) ys
+
+    %==
+      writeList i (Cons x xs) >> writeList (S (i + length xs)) ys
+        %-- rewrite (i + length (Cons x xs))
+
+    %==
+      write i x >> writeList (S i) xs >> writeList (S (i + length xs)) ys
+        %-- defn writeList
+
+    %==
+      write i x >> writeList (S (i + length xs)) ys >> writeList (S i) xs
+        %-- by IH
+
+    %==
+      write i x >> writeList (S i + length xs) ys >> writeList (S i) xs
+        %-- rewrite (S (i + length xs))
+
+    %==
+      writeList (S i + length xs) ys >> write i x >> writeList (S i) xs
+        %-- by write_writeList_commutativity'
+
+    %==
+      writeList (S i + length xs) ys >> writeList i (Cons x xs)
+        %-- defn writeList
+
+    %==
+      writeList (S (i + length xs)) ys >> writeList i (Cons x xs)
+        %-- rewrite (S i + length xs)
+
+    %==
+      writeList (i + length (Cons x xs)) ys >> writeList i (Cons x xs)
+        %-- defn writeList
+  |]
 
 {-@
 writeList_read ::
@@ -1062,7 +1275,7 @@ writeList_read ::
     {seq (writeList i (Cons x xs)) (pure x)}
 @-}
 writeList_read :: Equality (M Int) => Natural -> Int -> List Int -> EqualityProp (M Int)
-writeList_read i x xs = undefined
+writeList_read i x xs = undefined -- TODO
 
 {-@
 writeList_singleton ::
@@ -1073,4 +1286,4 @@ writeList_singleton ::
     {write i x}
 @-}
 writeList_singleton :: Equality (M Unit) => Natural -> Int -> EqualityProp (M ())
-writeList_singleton i x = undefined
+writeList_singleton i x = undefined -- TODO

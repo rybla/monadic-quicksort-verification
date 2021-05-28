@@ -84,6 +84,14 @@ add_associativity :: Natural -> Natural -> Natural -> Proof
 add_associativity Z m n = add_identity n &&& add_identity (add m n)
 add_associativity (S l) m n = add_associativity l m n
 
+{-@
+m_neq_S_add_Sm_Sn ::
+  m:Natural -> n:Natural ->
+  {m /= S (add (S m) (S n))}
+@-}
+m_neq_S_add_Sm_Sn :: Natural -> Natural -> Proof
+m_neq_S_add_Sm_Sn m n = undefined -- TODO
+
 -- 0 * n = 0
 -- (1 + m) * n = n + (m * n)
 {-@ reflect mul @-}
