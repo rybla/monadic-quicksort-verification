@@ -40,14 +40,15 @@ iqsort_spec_step1_aux i p xs =
 -- by definition of iqsort
 {-@
 iqsort_spec_step1 ::
+  (Equality (M ())) =>
   i:Natural -> p:Int -> xs:List Int ->
   RefinesPlus (Unit)
     {iqsort_spec_aux1 i (Cons p xs)}
     {iqsort_spec_step1_aux i p xs}
 @-}
-iqsort_spec_step1 :: Natural -> Int -> List Int -> EqualityProp (M Unit)
+iqsort_spec_step1 :: (Equality (M ())) => Natural -> Int -> List Int -> EqualityProp (M Unit)
 iqsort_spec_step1 i p xs =
-  (refinesplus_reflexivity (iqsort_spec_aux1 i (Cons p xs)))
+  (refinesplus_equalprop (iqsort_spec_aux1 i (Cons p xs)) (iqsort_spec_step1_aux i p xs))
     [eqpropchain|
         iqsort_spec_aux1 i (Cons p xs)
 
@@ -58,13 +59,13 @@ iqsort_spec_step1 i p xs =
       %==
         writeList i (Cons p xs) >>
         ( read i >>= 
-          iqsort_aux1 i (lenth (Cons p xs))
+          iqsort_aux1 i (length (Cons p xs))
         )
 
       %==
         writeList i (Cons p xs) >>
         ( read i >>= 
-          iqsort_aux1 i (lenth (Cons p xs))
+          iqsort_aux1 i (length (Cons p xs))
         )
 
       %==
@@ -74,13 +75,22 @@ iqsort_spec_step1 i p xs =
           iqsort i ny >>
           iqsort (S (i + ny)) nz
 
-      -- TODO
+        %by %rewrite iqsort i (length (Cons p xs))
+                 %to ipartl p (S i) (Z, Z, length xs) >>= \(ny, nz) -> swap i (i + ny) >> iqsort i ny >> iqsort (S (i + ny)) nz
+        %by %reflexivity
 
-        -- %by %rewrite iqsort i (length (Cons p xs))
-        --          %to ipartl p (S i) (Z, Z, length xs) >>= \(ny, nz) -> swap i (i + ny) >> iqsort i ny >> iqsort (S (i + ny)) nz
+      %==
+        writeList i (Cons p xs) >>
+        ipartl p (S i) (Z, Z, length xs) >>= \(ny, nz) ->
+          swap i (i + ny) >>
+          iqsort i ny >>
+          iqsort (S (i + ny)) nz
 
       %==
         iqsort_spec_step1_aux i p xs
+
+          %by %symmetry
+          %by %reflexivity
     |]
 
 --

@@ -204,7 +204,7 @@ ipartl_spec_lemma1_step2 ::
     {bind (permute (append zs (Cons x Nil))) (ipartl_spec_step4_aux2_aux p i xs ys)}
 @-}
 ipartl_spec_lemma1_step2 :: (Equality (M (Natural, Natural)), Equality (M (List Int)), Equality (List Int)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_lemma1_step2 p i x xs ys zs = refinesplus_substitutability f a b pf ? f a ? f b
+ipartl_spec_lemma1_step2 p i x xs ys zs = undefined -- TODO: refinesplus_substitutability f a b pf ? f a ? f b
   where
     f m = bind m (ipartl_spec_step4_aux2_aux p i xs ys)
     a = pure (append zs (Cons x Nil))
@@ -1489,7 +1489,7 @@ ipartl_spec_steps3to3a ::
     {ipartl_spec_step3A p i x xs ys zs}
 @-}
 ipartl_spec_steps3to3a :: (Equality (M (List Int)), Equality (M (Natural, Natural))) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_steps3to3a p i x xs ys zs = refinesplus_substitutability f a b pf ? f a ? f b
+ipartl_spec_steps3to3a p i x xs ys zs = undefined -- TODO: refinesplus_substitutability f a b pf ? f a ? f b
   where
     f a' =
       writeList (S (i + length ys + length zs)) xs
@@ -1514,7 +1514,7 @@ ipartl_spec_steps3Ato4 ::
 @-}
 ipartl_spec_steps3Ato4 :: (Equality (() -> M ()), Equality (() -> M (Natural, Natural)), Equality (List Int -> M (Natural, Natural)), Equality (M (Natural, Natural)), Equality (M Unit)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec_steps3Ato4 p i x xs ys zs =
-  refinesplus_substitutability f a b pf ? f a ? f b
+  undefined -- TODO: refinesplus_substitutability f a b pf ? f a ? f b
   where
     f a' =
       writeList (S (i + length ys + length zs)) xs
@@ -2971,7 +2971,7 @@ ipartl_spec_steps7to8 p i x xs ys zs =
               %by %reflexivity
       |]
     step2 =
-      refinesplus_substitutabilityF
+      undefined -- TODO: refinesplus_substitutabilityF
         step2_aux
         (ipartl_spec_steps7to8_lemma_aux1 p i)
         (ipartl_spec_steps7to8_lemma_aux2 p i)
