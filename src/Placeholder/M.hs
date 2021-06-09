@@ -680,7 +680,7 @@ refinesplus_equalprop :: Equality (M a) =>
 @-}
 refinesplus_equalprop :: Equality (M a) => M a -> M a -> EqualityProp (M a) -> EqualityProp (M a)
 refinesplus_equalprop m1 m2 hyp =
-  [equalprop|
+  [eqpropchain|
       m1 <+> m2
     %==
       m2 <+> m2
@@ -727,29 +727,12 @@ refinesplus_transitivity m1 m2 m3 h12 h23 =
         %by h23
   |]
 
--- TODO: does this need to be assumed? i have no idea how you would prove it...
-{- -- !COUNTEREXAMPLE
-f [] = [0]
-f (x :: xs) = []
-x = []
-y = [1]
-x <+> y = y 
-f x <+> f y /= y
-
-need morphism constraint on F:
-  x <+> y = y =>
-  ? f(ε) = ε -- might need this, but not sure
-  f(x) <+> f(y) = f(x <+> y)
-  = f(y)
--}
-
 {-@
-type Morphism a b {f} = x:M a -> y:M a -> EqualProp (M b) {f x <+> f y} {f (x <+> y)}
+type Morphism a b F = x:M a -> y:M a -> EqualProp (M b) {F x <+> F y} {F (x <+> y)}
 @-}
-type Morphism a b {f} = M a -> M a -> EqualityProp (M b)
+type Morphism a b = M a -> M a -> EqualityProp (M b)
 
 {-@
-assume
 refinesplus_substitutability ::
   (Equality (M a), Equality (M b)) =>
   f:(M a -> M b) -> x:M a -> y:M a ->
@@ -757,20 +740,30 @@ refinesplus_substitutability ::
   RefinesPlus (a) {x} {y} ->
   RefinesPlus (b) {f x} {f y}
 @-}
-refinesplus_substitutability :: (Equality (M a), Equality (M b)) => (M a -> M b) -> M a -> M a -> EqualityProp (M a) -> EqualityProp (M b)
-refinesplus_substitutability f x y h = assumedProp -- !ASSUMED
+refinesplus_substitutability :: (Equality (M a), Equality (M b)) => (M a -> M b) -> M a -> M a -> Morphism a b -> EqualityProp (M a) -> EqualityProp (M b)
+refinesplus_substitutability f x y f_morphism hyp =
+  [eqpropchain|
+      f x <+> f y
+    %==
+      f (x <+> y)
+        %by f_morphism x y
+    %==
+      f y
+        %by %rewrite x <+> y %to y
+        %by hyp
+  |]
 
--- TODO: same for this one as with `refinesplus_substitutability`...
-{-@
-assume
-refinesplus_substitutabilityF ::
-  (Equality (M a), Equality (M b)) =>
-  f:((c -> M a) -> M b) -> k1:(c -> M a) -> k2:(c -> M a) ->
-  RefinesPlusF (c) (a) {k1} {k2} ->
-  RefinesPlus (b) {f k1} {f k2}
-@-}
-refinesplus_substitutabilityF :: (Equality (M a), Equality (M b)) => ((c -> M a) -> M b) -> (c -> M a) -> (c -> M a) -> (c -> EqualityProp (M a)) -> EqualityProp (M b)
-refinesplus_substitutabilityF f k1 k2 h = undefined -- !ASSUMED
+-- TODO: do I actually need this anywhere?
+-- {-@
+-- assume
+-- refinesplus_substitutabilityF ::
+--   (Equality (M a), Equality (M b)) =>
+--   f:((c -> M a) -> M b) -> k1:(c -> M a) -> k2:(c -> M a) ->
+--   RefinesPlusF (c) (a) {k1} {k2} ->
+--   RefinesPlus (b) {f k1} {f k2}
+-- @-}
+-- refinesplus_substitutabilityF :: (Equality (M a), Equality (M b)) => ((c -> M a) -> M b) -> (c -> M a) -> (c -> M a) -> (c -> EqualityProp (M a)) -> EqualityProp (M b)
+-- refinesplus_substitutabilityF f k1 k2 h = undefined -- !ASSUMED
 
 {-
 ## Array interface
