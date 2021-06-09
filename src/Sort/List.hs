@@ -84,7 +84,7 @@ bind_seq_associativity_with_permute_preserved_length ::
     {bind (permute xs) (bind_seq_associativity_with_permute_preserved_length_aux k f)}
 @-}
 bind_seq_associativity_with_permute_preserved_length :: Equality (M b) => List Int -> (List Int -> M a) -> (Natural -> M b) -> EqualityProp (M b)
-bind_seq_associativity_with_permute_preserved_length =
+bind_seq_associativity_with_permute_preserved_length xs k f =
   -- TODO: explanations
   [eqpropchain|
       bind (permute xs) (kseq k (f (length xs)))

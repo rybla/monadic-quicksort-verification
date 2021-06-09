@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7fd6203e8bbc733799d9cab782445b9ad3f6644db90d119703d9fd7f23435658
+-- hash: e514f34b520894ddc61672bfa009d37464f13e2caa1e9580c10167d750762354
 
 name:           monadic-quicksort-verification
 version:        0.1.0.0
@@ -50,6 +50,7 @@ library
       Relation.Equality.PropOld
       Sort.Array
       Sort.ArrayProto
+      Sort.ArrayProtoNew
       Sort.ArrayProtoProto
       Sort.List
       Sort.ListProto
