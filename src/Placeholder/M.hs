@@ -45,6 +45,9 @@ data M :: * -> * where
   Read :: Natural -> M Int
   Write :: Natural -> Int -> M ()
 
+-- define predicate for not having array effects
+-- use this constraint to prove lemma using no array effects
+
 -- TODO
 -- interpretM :: Monad m -> Plus m -> Array m a -> M a -> m a
 -- interpretM _ pls _m = undefined
@@ -725,11 +728,32 @@ refinesplus_transitivity m1 m2 m3 h12 h23 =
   |]
 
 -- TODO: does this need to be assumed? i have no idea how you would prove it...
+{- -- !COUNTEREXAMPLE
+f [] = [0]
+f (x :: xs) = []
+x = []
+y = [1]
+x <+> y = y 
+f x <+> f y /= y
+
+need morphism constraint on F:
+  x <+> y = y =>
+  ? f(ε) = ε -- might need this, but not sure
+  f(x) <+> f(y) = f(x <+> y)
+  = f(y)
+-}
+
+{-@
+type Morphism a b {f} = x:M a -> y:M a -> EqualProp (M b) {f x <+> f y} {f (x <+> y)}
+@-}
+type Morphism a b {f} = M a -> M a -> EqualityProp (M b)
+
 {-@
 assume
 refinesplus_substitutability ::
   (Equality (M a), Equality (M b)) =>
   f:(M a -> M b) -> x:M a -> y:M a ->
+  Morphism a b {f} ->
   RefinesPlus (a) {x} {y} ->
   RefinesPlus (b) {f x} {f y}
 @-}
