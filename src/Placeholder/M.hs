@@ -45,8 +45,19 @@ data M :: * -> * where
   Read :: Natural -> M Int
   Write :: Natural -> Int -> M ()
 
--- define predicate for not having array effects
--- use this constraint to prove lemma using no array effects
+-- only performs monad and plus effects i.e. does not perform array effects
+{-@ reflect onlyMonadPlus @-}
+onlyMonadPlus :: M a -> Bool
+onlyMonadPlus (Pure _) = True
+onlyMonadPlus (Bind m k) = onlyMonadPlus m && onlyMonadPlusF k
+onlyMonadPlus Epsilon = True
+onlyMonadPlus (Plus _ _) = True
+onlyMonadPlus (Read _) = False
+onlyMonadPlus (Write _ _) = False
+
+{-@ reflect onlyMonadPlusF @-}
+onlyMonadPlusF :: (a -> M b) -> Bool
+onlyMonadPlusF k = False -- TODO
 
 -- TODO
 -- interpretM :: Monad m -> Plus m -> Array m a -> M a -> m a
