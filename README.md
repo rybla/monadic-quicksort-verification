@@ -5,6 +5,8 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 
 ## Tasks
 
+- [ ] try `--fast` option
+
 `Placeholder.M`:
 
 - [ ] implement `interpretM`
@@ -83,10 +85,11 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
   - [x] prove `ipartl_spec_steps`
 - [ ] prove termination `iqsort`
 - [x] prove `iqsort_spec`
-  - [o] prove `iqsort_spec_lemma1`
-  - [o] prove `iqsort_spec_lemma2`
-  - [o] prove `iqsort_spec_lemma3`
-  - [o] prove `iqsort_spec_lemma4`
+  - [ ] outlined proofs
+  - [ ] prove `iqsort_spec_lemma1`
+  - [ ] prove `iqsort_spec_lemma2`
+  - [ ] prove `iqsort_spec_lemma3`
+  - [ ] prove `iqsort_spec_lemma4`
 
 <!-- References -->
 

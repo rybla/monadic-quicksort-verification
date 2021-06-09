@@ -676,7 +676,16 @@ refinesplus_equalprop :: Equality (M a) =>
   RefinesPlus a {m1} {m2}
 @-}
 refinesplus_equalprop :: Equality (M a) => M a -> M a -> EqualityProp (M a) -> EqualityProp (M a)
-refinesplus_equalprop = undefined -- TODO
+refinesplus_equalprop m1 m2 hyp =
+  [equalprop|
+      m1 <+> m2
+    %==
+      m2 <+> m2
+        %by %rewrite m1 %to m2 %by hyp
+    %==
+      m2
+        %by plus_idempotency m2
+  |]
 
 {-@
 assume
