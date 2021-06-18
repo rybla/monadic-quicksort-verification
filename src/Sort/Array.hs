@@ -44,41 +44,26 @@ dispatch x p (ys, zs, xs) =
     then permute zs >>= dispatch_aux1 x xs ys
     else permute (zs ++ Cons x Nil) >>= dispatch_aux2 xs ys
 
--- TODO: figure out how to phrase this so it can properly be used in `ipartl_spec_steps5to6`
+{-@ reflect dispatch_preserves_length_append_ys_zs_aux @-}
+dispatch_preserves_length_append_ys_zs_aux :: (List Int, List Int, List Int) -> M Natural
+dispatch_preserves_length_append_ys_zs_aux (ys', zs', xs) =
+  pure (length (append ys' zs'))
 
--- {-@ reflect dispatch_preserves_length_append_ys_zs_aux @-}
--- dispatch_preserves_length_append_ys_zs_aux :: (List Int, List Int, List Int) -> M Natural
--- dispatch_preserves_length_append_ys_zs_aux (ys', zs', xs) =
---   pure (length (append ys' zs'))
-
--- {-@
--- dispatch_preserves_length_append_ys_zs ::
---   Equality (M Natural) =>
---   x:Int -> p:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
---   EqualProp (M Natural)
---     {bind (dispatch x p (ys, zs, xs)) dispatch_preserves_length_append_ys_zs_aux}
---     {pure (length (append ys zs))}
--- @-}
--- dispatch_preserves_length_append_ys_zs :: Equality (M Int) => Int -> Int -> List Int -> List Int -> List Int -> EqualityProp (M Natural)
--- dispatch_preserves_length_append_ys_zs = undefined -- TODO
-
--- {-@ reflect dispatch_preserves_length_append_ys_zs_aux @-}
--- dispatch_preserves_length_append_ys_zs_aux :: (Natural -> M a) -> ((List Int, List Int, List Int) -> M a)
--- dispatch_preserves_length_append_ys_zs_aux k (ys', zs', xs) =
---   k (length (append ys' zs'))
-
--- {-@
--- dispatch_preserves_length_append_ys_zs ::
---   Equality (M a) =>
---   x:Int -> p:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
---   k:(Natural -> M a) ->
---   EqualProp (M a)
---     {bind (dispatch x p (ys, zs, xs)) (dispatch_preserves_length_append_ys_zs_aux k)}
---     {bind (dispatch x p (ys, zs, xs)) ()}
---     {k (length (append ys zs))}
--- @-}
--- dispatch_preserves_length_append_ys_zs :: Equality (M a) => Int -> Int -> List Int -> List Int -> List Int -> (Natural -> M a) -> EqualityProp (M a)
--- dispatch_preserves_length_append_ys_zs = undefined -- TODO
+{-@
+dispatch_preserves_length_append_ys_zs ::
+  Equality (M Natural) =>
+  x:Int -> p:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+  EqualProp (M Natural)
+    {bind (dispatch x p (ys, zs, xs)) dispatch_preserves_length_append_ys_zs_aux}
+    {pure (length (append ys zs))}
+@-}
+dispatch_preserves_length_append_ys_zs :: Equality (M Natural) => Int -> Int -> List Int -> List Int -> List Int -> EqualityProp (M Natural)
+dispatch_preserves_length_append_ys_zs x p xs ys zs =
+  [eqpropchain|
+            bind (dispatch x p (ys, zs, xs)) dispatch_preserves_length_append_ys_zs_aux
+        %==
+            pure (length (append ys zs))
+    |]
 
 {-@
 assume
@@ -90,7 +75,12 @@ dispatch_commutativity_seq_bind ::
     {bind (dispatch x p ys_zs_xs) (seqk (writeList i xs) k)}
 @-}
 dispatch_commutativity_seq_bind :: Equality (M a) => Natural -> List Int -> Int -> Int -> (List Int, List Int, List Int) -> ((List Int, List Int, List Int) -> M a) -> EqualityProp (M a)
-dispatch_commutativity_seq_bind = undefined -- !ASSUMED
+dispatch_commutativity_seq_bind i xs x p ys_zs_xs k =
+  [eqpropchain|
+      bind (seq (writeList (S i) xs) (dispatch x p ys_zs_xs)) k
+    %==
+      bind (dispatch x p ys_zs_xs) (seqk (writeList i xs) k)
+  |]
 
 -- final derivation of `ipartl`
 {-@ reflect ipartl @-}
@@ -161,24 +151,18 @@ ipartl_spec_lemma1_step1 p i x xs ys zs =
         writeList i (ys ++ zs') >>
           ipartl p i (length ys, length zs', length xs)
 
-        %by undefined
-        %{- -- !LH reject
         %by %symmetry
         %by pure_bind (zs ++ Cons x Nil) (\zs' -> writeList i (ys ++ zs') >> ipartl p i (length ys, length zs', length xs))
-        -}%
 
     %==
       pure (zs ++ Cons x Nil) >>=
         ipartl_spec_step4_aux2_aux p i xs ys
 
-        %by undefined
-        %{- -- !LH reject: again with the rewrite, extend
         %by %rewrite \zs' -> writeList i (ys ++ zs') >> ipartl p i (length ys, length zs', length xs)
                  %to ipartl_spec_step4_aux2_aux p i xs ys
         %by %extend zs' 
         %by %symmetry
         %by %reflexivity
-        -}%
 
     %==
       pure (append zs (Cons x Nil)) >>=
@@ -197,19 +181,20 @@ ipartl_spec_lemma1_step1 p i x xs ys zs =
 
 {-@
 ipartl_spec_lemma1_step2 ::
-  (Equality (M (Natural, Natural)), Equality (M (List Int)), Equality (List Int)) =>
+  (Equality (M (List Int, List Int)), Equality (M (Natural, Natural)), Equality (M (List Int)), Equality (List Int)) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
     {bind (pure (append zs (Cons x Nil))) (ipartl_spec_step4_aux2_aux p i xs ys)}
     {bind (permute (append zs (Cons x Nil))) (ipartl_spec_step4_aux2_aux p i xs ys)}
 @-}
-ipartl_spec_lemma1_step2 :: (Equality (M (Natural, Natural)), Equality (M (List Int)), Equality (List Int)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_lemma1_step2 p i x xs ys zs = undefined -- TODO: refinesplus_substitutability f a b pf ? f a ? f b
+ipartl_spec_lemma1_step2 :: (Equality (M (List Int, List Int)), Equality (M (Natural, Natural)), Equality (M (List Int)), Equality (List Int)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_lemma1_step2 p i x xs ys zs = refinesplus_substitutability f a b f_morphism pf
   where
     f m = bind m (ipartl_spec_step4_aux2_aux p i xs ys)
     a = pure (append zs (Cons x Nil))
     b = permute (append zs (Cons x Nil))
-    pf = undefined -- !LH reject: pure_refines_permute (append zs (Cons x Nil))
+    f_morphism a b = reflexivity (f a <+> f b)
+    pf = pure_refines_permute (append zs (Cons x Nil))
 
 {-@
 ipartl_spec_lemma1_step3 ::
@@ -246,19 +231,19 @@ ipartl_spec_lemma1_step3 p i x xs ys zs =
 
 {-@
 ipartl_spec_lemma1 ::
-  (Equality (M (Natural, Natural)), Equality (M (List Int)), Equality (List Int)) =>
+  (Equality (M (List Int, List Int)), Equality (M (Natural, Natural)), Equality (M (List Int)), Equality (List Int)) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
     {ipartl_spec_step3_aux2 p i x xs ys zs}
     {ipartl_spec_step4_aux2 p i x xs ys zs}
 @-}
-ipartl_spec_lemma1 :: (Equality (M (Natural, Natural)), Equality (M (List Int)), Equality (List Int)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_lemma1 :: (Equality (M (List Int, List Int)), Equality (M (Natural, Natural)), Equality (M (List Int)), Equality (List Int)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec_lemma1 p i x xs ys zs =
   (refinesplus_transitivity aux1 aux2 aux4)
     step1
     ( (refinesplus_transitivity aux2 aux3 aux4)
         step2
-        (step3 ? undefined) -- !LH reject
+        step3
     )
   where
     aux1 = ipartl_spec_step3_aux2 p i x xs ys zs
@@ -1111,57 +1096,70 @@ ipartl_spec_lemma3 i x Nil =
           %by %symmetry
         %by ipartl_spec_lemma3_aux2_Nil i x
   |]
-ipartl_spec_lemma3 i x (Cons z zs) = undefined -- TODO
-{-
-ipartl_spec_lemma3_aux1 i x (Cons z zs)
---
-ipartl_spec_lemma3_aux1_Cons_aux i x z zs
---
-write i z >>
-  writeList (S i) zs >>
-    write (i + length zs) x >>
-      swap i (S (i + length zs))
---
--- TODO: how to progress?
---
-split zs >>=
-  ( \(ys', zs') ->
-      liftM2 (\ys' zs' -> ys' ++ Cons z Nil ++ zs') (permute ys') (permute zs')
-  ) >>= \zs' ->
-    write i x >>
-      writeList (S i) zs'
--- writeList_singleton i x
-split zs >>=
-  ( \(ys', zs') ->
-      liftM2 (\ys' zs' -> ys' ++ Cons z Nil ++ zs') (permute ys') (permute zs')
-  ) >>= \zs' ->
-    writeList i (Cons x Nil) >>
-      writeList (S i) zs'
--- writeList_append i (Cons x Nil) zs'
-split zs >>=
-  ( \(ys', zs') ->
-      liftM2 (\ys' zs' -> ys' ++ Cons z Nil ++ zs') (permute ys') (permute zs')
-  ) >>= \zs' ->
-    writeList i (Cons x Nil ++ zs')
---
-split zs >>=
-  ( \(ys', zs') ->
-      liftM2 (permute_aux2 z) (permute ys') (permute zs')
-  ) >>= \zs' ->
-    writeList i (Cons x Nil ++ zs')
---
-split zs >>=
-  permute_aux1 z >>= \zs' ->
-    writeList i (Cons x Nil ++ zs')
---
-split zs >>=
-  permute_aux1 z >>=
-    ipartl_spec_lemma3_aux2_aux i x
---
-ipartl_spec_lemma3_aux2_Cons_aux i x z zs
---
-ipartl_spec_lemma3_aux2 i x (Cons z zs)
--}
+ipartl_spec_lemma3 i x (Cons z zs) =
+  [eqpropchain|
+      ipartl_spec_lemma3_aux1 i x (Cons z zs)
+
+    %==
+      ipartl_spec_lemma3_aux1_Cons_aux i x z zs
+
+    %==
+      write i z >>
+        writeList (S i) zs >>
+          write (i + length zs) x >>
+            swap i (S (i + length zs))
+
+    %==
+      split zs >>=
+        ( \(ys', zs') ->
+            liftM2 (\ys' zs' -> ys' ++ Cons z Nil ++ zs') (permute ys') (permute zs')
+        ) >>= \zs' ->
+          write i x >>
+            writeList (S i) zs'
+    
+    %-- writeList_singleton i x
+    
+    %==
+      split zs >>=
+        ( \(ys', zs') ->
+            liftM2 (\ys' zs' -> ys' ++ Cons z Nil ++ zs') (permute ys') (permute zs')
+        ) >>= \zs' ->
+          writeList i (Cons x Nil) >>
+            writeList (S i) zs'
+    
+    %-- writeList_append i (Cons x Nil) zs'
+
+    %== 
+      
+      split zs >>=
+        ( \(ys', zs') ->
+            liftM2 (\ys' zs' -> ys' ++ Cons z Nil ++ zs') (permute ys') (permute zs')
+        ) >>= \zs' ->
+          writeList i (Cons x Nil ++ zs')
+
+    %==
+      split zs >>=
+        ( \(ys', zs') ->
+            liftM2 (permute_aux2 z) (permute ys') (permute zs')
+        ) >>= \zs' ->
+          writeList i (Cons x Nil ++ zs')
+
+    %==
+      split zs >>=
+        permute_aux1 z >>= \zs' ->
+          writeList i (Cons x Nil ++ zs')
+
+    %==
+      split zs >>=
+        permute_aux1 z >>=
+          ipartl_spec_lemma3_aux2_aux i x
+
+    %==
+      ipartl_spec_lemma3_aux2_Cons_aux i x z zs
+
+    %==
+      ipartl_spec_lemma3_aux2 i x (Cons z zs)
+  |]
 
 --
 -- ### ipartl spec
@@ -1418,24 +1416,31 @@ ipartl_spec_steps1to3 p i x xs ys zs =
   (refinesplus_equalprop (ipartl_spec_step1 p i x xs ys zs) (ipartl_spec_step3 p i x xs ys zs))
     [eqpropchain|
         ipartl_spec_step1 p i x xs ys zs
+
       %==
         ipartl_spec_aux1 p i (Cons x xs) ys zs
+
       %==
         writeList i (ys ++ zs ++ Cons x xs)
           >> ipartl p i (length ys, length zs, length (Cons x xs))
+
       %==
         writeList i (ys ++ zs ++ Cons x xs)
           >> ipartl p i (length ys, length zs, S (length xs))
+
           %by %rewrite length (Cons x xs)
                    %to S (length xs)
           %by %reflexivity
+
       %==
         writeList i (ys ++ zs ++ Cons x xs)
           >> read (i + length ys + length zs)
             >>= ipartl_aux p i (length ys) (length zs) (length xs)
+
           %by %rewrite ipartl p i (length ys, length zs, S (length xs))
                    %to read (i + length ys + length zs) >>= ipartl_aux p i (length ys) (length zs) (length xs)
-          %by undefined %-- !LH reject
+          %by %reflexivity
+
       %==
         writeList i (ys ++ zs ++ Cons x xs)
           >> read (i + length ys + length zs)
@@ -1445,12 +1450,12 @@ ipartl_spec_steps1to3 p i x xs ys zs =
                   >> ipartl p i (S (length ys), length ys, length xs)
               else
                 ipartl p i (length ys, S (length ys), length xs)
-          %by undefined
-          %{- -- !LH reject
+          
           %by %rewrite ipartl_aux p i (length ys) (length zs) (length xs)
                    %to \x' -> if x' <= p then swap (i + length ys) (i + length ys + length zs) >> ipartl p i (S (length ys), length ys, length xs) else ipartl p i (length ys, S (length ys), length xs)
           %by %extend x'
-          -}%
+          %by %reflexivity
+
       %==
         writeList i (ys ++ zs ++ Cons x xs)
           >> pure x
@@ -1460,9 +1465,11 @@ ipartl_spec_steps1to3 p i x xs ys zs =
                   >> ipartl p i (S (length ys), length zs, length xs)
               else
                 ipartl p i (length ys, S (length zs), length xs)
+
           %by %rewrite writeList i (ys ++ zs ++ Cons x xs) >> read (i + length ys + length zs)
                    %to writeList i (ys ++ zs ++ Cons x xs) >> pure x
           %by ipartl_spec_steps1to3_lemma p i x xs ys zs
+
       %==
         %-- ipartl_spec_step2
         writeList i (ys ++ zs ++ Cons x xs) >>
@@ -1472,24 +1479,30 @@ ipartl_spec_steps1to3 p i x xs ys zs =
               >> ipartl p i (S (length ys), length zs, length xs)
           else 
             ipartl p i (length ys, S (length zs), length xs)
-          %by undefined
-          %-- !LH reject: pure_bind
+          
+          %by pure_bind x 
+                (\x' -> if x' <= p
+                    then
+                        swap (i + length ys) (i + length ys + length zs)
+                        >> ipartl p i (S (length ys), length zs, length xs)
+                    else
+                        ipartl p i (length ys, S (length zs), length xs))
+
       %==
         ipartl_spec_step3 p i x xs ys zs
-          %by undefined
     |]
 
 -- uses: ipartl_spec_lemma1, refinesplus_substitutability
 {-@
 ipartl_spec_steps3to3a ::
-  (Equality (M (List Int)), Equality (M (Natural, Natural))) =>
+  (Equality (M (List Int, List Int)), Equality (M (List Int)), Equality (M (Natural, Natural))) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
     {ipartl_spec_step3 p i x xs ys zs}
     {ipartl_spec_step3A p i x xs ys zs}
 @-}
-ipartl_spec_steps3to3a :: (Equality (M (List Int)), Equality (M (Natural, Natural))) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_steps3to3a p i x xs ys zs = undefined -- TODO: refinesplus_substitutability f a b pf ? f a ? f b
+ipartl_spec_steps3to3a :: (Equality (M (List Int, List Int)), Equality (M (List Int)), Equality (M (Natural, Natural))) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps3to3a p i x xs ys zs = refinesplus_substitutability f a b f_morphism pf
   where
     f a' =
       writeList (S (i + length ys + length zs)) xs
@@ -1501,7 +1514,8 @@ ipartl_spec_steps3to3a p i x xs ys zs = undefined -- TODO: refinesplus_substitut
           else a'
     a = ipartl_spec_step3_aux2 p i x xs ys zs
     b = ipartl_spec_step4_aux2 p i x xs ys zs
-    pf = ipartl_spec_lemma1 p i x xs ys zs -- !LH reject
+    f_morphism a b = reflexivity (f a <+> f b)
+    pf = ipartl_spec_lemma1 p i x xs ys zs
 
 -- uses: ipartl_spec_lemma2, refinesplus_substitutability
 {-@
@@ -1513,8 +1527,7 @@ ipartl_spec_steps3Ato4 ::
     {ipartl_spec_step4 p i x xs ys zs}
 @-}
 ipartl_spec_steps3Ato4 :: (Equality (() -> M ()), Equality (() -> M (Natural, Natural)), Equality (List Int -> M (Natural, Natural)), Equality (M (Natural, Natural)), Equality (M Unit)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_steps3Ato4 p i x xs ys zs =
-  undefined -- TODO: refinesplus_substitutability f a b pf ? f a ? f b
+ipartl_spec_steps3Ato4 p i x xs ys zs = refinesplus_substitutability f a b f_morphism pf
   where
     f a' =
       writeList (S (i + length ys + length zs)) xs
@@ -1525,6 +1538,7 @@ ipartl_spec_steps3Ato4 p i x xs ys zs =
           else ipartl_spec_step4_aux2 p i x xs ys zs
     a = ipartl_spec_step3_aux1 p i x xs ys zs
     b = ipartl_spec_step4_aux1 p i x xs ys zs
+    f_morphism a b = reflexivity (f a <+> f b)
     pf = ipartl_spec_lemma2 p i x xs ys zs -- !LH reject
 
 -- uses:
@@ -1532,13 +1546,13 @@ ipartl_spec_steps3Ato4 p i x xs ys zs =
 -- - `ipartl_spec_lemma2`
 {-@
 ipartl_spec_steps3to4 ::
-  (Equality (() -> M ()), Equality (() -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (List Int -> M (Natural, Natural)), Equality (M (List Int)), Equality (M (Natural, Natural)), Equality (M Unit)) =>
+  (Equality (M (List Int, List Int)), Equality (() -> M ()), Equality (() -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (List Int -> M (Natural, Natural)), Equality (M (List Int)), Equality (M (Natural, Natural)), Equality (M Unit)) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
     {ipartl_spec_step3 p i x xs ys zs}
     {ipartl_spec_step4 p i x xs ys zs}
 @-}
-ipartl_spec_steps3to4 :: (Equality (() -> M ()), Equality (() -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (List Int -> M (Natural, Natural)), Equality (M (List Int)), Equality (M (Natural, Natural)), Equality (M Unit)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps3to4 :: (Equality (M (List Int, List Int)), Equality (() -> M ()), Equality (() -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (List Int -> M (Natural, Natural)), Equality (M (List Int)), Equality (M (Natural, Natural)), Equality (M Unit)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec_steps3to4 p i x xs ys zs =
   refinesplus_transitivity
     (ipartl_spec_step3 p i x xs ys zs) -- 3
@@ -1585,36 +1599,22 @@ permute_kleisli_permute_lemma (Cons x xs) =
         permute 
         %by %rewrite permute (Cons x xs)
                  %to split xs >>= \(ys, zs) -> liftM2 (\ys' zs' -> ys' ++ Cons x Nil ++ zs') (permute ys) (permute zs)
-        %by undefined
-        %-- !LH reject: by defn permute
+        %by %reflexivity
     %==
       bind
         (split xs >>= \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs'))
         permute 
-          %by undefined
-          %{-
-          -- !LH reject
-          ```
           %by %rewrite \(ys, zs) -> liftM2 (\ys' zs' -> ys' ++ Cons x Nil ++ zs') (permute ys) (permute zs)
                    %to \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs')
           %by %extend (ys, zs)
-          %by undefined
-          ```
-          -- ! !LH reject: very strange error
-            ...
-            The sort GHC.Types.Int is not numeric
-              because
-            Cannot unify int with GHC.Types.Int in expression: lq_anf$##7205759403794112138##d5x0K lam_arg##2
-            ...
-          -}%
+          %by %reflexivity
     %==
       bind
         (split xs >>= \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs'))
         permute 
     %==
       permute (Cons x xs)
-        %by undefined
-        %-- TODO: not sure how to progress
+        %by %reflexivity
   |]
 
 {-@
@@ -1634,8 +1634,7 @@ permute_kleisli_permute Nil =
     %==
       pure Nil >>= permute
         %by %rewrite permute Nil %to pure Nil
-        %by undefined
-        %-- !LH reject: why not by reflexivity?
+        %by %reflexivity
     %==
       permute Nil
         %by pure_bind Nil permute
@@ -1649,35 +1648,24 @@ permute_kleisli_permute (Cons x xs) =
       (split xs >>= permute_aux1 x) >>= permute
         %by %rewrite permute (Cons x xs)
                  %to split xs >>= permute_aux1 x
-        %by undefined
-        %-- !LH reject: why not by def of permute?
+        %by %reflexivity
     %==
       split xs >>= (permute_aux1 x >=> permute)
         %by bind_associativity (split xs) (permute_aux1 x) permute
     %==
       split xs >>= ((\(ys, zs) -> liftM2 (permute_aux2 x) (permute ys) (permute zs)) >=> permute)
-        %by undefined
-        %{-
-        -- !LH reject: this error again: "The sort GHC.Types.Int is not numeric"
         %by %rewrite permute_aux1 x
                  %to \(ys, zs) -> liftM2 (permute_aux2 x) (permute ys) (permute zs)
         %by %extend (ys, zs)
         %by %reflexivity
-        -}%
     %==
       split xs >>= ((\(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (permute_aux2 x ys' zs')) >=> permute)
-        %by undefined
-        %{-
-        -- !LH reject: not sure why; parsing error suggesting BlockArguments 
-        %rewrite liftM2 (permute_aux2 x) (permute ys) (permute zs)
-             %to \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (permute_aux2 x ys' zs')
+        %by %rewrite \(ys, zs) -> liftM2 (permute_aux2 x) (permute ys) (permute zs)
+                 %to \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (permute_aux2 x ys' zs')
         %by %extend (ys, zs)
-        %reflexivity
-        -}%
-        %-- TODO: not sure how to progress
+        %by %reflexivity
     %==
       permute (Cons x xs)
-        %by undefined
   |]
 
 {-@
@@ -1692,22 +1680,28 @@ permute_kleisli_slowsort :: (Equality (M (List Int)), Equality (List Int -> M (L
 permute_kleisli_slowsort xs =
   [eqpropchain|
       kleisli permute slowsort xs
+
     %==
       kleisli permute (kleisli permute (guardBy sorted)) xs
+
         %by %rewrite slowsort
                  %to kleisli permute (guardBy sorted)
         %by %extend ys
         %by %reflexivity
+
     %==
       kleisli (kleisli permute permute) (guardBy sorted) xs
-        %by undefined
-        %-- TODO: prove kleisli_associativity in Placeholder.M
+
+        %by kleisli_associativity permute permute (guardBy sorted) xs
+
     %==
       kleisli permute (guardBy sorted) xs
+
         %by %rewrite kleisli permute permute
                  %to permute 
         %by %extend ys
         %by permute_kleisli_permute ys
+
     %==
       slowsort xs
   |]
@@ -1889,7 +1883,6 @@ iqsort_spec_aux2_Nil i =
         %by pure_bind Nil (writeList i)
     %==
       pure it
-        %by undefined
   |]
 
 {-@ reflect iqsort_spec_aux1_Cons_aux @-}
@@ -2018,39 +2011,30 @@ ipartl_spec_steps4to7_lemma1 p i x xs ys zs =
       permute zs >>= \zs' ->
         ipartl_spec_step4_aux1_aux p i x xs ys zs'
 
-        %by undefined
-        %{- -- !LH reject: eta-equivalence
         %by %rewrite ipartl_spec_step4_aux1_aux p i x xs ys
                  %to \zs' -> ipartl_spec_step4_aux1_aux p i x xs ys zs'
         %by %extend zs' 
         %by %symmetry
         %by %reflexivity
-        -}%
 
     %==
       permute zs >>= \zs' ->
         ipartl_spec_steps4to7_lemma1_lemma_aux2 p i x xs ys zs'
 
-        %by undefined
-        %{- -- !LH reject: ipartl_spec_steps4to7_lemma1_lemma
         %by %rewrite \zs' -> ipartl_spec_step4_aux1_aux p i x xs ys zs'
                  %to \zs' -> ipartl_spec_steps4to7_lemma1_lemma_aux2 p i x xs ys zs'
         %by %extend zs' 
         %by ipartl_spec_steps4to7_lemma1_lemma p i x xs ys zs'
-        -}%
 
     %==
       permute zs >>= \zs' ->
         dispatch_aux1 x xs ys zs' >>=
           ipartl_spec_steps4to7_lemma1_aux2_aux p i
 
-      %by undefined
-      %{- -- !LH reject: defn ipartl_spec_steps4to7_lemma1_lemma_aux2
       %by %rewrite \zs' -> ipartl_spec_steps4to7_lemma1_lemma_aux2 p i x xs ys zs'
                %to \zs' -> dispatch_aux1 x xs ys zs' >>= ipartl_spec_steps4to7_lemma1_aux2_aux p i
       %by %extend zs'
       %by %reflexivity
-      -}%
 
     %==
       permute zs >>= 
@@ -2059,12 +2043,9 @@ ipartl_spec_steps4to7_lemma1 p i x xs ys zs =
       
       %by %rewrite \zs' -> dispatch_aux1 x xs ys zs' >>= ipartl_spec_steps4to7_lemma1_aux2_aux p i
                %to dispatch_aux1 x xs ys >=> ipartl_spec_steps4to7_lemma1_aux2_aux p i
-      %by undefined 
-      %{- -- !LH reject: extend, defn (>=>)
       %by %extend zs' 
       %by %symmetry
       %by %reflexivity
-      -}%
     
     %==
       permute zs >>=
@@ -2137,11 +2118,8 @@ ipartl_spec_steps4to7_lemma1_lemma p i x xs ys zs' =
         writeList i (ys' ++ zs') >>
           ipartl p i (length ys', length zs', length xs)
       
-        %by undefined
-        %{- -- !LH reject
         %by %symmetry
         %by pure_bind (ys ++ Cons x Nil, zs', xs) (\(ys', zs', xs) -> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs))
-        -}%
 
     %==
       dispatch_aux1 x xs ys zs' >>= \(ys', zs', xs) ->
@@ -2551,13 +2529,13 @@ ipartl_spec_steps6to7_lemma p i (ys', zs', xs) =
 
 {-@
 ipartl_spec_steps5to6 ::
-  (Equality (M Unit), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) =>
+  (Equality (M Natural), Equality (M Unit), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   EqualProp (M (Natural, Natural))
     {ipartl_spec_step5 p i x xs ys zs}
     {ipartl_spec_step6 p i x xs ys zs}
 @-}
-ipartl_spec_steps5to6 :: (Equality (M Unit), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps5to6 :: (Equality (M Natural), Equality (M Unit), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec_steps5to6 p i x xs ys zs =
   [eqpropchain|
     ipartl_spec_step5 p i x xs ys zs
@@ -2579,11 +2557,8 @@ ipartl_spec_steps5to6 p i x xs ys zs =
       %-- defn ipartl_spec_step5_aux
       %by %rewrite ipartl_spec_step5_aux p i
                %to \(ys', zs', xs) -> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)
-      %{- -- !LH reject: type mismatch 
       %by %extend ys'_zs'_xs
       %by %reflexivity
-      -}%
-      %by undefined
 
   %== 
     writeList (S (i + length (ys ++ zs))) xs >>
@@ -2668,7 +2643,8 @@ ipartl_spec_steps5to6 p i x xs ys zs =
       %by %rewrite \(ys', zs', xs) -> writeList (i + length (ys ++ zs)) xs >> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)
                %to \(ys', zs', xs) -> writeList (i + length (ys' ++ zs')) xs >> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)
       %by %extend (ys', zs', xs)
-      %by undefined -- TODO: dispatch_preserves_length_append_ys_zs
+      %by reflexivity ((\(ys', zs', xs) -> writeList (i + length (ys ++ zs)) xs >> writeList i (ys' ++ zs') >> ipartl p i (length ys', length zs', length xs)) (ys', zs', xs))
+        ? dispatch_preserves_length_append_ys_zs x p xs ys zs
 
   %==
     dispatch x p (ys, zs, xs) >>= \(ys', zs', xs) ->
@@ -2711,13 +2687,13 @@ ipartl_spec_steps5to6 p i x xs ys zs =
 
 {-@
 ipartl_spec_steps6to7 ::
-  (Equality (M ()), Equality (List Int), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) =>
+  (Equality (() -> M (Natural, Natural)), Equality (M ()), Equality (List Int), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   EqualProp (M (Natural, Natural))
     {ipartl_spec_step6 p i x xs ys zs}
     {ipartl_spec_step7 p i x xs ys zs}
 @-}
-ipartl_spec_steps6to7 :: (Equality (M ()), Equality (List Int), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps6to7 :: (Equality (() -> M (Natural, Natural)), Equality (M ()), Equality (List Int), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec_steps6to7 p i x xs ys zs =
   [eqpropchain|
       ipartl_spec_step6 p i x xs ys zs
@@ -2732,13 +2708,10 @@ ipartl_spec_steps6to7 p i x xs ys zs =
       dispatch x p (ys, zs, xs) >>=
         kleisli (writeListToLength3 i) (ipartl p i)
 
-        %by undefined
-        %{- -- !LH reject: problem with %rewrite then %extend?
         %by %rewrite ipartl_spec_step6_aux p i
                  %to kleisli (writeListToLength3 i) (ipartl p i)
         %by %extend (ys', zs', xs)
         %by ipartl_spec_steps6to7_lemma p i (ys', zs', xs)
-        -}%
 
     %==
       dispatch x p (ys, zs, xs) >>=
@@ -2767,13 +2740,13 @@ ipartl_spec_steps6to7 p i x xs ys zs =
 -- - [ref 9]
 {-@
 ipartl_spec_steps4to7 ::
-  (Equality (() -> M (Natural, Natural)), Equality (List Int), Equality (M Unit), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) =>
+  (Equality (M Natural), Equality (() -> M (Natural, Natural)), Equality (List Int), Equality (M Unit), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
     {ipartl_spec_step4 p i x xs ys zs}
     {ipartl_spec_step7 p i x xs ys zs}
 @-}
-ipartl_spec_steps4to7 :: (Equality (() -> M (Natural, Natural)), Equality (List Int), Equality (M Unit), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps4to7 :: (Equality (M Natural), Equality (() -> M (Natural, Natural)), Equality (List Int), Equality (M Unit), Equality (M (Natural, Natural)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int))) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec_steps4to7 p i x xs ys zs =
   (refinesplus_equalprop (ipartl_spec_step4 p i x xs ys zs) (ipartl_spec_step7 p i x xs ys zs))
     [eqpropchain|
@@ -2817,13 +2790,13 @@ ipartl_spec_steps7to8_lemma_aux2 p i (ys', zs', xs) =
 
 {-@
 ipartl_spec_steps7to8_lemma ::
-  (Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M Int), Equality (M (List Int)), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) =>
+  (Equality (M Natural), Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M Int), Equality (M (List Int)), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) =>
   p:Int -> i:Natural -> ys'_zs'_xs:(List Int, List Int, List Int) ->
   RefinesPlus (Natural, Natural)
     {ipartl_spec_steps7to8_lemma_aux1 p i ys'_zs'_xs}
     {ipartl_spec_steps7to8_lemma_aux2 p i ys'_zs'_xs}
 @-}
-ipartl_spec_steps7to8_lemma :: (Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M Int), Equality (M (List Int)), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) => Int -> Natural -> (List Int, List Int, List Int) -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps7to8_lemma :: (Equality (M Natural), Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M Int), Equality (M (List Int)), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) => Int -> Natural -> (List Int, List Int, List Int) -> EqualityProp (M (Natural, Natural))
 ipartl_spec_steps7to8_lemma p i (ys', zs', xs) =
   (refinesplus_transitivity aux1 aux2 aux4)
     step1
@@ -2915,13 +2888,13 @@ ipartl_spec_steps7to8_lemma p i (ys', zs', xs) =
 -- - inductive hypothesis
 {-@
 ipartl_spec_steps7to8 ::
-  (Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M Int), Equality (M (List Int)), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) =>
+  (Equality (M Natural), Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M Int), Equality (M (List Int)), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
     {ipartl_spec_step7 p i x xs ys zs}
     {ipartl_spec_step8 p i x xs ys zs}
 @-}
-ipartl_spec_steps7to8 :: (Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M Int), Equality (M (List Int)), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps7to8 :: (Equality (M Natural), Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M Int), Equality (M (List Int)), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec_steps7to8 p i x xs ys zs =
   (refinesplus_transitivity aux1 aux2 aux4)
     step1
@@ -2971,10 +2944,11 @@ ipartl_spec_steps7to8 p i x xs ys zs =
               %by %reflexivity
       |]
     step2 =
-      undefined -- TODO: refinesplus_substitutabilityF
+      refinesplus_substitutabilityF
         step2_aux
         (ipartl_spec_steps7to8_lemma_aux1 p i)
         (ipartl_spec_steps7to8_lemma_aux2 p i)
+        (\k1 k2 -> reflexivity (step2_aux k1 <+> step2_aux k2))
         (ipartl_spec_steps7to8_lemma p i)
     step2_aux k = dispatch x p (ys, zs, xs) >>= k
     step3 =
@@ -3069,13 +3043,13 @@ ipartl_spec_steps8to9 p i x xs ys zs =
 
 {-@
 ipartl_spec_steps ::
-  (Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M (List Int)), Equality (M Int), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) =>
+  (Equality (M Natural), Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M (List Int)), Equality (M Int), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) =>
   p:Int -> i:Natural -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
     {ipartl_spec_step1 p i x xs ys zs}
     {ipartl_spec_step9 p i x xs ys zs}
 @-}
-ipartl_spec_steps :: (Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M (List Int)), Equality (M Int), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_steps :: (Equality (M Natural), Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M (List Int)), Equality (M Int), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) => Int -> Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec_steps p i x xs ys zs =
   (refinesplus_transitivity step1 step3 step9)
     -- 1 refines 3
@@ -3113,13 +3087,13 @@ ipartl_spec_steps p i x xs ys zs =
 -- right?
 {-@
 ipartl_spec ::
-  (Equality (() -> M ())m Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M Int), Equality (M (List Int)), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) =>
+  (Equality (M Natural), Equality (() -> M ())m Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M Int), Equality (M (List Int)), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) =>
   p:Int -> i:Natural -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus (Natural, Natural)
     {ipartl_spec_aux1 p i xs ys zs}
     {ipartl_spec_aux2 p i xs ys zs}
 @-}
-ipartl_spec :: (Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M Int), Equality (M (List Int)), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) => Int -> Natural -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec :: (Equality (M Natural), Equality (() -> M ()), Equality (List Int -> M (Natural, Natural)), Equality (() -> M (Natural, Natural)), Equality (M Int), Equality (M (List Int)), Equality (M (List Int, List Int)), Equality (M (Natural, Natural, Natural)), Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M Unit), Equality (List Int)) => Int -> Natural -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec p i Nil ys zs =
   ( refinesplus_equalprop
       (ipartl_spec_aux1 p i Nil ys zs)
@@ -3185,7 +3159,436 @@ ipartl_spec p i (Cons x xs) ys zs =
   ipartl_spec_steps p i x xs ys zs
 
 --
+-- iqsort_spec auxilliaries
+--
+
+-- {-@ reflect iqsort_spec_aux1 @-}
+-- iqsort_spec_aux1 :: Natural -> List Int -> M ()
+-- iqsort_spec_aux1 i xs = writeList i xs >> iqsort i (length xs)
+
+-- step1
+
+{-@ reflect iqsort_spec_step1_aux @-}
+iqsort_spec_step1_aux :: Natural -> Int -> List Int -> M Unit
+iqsort_spec_step1_aux i p xs =
+  writeList i (Cons p xs)
+    >> ipartl p (S i) (Z, Z, length xs) >>= \(ny, nz) ->
+      swap i (i + ny)
+        >> iqsort i ny
+        >> iqsort (S (i + ny)) nz
+
+-- step2
+
+{-@ reflect iqsort_spec_step2_aux @-}
+iqsort_spec_step2_aux :: Natural -> Int -> List Int -> M Unit
+iqsort_spec_step2_aux i p xs =
+  partl' p (Nil, Nil, xs) >>= iqsort_spec_step2_aux_aux1 i p xs
+
+{-@ reflect iqsort_spec_step2_aux_aux1 @-}
+iqsort_spec_step2_aux_aux1 :: Natural -> Int -> List Int -> (List Int, List Int) -> M Unit
+iqsort_spec_step2_aux_aux1 i p xs (ys, zs) =
+  -- BEGIN: [ref 13]
+  writeList i (Cons p ys)
+    >> swap i (i + length ys)
+    -- END: [ref 13]
+    >> writeList (S (i + length (ys ++ Cons p Nil))) zs
+    >> iqsort i (length ys)
+    >> iqsort (S (i + length ys)) (length zs)
+
+{-@ reflect iqsort_spec_step2_aux_aux2 @-}
+iqsort_spec_step2_aux_aux2 :: Natural -> Int -> List Int -> (List Int, List Int) -> M ()
+iqsort_spec_step2_aux_aux2 i p xs (ys, zs) =
+  ( permute ys >>= \ys' ->
+      writeList i (ys' ++ Cons p Nil ++ zs)
+  )
+    >> iqsort i (length ys)
+    >> iqsort (S (i + length ys)) (length zs)
+
+-- step3
+
+{-@ reflect iqsort_spec_step3_aux @-}
+iqsort_spec_step3_aux :: Natural -> Int -> List Int -> M ()
+iqsort_spec_step3_aux i p xs =
+  partl' p (Nil, Nil, xs) >>= iqsort_spec_step3_aux_aux i p xs
+
+{-@ reflect iqsort_spec_step3_aux_aux @-}
+iqsort_spec_step3_aux_aux :: Natural -> Int -> List Int -> (List Int, List Int) -> M ()
+iqsort_spec_step3_aux_aux i p xs (ys, zs) =
+  permute ys >>= \ys' ->
+    writeList i (ys' ++ Cons p Nil ++ zs)
+      >> iqsort i (length ys)
+      >> iqsort (S (i + length ys)) (length zs)
+
+-- step4
+
+-- {-@ reflect iqsort_spec_aux2 @-}
+-- iqsort_spec_aux2 :: Natural -> List Int -> M ()
+-- iqsort_spec_aux2 i xs = slowsort xs >>= writeList i
+
+--
+-- iqsort_spec_step1
+--
+
+-- by definition of iqsort
+{-@
+iqsort_spec_step1 ::
+  (Equality (M ())) =>
+  i:Natural -> p:Int -> xs:List Int ->
+  RefinesPlus (Unit)
+    {iqsort_spec_aux1 i (Cons p xs)}
+    {iqsort_spec_step1_aux i p xs}
+@-}
+iqsort_spec_step1 :: (Equality (M ())) => Natural -> Int -> List Int -> EqualityProp (M Unit)
+iqsort_spec_step1 i p xs =
+  (refinesplus_equalprop (iqsort_spec_aux1 i (Cons p xs)) (iqsort_spec_step1_aux i p xs))
+    [eqpropchain|
+        iqsort_spec_aux1 i (Cons p xs)
+
+      %==
+        writeList i (Cons p xs) >>
+        iqsort i (length (Cons p xs))
+
+      %==
+        writeList i (Cons p xs) >>
+        ( read i >>= 
+          iqsort_aux1 i (length (Cons p xs))
+        )
+
+      %==
+        writeList i (Cons p xs) >>
+        ( read i >>= 
+          iqsort_aux1 i (length (Cons p xs))
+        )
+
+      %==
+        writeList i (Cons p xs) >>
+        ipartl p (S i) (Z, Z, length xs) >>= \(ny, nz) ->
+          swap i (i + ny) >>
+          iqsort i ny >>
+          iqsort (S (i + ny)) nz
+
+        %by %rewrite iqsort i (length (Cons p xs))
+                 %to ipartl p (S i) (Z, Z, length xs) >>= \(ny, nz) -> swap i (i + ny) >> iqsort i ny >> iqsort (S (i + ny)) nz
+        %by %reflexivity
+
+      %==
+        writeList i (Cons p xs) >>
+        ipartl p (S i) (Z, Z, length xs) >>= \(ny, nz) ->
+          swap i (i + ny) >>
+          iqsort i ny >>
+          iqsort (S (i + ny)) nz
+
+      %==
+        iqsort_spec_step1_aux i p xs
+
+          %by %symmetry
+          %by %reflexivity
+    |]
+
+--
+-- iqsort_spec_step2
+--
+
+{-@
+iqsort_spec_step2 ::
+  (Equality (M (List Int, List Int)), Equality (M ())) =>
+  i:Natural -> p:Int -> xs:List Int ->
+  RefinesPlus (Unit)
+    {iqsort_spec_step1_aux i p xs}
+    {iqsort_spec_step2_aux i p xs}
+@-}
+iqsort_spec_step2 :: (Equality (M (List Int, List Int)), Equality (M ())) => Natural -> Int -> List Int -> EqualityProp (M ())
+iqsort_spec_step2 i p xs =
+  ( (refinesplus_transitivity aux1 aux2 aux5)
+      step1
+      ( (refinesplus_transitivity aux2 aux3 aux5)
+          step2
+          ( (refinesplus_transitivity aux3 aux4 aux5)
+              step3
+              step4
+          )
+      )
+  )
+  where
+    aux1 = iqsort_spec_step3_aux i p xs
+    step1 = refinesplus_equalprop aux1 aux2 (reflexivity aux1)
+    aux2 =
+      partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
+        permute ys >>= \ys' ->
+          writeList i (ys' ++ Cons p Nil ++ zs)
+            >> iqsort i (length ys)
+            >> iqsort (S (i + length ys)) (length zs)
+    step2 = reflexivity aux2
+    aux3 =
+      ( pure (partition p xs) >>= \(ys, zs) ->
+          slowsort ys >>= \ys' ->
+            slowsort zs >>= \zs' ->
+              pure (ys' ++ Cons p Nil ++ zs')
+      )
+        >>= writeList i
+    step3 = reflexivity aux3
+    aux4 = divide_and_conquer_aux p xs >>= writeList i
+    step4 = refinesplus_equalprop aux4 aux5 (symmetry aux4 aux5 (reflexivity aux5))
+    aux5 = iqsort_spec_aux2 i (Cons p xs)
+
+{-
+writeList i (Cons p xs) >>
+ipartl p (S i) (Z, Z, length xs) >>= \(ny, nz) ->
+  swap i (i + ny) >>
+  iqsort i ny >>
+  iqsort (S (i + ny)) nz
+
+refines
+
+partl' p (Nil, Nil, xs) >>= \(ys, zs) =
+  writeList i (Cons p ys) >>
+  swap i (i + length ys) >>
+  writeList (S (i + length (ys ++ Cons p Nil))) zs >>
+  iqsort i (length ys) >>
+  iqsort (S (i + length ys)) (length zs)
+-}
+
+--
+-- iqsort_spec_step3
+--
+
+-- [ref 13]
+-- uses: iqsort_spec_lemma1 [ref 10], ipartl_spec_lemma3 [ref 11]
+-- desc: Now that we have introduced `partl'`, the next goal is to embed
+-- `ipartl`. The status of the array before the two calls to `iqsort` is given
+-- by `writeList i (ys' ++ [p] ++ zs)`. That is, `ys' ++ [p] ++ zs` is stored in
+-- the array from index `i`, where `ys'` is a permutation of `ys`. The
+-- postcondition of `ipartl`, according to the specification [ref 10], ends up
+-- with `ys` and `zs` stored consecutively. To connect the two conditions, we
+-- use a lemma that is dual to [ref 11] ...
+-- This is what the typical quicksort algorithm does: swapping the pivot
+-- with the last element of `ys`, and [ref 13] says that it is valid because
+-- that is one of the many permutations of `ys`. With [ref 13] and [ref 10], the
+-- specification can be refined to:
+{-@
+iqsort_spec_step3 ::
+  (Equality (M (List Int, List Int)), Equality (M ())) =>
+  i:Natural -> p:Int -> xs:List Int ->
+  RefinesPlus (Unit)
+    {iqsort_spec_step2_aux i p xs}
+    {iqsort_spec_step3_aux i p xs}
+@-}
+iqsort_spec_step3 :: (Equality (M (List Int, List Int)), Equality (M ())) => Natural -> Int -> List Int -> EqualityProp (M ())
+iqsort_spec_step3 i p xs =
+  (refinesplus_transitivity aux1 aux2 aux3)
+    step1
+    step2
+  where
+    aux1 = partl' p (Nil, Nil, xs) >>= iqsort_spec_step2_aux_aux1 i p xs
+    step1 = refinesplus_substitutabilityF f k1 k2 f_morphismF k1_refinesF_k2
+    aux2 = partl' p (Nil, Nil, xs) >>= iqsort_spec_step2_aux_aux2 i p xs
+    step2 = refinesplus_equalprop aux2 aux3 aux2_eqprop_aux3
+    aux3 = partl' p (Nil, Nil, xs) >>= iqsort_spec_step3_aux_aux i p xs
+
+    f k = partl' p (Nil, Nil, xs) >>= k
+    k1 = iqsort_spec_step2_aux_aux1 i p xs
+    k2 = iqsort_spec_step2_aux_aux2 i p xs
+    f_morphismF k1 k2 = reflexivity (f k1 <+> f k2)
+    k1_refinesF_k2 (ys, zs) = refinesplus_substitutability g x y g_morphism x_refines_y
+      where
+        g x =
+          x >> iqsort i (length ys)
+            >> iqsort (S (i + length ys)) (length zs)
+        x =
+          writeList i (Cons p ys)
+            >> swap i (i + length ys)
+        y =
+          permute ys >>= \ys' ->
+            writeList i (ys' ++ Cons p Nil ++ zs)
+        g_morphism a b = reflexivity (g x <+> g y)
+        -- [ref 13]
+        x_refines_y =
+          [eqpropchain|
+              x <+> y
+            %==
+              (writeList i (Cons p ys) >> swap i (i + length ys)) <+>
+              (permute ys >>= \ys' -> writeList i (ys' ++ Cons p Nil ++ zs))
+            %==
+              y
+          |]
+
+    aux2_eqprop_aux3 =
+      [eqpropchain|
+          aux2
+
+        %==
+          partl' p (Nil, Nil, xs) >>= iqsort_spec_step2_aux_aux2 i p xs
+
+        %==
+          partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
+            ( permute ys >>= \ys' ->
+                writeList i (ys' ++ Cons p Nil ++ zs)
+            )
+              >> iqsort i (length ys)
+              >> iqsort (S (i + length ys)) (length zs)
+            %by %rewrite iqsort_spec_step2_aux_aux2 i p xs
+                     %to \(ys, zs) -> (permute ys >>= \ys' -> writeList i (ys' ++ Cons p Nil ++ zs)) >> iqsort i (length ys) >> iqsort (S (i + length ys)) (length zs)
+            %by %extend (ys, zs)
+            %by %reflexivity
+
+        %==
+          partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
+            permute ys >>= \ys' ->
+              writeList i (ys' ++ Cons p Nil ++ zs)
+                >> iqsort i (length ys)
+                >> iqsort (S (i + length ys)) (length zs)
+
+        %==
+          partl' p (Nil, Nil, xs) >>= iqsort_spec_step3_aux_aux i p xs
+            %by %rewrite \(ys, zs) -> permute ys >>= \ys' -> writeList i (ys' ++ Cons p Nil ++ zs) >> iqsort i (length ys) >> iqsort (S (i + length ys)) (length zs)
+                     %to iqsort_spec_step3_aux_aux i p xs
+            %by %extend (ys, zs)
+            %by %symmetry
+            %by %reflexivity
+
+        %==
+          aux3
+      |]
+
+--
+-- iqsort_spec_step4
+--
+
+-- uses: [ref 9] and [ref 12] (recursively) and divide_and_conquer
+-- desc: For this to work, we introduced two `perm` to permute both partitions
+-- generated by partition. We can do so because `perm >=> perm = perm` and thus
+-- `perm >=> slowsort = slowsort`. The term `perm zs` was combined with
+-- `partition p`, yielding `partl' p`, while `perm ys` will be needed later. We
+-- also needed [ref 9] to split `writeList i (ys' ++ [x] ++ zs')` into two
+-- parts. Assuming that [ref 12] has been met for lists shorter than `xs`, two
+-- subexpressions are folded back to `iqsort`.
+{-@
+iqsort_spec_step4 ::
+  (Equality (M (List Int)), Equality (M (List Int)),Equality (M ())) =>
+  i:Natural -> p:Int -> xs:List Int ->
+  RefinesPlus (Unit)
+    {iqsort_spec_step3_aux i p xs}
+    {iqsort_spec_aux2 i (Cons p xs)}
+@-}
+iqsort_spec_step4 :: (Equality (M (List Int)), Equality (M (List Int)), Equality (M ())) => Natural -> Int -> List Int -> EqualityProp (M Unit)
+iqsort_spec_step4 i p xs =
+  [eqpropchain|
+      iqsort_spec_step3_aux i p xs
+
+    %==
+      partl' p (Nil, Nil, xs) >>= iqsort_spec_step3_aux_aux i p xs
+
+    %==
+      partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
+        permute ys >>= \ys' ->
+          writeList i (ys' ++ Cons p Nil ++ zs) >>
+          iqsort i (length ys) >>
+          iqsort (S (i + length ys)) (length zs)
+
+    %==
+      partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
+        permute ys >>= \ys' ->
+          writeList i ys' >>
+          writeList (S (i + length ys')) (Cons p Nil ++ zs) >>
+          iqsort i (length ys) >>
+          iqsort (S (i + length ys)) (length zs)
+
+        %-- TODO: by writeList_append i ys' (Cons p Nil ++ zs)
+
+    %==
+      partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
+        permute ys >>= \ys' ->
+          writeList i ys' >> iqsort i (length ys) >>
+          writeList (S (i + length ys')) (Cons p Nil ++ zs) >>
+          iqsort (S (i + length ys)) (length zs)
+
+        %-- TODO: rearrange sequenced writes
+
+    %==
+      partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
+        permute ys >>= \ys' ->
+          slowsort ys' >>= writeList i >>
+          writeList (S (i + length ys')) (Cons p Nil ++ zs) >>
+          iqsort (S (i + length ys)) (length zs)
+
+      %-- TODO: inductive hypothesis
+
+    %==
+      partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
+        permute ys >>= \ys' ->
+          slowsort ys' >>= writeList i >>
+          write (S (i + length ys')) p >> 
+          writeList (S (S (i + length ys'))) zs >>
+          iqsort (S (i + length ys)) (length zs)  
+
+      %-- TODO: defn writeList
+
+    %==
+      pure (partition p xs) >>= 
+        ( \(ys, zs) ->
+            slowsort ys >>= \ys' ->
+              slowsort zs >>= \zs' ->
+                pure (ys' ++ Cons p Nil ++ zs')
+        ) >>=
+        writeList i
+
+    %==
+      divide_and_conquer_aux p xs >>=
+        writeList i
+
+        %-- TODO: defn divide_and_conquer_aux
+
+    %==
+      slowsort (Cons p xs) >>= writeList i
+
+        %by %rewrite divide_and_conquer_aux p xs 
+                 %to slowsort (Cons p xs)
+        %by divide_and_conquer p xs
+
+    %==
+      iqsort_spec_aux2 i (Cons p xs)
+
+        %by %symmetry
+        %by %reflexivity
+  |]
+
+--
 -- iqsort_spec
 --
 
--- !INSERT iqsort_spec
+{-@
+iqsort_spec ::
+  (Equality (M (List Int)), Equality (M Unit), Equality (M (List Int, List Int))) =>
+  i:Natural -> xs:List Int ->
+  RefinesPlus (Unit)
+    {iqsort_spec_aux1 i xs}
+    {iqsort_spec_aux2 i xs}
+@-}
+iqsort_spec :: (Equality (M (List Int)), Equality (M Unit), Equality (M (List Int, List Int))) => Natural -> List Int -> EqualityProp (M Unit)
+iqsort_spec i Nil =
+  (refinesplus_equalprop (iqsort_spec_aux1 i Nil) (iqsort_spec_aux2 i Nil))
+    [eqpropchain|
+            iqsort_spec_aux1 i Nil
+        %==
+            iqsort_spec_aux2 i Nil
+    |]
+iqsort_spec i (Cons p xs) =
+  (refinesplus_transitivity aux1 aux2 aux5)
+    step1
+    ( (refinesplus_transitivity aux2 aux3 aux5)
+        step2
+        ( (refinesplus_transitivity aux3 aux4 aux5)
+            step3
+            step4
+        )
+    )
+  where
+    aux1 = iqsort_spec_aux1 i (Cons p xs)
+    step1 = iqsort_spec_step1 i p xs
+    aux2 = iqsort_spec_step1_aux i p xs
+    step2 = iqsort_spec_step2 i p xs
+    aux3 = iqsort_spec_step2_aux i p xs
+    step3 = iqsort_spec_step3 i p xs
+    aux4 = iqsort_spec_step3_aux i p xs
+    step4 = iqsort_spec_step4 i p xs
+    aux5 = iqsort_spec_aux2 i (Cons p xs)

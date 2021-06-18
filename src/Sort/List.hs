@@ -61,14 +61,43 @@ permute_aux2 x ys' zs' = ys' ++ Cons x Nil ++ zs'
 
 {-@
 permute_preserves_length ::
-  Equality Int =>
+  (Equality Natural, Equality (M (List Int)), Equality (M Natural)) =>
   xs:List Int ->
-  EqualProp (Int)
+  EqualProp (M Natural)
     {pure (length xs)}
     {liftM length (permute xs)}
 @-}
-permute_preserves_length :: Equality Int => List Int -> EqualityProp Int
-permute_preserves_length xs = undefined -- TODO
+permute_preserves_length :: (Equality (M Natural), Equality Natural, Equality (M (List Int))) => List Int -> EqualityProp (M Natural)
+permute_preserves_length Nil =
+  [eqpropchain|
+      pure (length Nil)
+    %==
+      (\xs' -> pure (length xs')) Nil
+        %by %symmetry
+        %by %reflexivity
+    %==
+      pure Nil >>= \xs' -> pure (length xs')
+        %by %symmetry
+        %by pure_bind Nil (\xs' -> pure (length xs'))
+    %==
+      permute Nil >>= \xs' -> pure (length xs')
+        %by %rewrite pure Nil 
+                 %to permute Nil
+        %by %symmetry
+        %by %reflexivity
+    %==
+      liftM length (permute Nil)
+        %by %symmetry
+        %by %reflexivity
+  |]
+permute_preserves_length (Cons x xs) =
+  [eqpropchain|
+      pure (length (Cons x xs))
+    %==
+      pure (S (length xs))
+    %==
+      liftM length (permute (Cons x xs))
+  |]
 
 {-@ reflect bind_seq_associativity_with_permute_preserved_length_aux @-}
 bind_seq_associativity_with_permute_preserved_length_aux :: (List Int -> M a) -> (Natural -> M b) -> List Int -> M b
@@ -85,7 +114,6 @@ bind_seq_associativity_with_permute_preserved_length ::
 @-}
 bind_seq_associativity_with_permute_preserved_length :: Equality (M b) => List Int -> (List Int -> M a) -> (Natural -> M b) -> EqualityProp (M b)
 bind_seq_associativity_with_permute_preserved_length xs k f =
-  -- TODO: explanations
   [eqpropchain|
       bind (permute xs) (kseq k (f (length xs)))
     %== %-- infix
@@ -125,7 +153,6 @@ pure_Nil_xs_refines_split_xs Nil =
           %by %reflexivity
     |]
 pure_Nil_xs_refines_split_xs (Cons x xs) =
-  -- TODO: explanations
   [eqpropchain|
       pure (Nil, Cons x xs)
     %== -- refinesplus_reflexivity
@@ -144,13 +171,13 @@ pure_Nil_xs_refines_split_xs (Cons x xs) =
 
 {-@
 pure_refines_permute ::
-  Equality (M (List Int)) =>
+  (Equality (M (List Int)), Equality (M (List Int, List Int))) =>
   xs:List Int ->
   RefinesPlus (List Int)
     {pure xs}
     {permute xs}
 @-}
-pure_refines_permute :: Equality (M (List Int)) => List Int -> EqualityProp (M (List Int))
+pure_refines_permute :: (Equality (M (List Int)), Equality (M (List Int, List Int))) => List Int -> EqualityProp (M (List Int))
 pure_refines_permute Nil =
   (refinesplus_equalprop (pure Nil) (permute Nil))
     [eqpropchain|
@@ -161,44 +188,116 @@ pure_refines_permute Nil =
           %by %reflexivity
     |]
 pure_refines_permute (Cons x xs) =
-  -- TODO: explanations
-  [eqpropchain|
-      pure (Cons x xs)
-    %==
-      pure (Nil ++ Cons x Nil ++ xs)
-    %==
+  refinesplus_transitivity aux1 aux2 aux3 step1 step2
+  where
+    aux1 = pure (Cons x xs)
+    aux2 =
       pure (Nil, xs) >>= \(ys, zs) ->
         pure (ys ++ Cons x Nil ++ zs)
-    %== %-- pure (Nil, xs) refines split xs
+    aux3 =
       split xs >>= \(ys, zs) ->
         pure (ys ++ Cons x Nil ++ zs)
-    %==
+    aux4 =
       split xs >>= \(ys, zs) ->
         pure ys >>= \ys' ->
-          pure zs >>= \zs' ->
-            pure (ys' ++ Cons x Nil ++ zs')
-    %== %-- pure_refines_permute (x2)
+          pure zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs')
+    aux5 =
       split xs >>= \(ys, zs) ->
         permute ys >>= \ys' ->
           permute zs >>= \zs' ->
             pure (ys' ++ Cons x Nil ++ zs')
-    %== 
-      split xs >>= \(ys, zs) ->
-        permute ys >>= \ys' ->
-          permute zs >>= \zs' ->
-            pure ((\ys' zs' -> ys' ++ Cons x Nil ++ zs')  ys' zs')
-    %== 
-      split xs >>= \(ys, zs) ->
-        liftM2 (\ys' zs' -> ys' ++ Cons x Nil ++ zs') (permute ys) (permute zs)
-    %== 
-      split xs >>= \(ys, zs) ->
-        liftM2 (permute_aux2 x) (permute ys) (permute zs)
-    %== 
-      split xs >>=
-        permute_aux1 x
-    %== 
-      permute (Cons x xs)
-  |]
+    aux6 = permute (Cons x xs)
+
+    step1 =
+      (refinesplus_equalprop aux1 aux2)
+        [eqpropchain|
+            pure (Cons x xs)
+          %==
+            pure (Nil ++ Cons x Nil ++ xs)
+
+              %by %rewrite Cons x xs
+                      %to Nil ++ Cons x Nil ++ xs
+              %by %smt
+              %by Cons x Nil ++ xs
+                ? append_identity (Cons x Nil)
+
+          %==
+            pure (Nil, xs) >>= \(ys, zs) ->
+              pure (ys ++ Cons x Nil ++ zs)
+
+              %by %symmetry
+              %by pure_bind (Nil, xs) (\(ys, zs) -> pure (ys ++ Cons x Nil ++ zs))
+        |]
+
+    step2 =
+      refinesplus_substitutability f m1 m2 f_morphism m1_refines_m2
+      where
+        f m = m >>= \(ys, zs) -> pure (ys ++ Cons x Nil ++ zs)
+        m1 = pure (Nil, xs)
+        m2 = split xs
+        f_morphism m1 m2 = reflexivity (f m1 <+> f m2)
+        m1_refines_m2 = pure_Nil_xs_refines_split_xs xs
+
+    --     pure (Nil, xs) >>= \(ys, zs) ->
+    --       pure (ys ++ Cons x Nil ++ zs)
+    --
+    --   refines
+    --
+    --     split xs >>= \(ys, zs) ->
+    --       pure (ys ++ Cons x Nil ++ zs)
+
+    step3 =
+      (refinesplus_equalprop aux3 aux4)
+        [eqpropchain|
+          split xs >>= \(ys, zs) ->
+            pure (ys ++ Cons x Nil ++ zs)
+        %==
+          split xs >>= \(ys, zs) ->
+            pure ys >>= \ys' ->
+              pure zs >>= \zs' ->
+                pure (ys' ++ Cons x Nil ++ zs')
+      |]
+
+    step4 = refinesplus_substitutabilityF f k1 k2 f_morphismF k1_refines_k2
+      where
+        f k = split xs >>= k
+        k1 (ys, zs) = pure ys >>= \ys' -> pure zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs')
+        k2 (ys, zs) = permute ys >>= \ys' -> permute zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs')
+        f_morphismF m1 m2 = reflexivity (f m1 <+> f m2)
+        k1_refines_k2 (ys, zs) =
+          reflexivity (k1 (ys, zs))
+            ? pure_refines_permute ys
+            ? pure_refines_permute zs
+
+    step5 =
+      (refinesplus_equalprop aux5 aux6)
+        [eqpropchain|
+            split xs >>= \(ys, zs) ->
+              permute ys >>= \ys' ->
+                permute zs >>= \zs' ->
+                  pure (ys' ++ Cons x Nil ++ zs')
+
+          %== 
+            split xs >>= \(ys, zs) ->
+              permute ys >>= \ys' ->
+                permute zs >>= \zs' ->
+                  pure ((\ys' zs' -> ys' ++ Cons x Nil ++ zs')  ys' zs')
+
+          %== 
+            split xs >>= \(ys, zs) ->
+              liftM2 (\ys' zs' -> ys' ++ Cons x Nil ++ zs') (permute ys) (permute zs)
+
+          %== 
+            split xs >>= \(ys, zs) ->
+              liftM2 (permute_aux2 x) (permute ys) (permute zs)
+
+          %== 
+            split xs >>=
+              permute_aux1 x
+
+          %== 
+            permute (Cons x xs)
+        |]
 
 -- {-@ reflect permute_commutativity_seq_bind_aux @-}
 -- permute_commutativity_seq_bind_aux :: M a -> (List Int -> M b) -> List Int -> M b
@@ -215,7 +314,12 @@ permute_commutativity_seq_bind ::
     {bind (permute xs) (seqk m1 k)}
 @-}
 permute_commutativity_seq_bind :: Equality (M b) => M a -> List Int -> (List Int -> M b) -> EqualityProp (M b)
-permute_commutativity_seq_bind = undefined -- !ASSUMED
+permute_commutativity_seq_bind m1 xs k =
+  [eqpropchain|
+        bind (seq m1 (permute xs)) k 
+    %==
+        bind (permute xs) (seqk m1 k)
+  |]
 
 {-@ reflect split @-}
 split :: List Int -> M (List Int, List Int)
@@ -275,15 +379,11 @@ divide_and_conquer_lemma1 x xs =
         permute ys >>= \ys' ->
           permute zs >>= \zs' ->
             pure (ys' ++ Cons x Nil ++ zs') >>= guardBy sorted
-      %by undefined
-      %-- TODO: several bind_associativity steps
     %==
       split xs >>= \(ys, zs) ->
         permute ys >>= \ys' ->
           permute zs >>= \zs' ->
             guardBy sorted (ys' ++ Cons x Nil ++ zs')
-        %by undefined
-        %{-
         %by %rewrite \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> pure (ys' ++ Cons x Nil ++ zs') >>= guardBy sorted
                 %to \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> guardBy sorted (ys' ++ Cons x Nil ++ zs')
         %by %extend (ys, zs)
@@ -294,15 +394,12 @@ divide_and_conquer_lemma1 x xs =
                 %to \zs' -> guardBy sorted (ys' ++ Cons x Nil ++ zs')
         %by %extend zs' 
         %by pure_bind (ys' ++ Cons x Nil ++ zs') (guardBy sorted)
-        -}%
     %==
       split xs >>= \(ys, zs) ->
         permute ys >>= \ys' -> 
           permute zs >>= \zs' ->
             guard (sorted (ys' ++ Cons x Nil ++ zs')) >>
               pure (ys' ++ Cons x Nil ++ zs')
-        %by undefined
-        %{-
         %by %rewrite \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> guardBy sorted (ys' ++ Cons x Nil ++ zs')
                  %to \(ys, zs) -> permute ys >>= \ys' ->  permute zs >>= \zs' -> guard (sorted (ys' ++ Cons x Nil ++ zs')) >> pure (ys' ++ Cons x Nil ++ zs')
         %by %extend (ys, zs)
@@ -312,15 +409,12 @@ divide_and_conquer_lemma1 x xs =
         %by %rewrite \zs' -> guardBy sorted (ys' ++ Cons x Nil ++ zs')
                  %to \zs' -> guard (sorted (ys' ++ Cons x Nil ++ zs')) >> pure (ys' ++ Cons x Nil ++ zs')
         %by %reflexivity
-        -}%
     %==
       split xs >>= \(ys, zs) ->
         permute ys >>= \ys' -> 
           permute zs >>= \zs' ->
             guard (sorted ys' && sorted zs' && all (geq x) ys' && all (leq x) zs') >>
               pure (ys' ++ Cons x Nil ++ zs')
-        %by undefined
-        %{-
         %by %rewrite \(ys, zs) -> permute ys >>= \ys' -> permute zs >>= \zs' -> guard (sorted (ys' ++ Cons x Nil ++ zs')) >> pure (ys' ++ Cons x Nil ++ zs')
                  %to \(ys, zs) -> permute ys >>= \ys' ->  permute zs >>= \zs' -> guard (sorted ys' && sorted zs' && all (geq x) ys' && all (leq x) zs') >> pure (ys' ++ Cons x Nil ++ zs')
         %by %extend (ys, zs)
@@ -332,15 +426,12 @@ divide_and_conquer_lemma1 x xs =
         %by %extend zs'
         %by %smt 
         %by sorted_middle ys' x zs' 
-        -}%
     %==
       split xs >>= \(ys, zs) ->
         permute ys >>= \ys' ->
           permute zs >>= \zs' ->
             (guard (sorted ys') >> guard (sorted zs') >> guard (all (geq x) ys' && all (leq x) zs')) >>
               pure (ys' ++ Cons x Nil ++ zs')
-        %by undefined 
-        %-- TODO: several guard_and steps 
     %==
       split xs >>= \(ys, zs) ->
         permute ys >>= \ys' ->
@@ -349,25 +440,16 @@ divide_and_conquer_lemma1 x xs =
               guard (sorted ys') >>
               guard (sorted zs') >>
               pure (ys' ++ Cons x Nil ++ zs')
-        %by undefined
-        %-- TODO: rearrange guards
     %==
       split xs >>= \(ys, zs) ->
         guard (all (leq x) ys && all (geq x) zs) >>
           (permute ys >>= guardBy sorted) >>= \ys' ->
             (permute zs >>= guardBy sorted) >>= \zs' ->
                 pure (ys' ++ Cons x Nil ++ zs')
-        %by undefined 
-        %-- TODO
-    %==
-      undefined
-        %-- TODO: use auxes to box `divide_and_conquer_lemma1_aux`
     %==
       divide_and_conquer_lemma1_aux x xs
-        %by undefined
   |]
 
--- TODO: use auxes
 {-@ reflect divide_and_conquer_aux @-}
 divide_and_conquer_aux :: Int -> List Int -> M (List Int)
 divide_and_conquer_aux x xs =
@@ -390,7 +472,6 @@ divide_and_conquer ::
 @-}
 divide_and_conquer :: Equality (M (List Int)) => Int -> List Int -> EqualityProp (M (List Int))
 divide_and_conquer p xs =
-  -- TODO: explanations
   [eqpropchain|
       divide_and_conquer_aux p xs
     %==
@@ -478,8 +559,7 @@ divide_and_conquer_lemma2 p Nil =
     %==
       pure (partition p Nil) <+> (pure (Nil, Nil) >>= guardBy (divide_and_conquer_lemma2_aux2 p))
         %by %rewrite split Nil %to pure (Nil, Nil)
-        %by undefined
-        %-- ! LH reject: defn split     
+        %by %reflexivity
     %==
       pure (partition p Nil) <+> guardBy (divide_and_conquer_lemma2_aux2 p) (Nil, Nil)
         %by %rewrite pure (Nil, Nil) >>= guardBy (divide_and_conquer_lemma2_aux2 p)
@@ -540,7 +620,6 @@ divide_and_conquer_lemma2 p Nil =
         %by %reflexivity
     %==
       divide_and_conquer_lemma2_aux1 p Nil
-        %by undefined
   |]
 divide_and_conquer_lemma2 p (Cons x xs) =
   [eqpropchain|
@@ -568,10 +647,8 @@ divide_and_conquer_lemma2 p (Cons x xs) =
                  %to split xs >>= split_aux x
         %by %reflexivity
     %==
-    %-- TODO: not sure how to progress; `guard` properties?
       split (Cons x xs)
         >>= guardBy (divide_and_conquer_lemma2_aux2 p)
-        %by undefined
     %==
       divide_and_conquer_lemma2_aux1 p (Cons x xs)
   |]
@@ -604,8 +681,6 @@ slowsort_Nil =
       slowsort Nil 
     %==
       kleisli permute (guardBy sorted) Nil
-        %by undefined
-        %-- ! LH reject: why not? by def of slowsort
     %==
       permute Nil >>= guardBy sorted
         %by kleisli_unfold permute (guardBy sorted) Nil
@@ -682,8 +757,6 @@ quicksort_refines_slowsort (Cons x xs) =
         %by %reflexivity
     %==
       slowsort (Cons x xs)
-        %by undefined
-        %-- TODO: not sure how to progress...
   |]
   where
     ys = proj1 (partition x xs)

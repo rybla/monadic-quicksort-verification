@@ -61,7 +61,7 @@ onlyMonadPlusF k = False -- TODO
 
 -- TODO
 -- interpretM :: Monad m -> Plus m -> Array m a -> M a -> m a
--- interpretM _ pls _m = undefined
+-- interpretM _ pls _m =
 
 {-
 ## Monad interface
@@ -204,7 +204,6 @@ seq_associativity ma mb mc =
       (ma >>= constant mb) >> mc
     %==
       (ma >>= constant mb) >>= constant mc
-        %by undefined %-- !LH reject: SMT crash: invalid qualiied identifier, sort mismatch
     %==
       ma >>= (constant mb >=> constant mc)
         %by bind_associativity ma (constant mb) (constant mc)
@@ -560,6 +559,7 @@ bind_seq_associativity m1 k m2 =
   |]
 
 {-@
+assume
 seq_pure_unit ::
   m:M Unit ->
   EqualProp (M Unit)
@@ -567,7 +567,22 @@ seq_pure_unit ::
     {m >> pure it}
 @-}
 seq_pure_unit :: M Unit -> EqualityProp (M Unit)
-seq_pure_unit m = undefined -- TODO
+seq_pure_unit m = assumedProp
+
+{-@
+kleisli_associativity ::
+    (Equality (M d)) => k1:(a -> M b) -> k2:(b -> M c) -> k3:(c -> M d) -> x:a ->
+    EqualProp (M d)
+        {kleisli k1 (kleisli k2 k3) x}
+        {kleisli (kleisli k1 k2) k3 x}
+@-}
+kleisli_associativity :: Equality (M d) => (a -> M b) -> (b -> M c) -> (c -> M d) -> a -> EqualityProp (M d)
+kleisli_associativity k1 k2 k3 x =
+  [eqpropchain|
+        kleisli k1 (kleisli k2 k3) x
+    %==
+        kleisli (kleisli k1 k2) k3 x
+    |]
 
 -- TODO: other monad lemmas
 
@@ -752,7 +767,7 @@ refinesplus_substitutability ::
   RefinesPlus (b) {f x} {f y}
 @-}
 refinesplus_substitutability :: (Equality (M a), Equality (M b)) => (M a -> M b) -> M a -> M a -> Morphism a b -> EqualityProp (M a) -> EqualityProp (M b)
-refinesplus_substitutability f x y f_morphism hyp =
+refinesplus_substitutability f x y f_morphism x_refines_y =
   [eqpropchain|
       f x <+> f y
     %==
@@ -761,20 +776,61 @@ refinesplus_substitutability f x y f_morphism hyp =
     %==
       f y
         %by %rewrite x <+> y %to y
-        %by hyp
+        %by x_refines_y
   |]
 
--- TODO: do I actually need this anywhere?
--- {-@
--- assume
--- refinesplus_substitutabilityF ::
---   (Equality (M a), Equality (M b)) =>
---   f:((c -> M a) -> M b) -> k1:(c -> M a) -> k2:(c -> M a) ->
---   RefinesPlusF (c) (a) {k1} {k2} ->
---   RefinesPlus (b) {f k1} {f k2}
--- @-}
--- refinesplus_substitutabilityF :: (Equality (M a), Equality (M b)) => ((c -> M a) -> M b) -> (c -> M a) -> (c -> M a) -> (c -> EqualityProp (M a)) -> EqualityProp (M b)
--- refinesplus_substitutabilityF f k1 k2 h = undefined -- !ASSUMED
+{-@ reflect morphismF_aux @-}
+morphismF_aux :: (a -> M b) -> (a -> M b) -> (a -> M b)
+morphismF_aux k1 k2 x = k1 x <+> k2 x
+
+{-@
+type MorphismF a b c F = k1:(a -> M b) -> k2:(a -> M b) ->
+  EqualProp (M c) {F k1 <+> F k2} {F (morphismF_aux k1 k2)}
+@-}
+type MorphismF a b c = (a -> M b) -> (a -> M b) -> EqualityProp (M c)
+
+{-@
+assume
+refinesplus_substitutabilityF ::
+  (Equality (M a), Equality (M b), Equality (M c)) =>
+  f:((a -> M b) -> M c) -> k1:(a -> M b) -> k2:(a -> M b) ->
+  MorphismF a b c {f} ->
+  RefinesPlusF (a) (b) {k1} {k2} ->
+  RefinesPlus (c) {f k1} {f k2}
+@-}
+refinesplus_substitutabilityF ::
+  (Equality (M a), Equality (M b), Equality (M c)) =>
+  ((a -> M b) -> M c) ->
+  (a -> M b) ->
+  (a -> M b) ->
+  MorphismF a b c ->
+  (a -> EqualityProp (M b)) ->
+  EqualityProp (M c)
+refinesplus_substitutabilityF f k1 k2 f_morphismF k1_refines_k2 =
+  [eqpropchain|
+      f k1 <+> f k2
+    %==
+      f (morphismF_aux k1 k2)
+        %by f_morphismF k1 k2
+    %==
+      f (\x -> k1 x <+> k2 x)
+        %by %rewrite morphismF_aux k1 k2 
+                 %to \x -> k1 x <+> k2 x
+        %by %extend x
+        %by %reflexivity
+    %==
+      f (\x -> k2 x)
+        %by %rewrite \x -> k1 x <+> k2 x
+                 %to \x -> k2 x
+        %by %extend x
+        %by k1_refines_k2 x
+    %==
+      f k2
+        %by %rewrite \x -> k2 x
+                 %to k2
+        %by %extend x 
+        %by %reflexivity
+  |]
 
 {-
 ## Array interface
@@ -908,14 +964,33 @@ read_write_commutivity _ _ _ _ = assumedProp
 
 {-@
 swap_id ::
-  Equality (M Unit) =>
+  (Equality (M ()), Equality (M Unit)) =>
   i:Natural ->
   EqualProp (M Unit)
     {swap i i}
     {pure it}
 @-}
-swap_id :: Natural -> EqualityProp (M ())
-swap_id = undefined
+swap_id :: (Equality (M ()), Equality (M Unit)) => Natural -> EqualityProp (M ())
+swap_id i =
+  [eqpropchain|
+        swap i i
+    %==
+        read i >>= \x -> read i >>= \y -> write i y >> write i x
+    %==
+        read i >>= \x -> read i >>= \y -> (\x y -> write i y >> write i x) x y
+    %==
+        read i >>= \x -> read i >>= \y -> (\x y -> write i y >> write i x) x x
+            %-- seq_read_read i (\x y -> write i y >> write i x)
+    %==
+        read i >>= \x -> read i >>= \y -> (\x y -> write i x) x x
+    %==
+        read i >>= \x -> read i >>= \y -> write i x
+    %==
+        read i >>= \x -> write i x
+    %==
+        pure it
+            %by bind_read_write i
+    |]
 
 -- [ref 9]
 {-@
@@ -1090,6 +1165,7 @@ writeList_redundancy i (Cons x xs) =
   |]
 
 {-@
+assume
 write_writeList_commutativity ::
   Equality (M Unit) =>
   i:Natural -> x:Int -> xs:List Int ->
@@ -1098,7 +1174,7 @@ write_writeList_commutativity ::
     {writeList (S i) xs >> write i x}
 @-}
 write_writeList_commutativity :: Equality (M Unit) => Natural -> Int -> List Int -> EqualityProp (M Unit)
-write_writeList_commutativity = undefined -- TODO
+write_writeList_commutativity i x xs = assumedProp -- !ASSUMED
 
 {-@
 write_writeList_commutativity' ::
@@ -1186,7 +1262,7 @@ write_writeList_commutativity' i x (Cons y ys) (S j) =
       write (add (S i) (S j)) y >> write i x >> writeList (add (S i) (S (S j))) ys
         %by %rewrite (S (add (S i) (S j)))
                  %to (add (S i) (S (S j)))
-        %by undefined -- TODO
+        %by %reflexivity
 
     %==
       write (add (S i) (S j)) y >> (write i x >> writeList (add (S i) (S (S j))) ys)
@@ -1219,17 +1295,6 @@ write_writeList_commutativity' i x (Cons y ys) (S j) =
         %by %symmetry
         %by %reflexivity
   |]
-
--- {-@
--- writeList_write_commutativity ::
---   Equality (M Unit) =>
---   i:Natural -> xs:List Int -> x:Int ->
---   EqualProp (M Unit)
---     {writeList i xs >> write (S (add i (length xs))) x}
---     {write (S (add i (length xs))) x >> writeList i xs}
--- @-}
--- writeList_write_commutativity :: Equality (M Unit) => Natural -> List Int -> Int -> EqualityProp (M Unit)
--- writeList_write_commutativity = undefined -- TODO; needed?
 
 {-@
 writeList_commutativity ::
@@ -1312,7 +1377,12 @@ writeList_read ::
     {seq (writeList i (Cons x xs)) (pure x)}
 @-}
 writeList_read :: Equality (M Int) => Natural -> Int -> List Int -> EqualityProp (M Int)
-writeList_read i x xs = undefined -- TODO
+writeList_read i x xs =
+  [eqpropchain|
+      seq (writeList i (Cons x xs)) (read (add i (length xs)))
+    %==
+      seq (writeList i (Cons x xs)) (pure x)
+  |]
 
 {-@
 writeList_singleton ::
@@ -1323,4 +1393,9 @@ writeList_singleton ::
     {write i x}
 @-}
 writeList_singleton :: Equality (M Unit) => Natural -> Int -> EqualityProp (M ())
-writeList_singleton i x = undefined -- TODO
+writeList_singleton i x =
+  [eqpropchain|
+      writeList i (Cons x Nil)
+    %==
+      write i x
+  |]
