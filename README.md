@@ -5,82 +5,89 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 
 ## Tasks
 
-- [ ] types synonyms (and predicates)
-  - [x] collection of type synonyms and predicates relating to reasoning about
-        functions (`Function.hs`)
-  - [x] collection of type synonyms and predicates relating to reasoning about
-        relations (functions that return `Bool`) (`Relation.hs`)
-- [x] data classes:
-  - [x] semigroup (`VSemigroup.hs`)
-  - [x] functor (`VFunctor.hs`)
-  - [x] group (`VGroup.hs`)
-  - [x] monad (`VMonad.hs`)
-    - [ ] monadic sequence right-identity (`vseq_identity_right`)
-  - [ ] plus-monad, used for monadic nondeterminism (`VMonadPlus.hs`)
-    - [x] implement
-    - [x] plus-monadic refinement (`RefinesPlusMonadic` and
-          `RefinesPlusMonadicF`)
-    - [x] plus-monadic refinement is monotic in monadic binding
-          (`bind_monotonic_refinement`)
-    - [x] guarding monad-commutes with other monad elements (that have just
-          (monadic) effect) (`guard_isCommutativeMonadic`)
-    - [ ] guarding a conjunction is the same as the sequence of guarding each
-          conjunct (`guard_and_vseq`)
-    - [ ] guarding the plus-monadic sum of two monad sequence terms with head
-          elements are guarding on disjoint conditions plus-monad refines a
-          top-level branching by the boolean over the sequence tails
-          (`guard_disjoint_branch`)
-  - [ ] array-monad, used for monadic array interface (`VMonadArray.hs`)
-    - [x] implement
-    - [ ] array-monad writing the append of two lists is the same as the
-          sequence of array-monad writing the first list and then array-monad
-          writing the second list ofset by the length of the first list
-  - [x] ordered (set) (`VOrdered.hs`)
-- [ ] data
-  - [x] identity functor (`VIdentity.hs`)
-  - [x] list (`VList.hs`)
-  - [x] natural numbers (`VNat.hs`)
-- [ ] SlowSort List (`SlowSort.hs`)
-  - [x] filter (nondeterministic) (`vfilter`)
-  - [x] predicate for "is sorted" (`isSorted`)
-  - [x] permutation (nondeterministic) (`permute`)
-  - [x] split (nondeterministic) (`split`)
-  - [ ] `slowsort` termination
-  - [ ] `permute` termination
-  - [ ] lift of a list plus-monadically refines permutations of itself
-        (`identity_refines_permute`)
-  - [ ] `isSorted` termination
-  - [ ] `split` termination
-- [ ] QuickSort List (`QuickSortList.hs`)
-  - [ ] `partition_correct`
-  - [ ] "divide and conquer" property (`divide_and_conquer`)
-- [ ] Partition Array (`PartitionArray.hs`)
-  - [ ] what's the main theorem of this module?
-  - [x] mark corresponding terms in paper
-  - [ ] `partl_correct`
-  - [ ] `partl_generalizes_partition`
-  - [ ] `ipartl_specification1_correct`
-  - [ ] decide how to handle (get rid of / name) commented-out implementation
-        for `partl'` that is given in paper but then overriden
-  - [ ] `ipartl_specification2_correct`
-  - [ ] `ipartl_VCons_specification3_correct`
-  - [ ] `ipartl_VCons_then_specification4_correct`
-  - [ ] `ipartl_VCons_else_specification4_correct`
-  - [ ] `refinement11`
-  - [ ] `ipartl_VCons_specification5_correct`
-- [ ] QuickSort Array (`QuickSortArray.hs`)
-  - [ ] `iqsort_specification1_correct`
-  - [ ] `iqsort_specification2_correct`
-  - [ ] `refinement13`
-  - [ ] `iqsort_specification3_correct`
+- [ ] try `--fast` option
 
-<!-- old -->
+`Placeholder.M`:
 
-- [ ] QuickSort List (`QuickSort.hs`)
-  - [x] specify partition function (as function predicate)
-  - [x] implement `partition`
-  - [ ] prove correctness of `partition` implementation
-  - [ ] prove "divide and conquer" property (`divide_and_conquer`)
+- [ ] implement `interpretM`
+- [x] prove `kleisli_associativity`
+- [x] prove `bind_if`
+- [x] prove `seq_bind_associativity`
+- [x] prove `bind_associativity4`
+- [x] prove `seq_associativity4`
+- [x] prove `seq_pure_bind`
+- [x] prove `seq_if_bind`
+- [x] prove `pure_kleisli`
+- [x] prove `refinesplus_equalprop`
+- [x] prove `refinesplus_reflexivity`
+- [x] prove `refinesplus_transitivity`
+- [x] prove `refinesplus_substitutability`
+- [x] prove `writeList_append`
+- [x] prove `writeList_redundancy`
+- [x] prove `writeList_commutativity`
+
+`Sort.List`:
+
+- [ ] prove termination `permute`
+- [x] prove `pure_refines_permute`
+- [x] prove `permute_preserves_length`
+- [x] prove `bind_seq_associativity_with_permute_preserved_length`
+- [x] prove `divide_and_conquer`
+  - [x] use auxes for `divide_and_conquer_aux`
+  - [x] prove `divide_and_conquer_lemma1`:
+    - [x] use auxes for `divide_and_conquer_lemma1_aux`
+    - [x] several `bind_associativity`
+    - [x] several `guard_and`
+    - [x] rearrange `guard`s
+    - [x] uses auxes to box `divide_and_conquer_lemma1_aux`
+  - [x] prove `divide_and_conquer_lemma2`
+    - [x] prove `Cons` case
+    - [x] progress with `guard` properties
+- [x] prove `quicksort_refines_slowsort`
+  - [x] prove `Cons` case
+
+`Sort.Array`:
+
+- [x] prove `permute_kleisli_permute` in `Cons` case
+  - [x] prove `permute_kleisli_permute_lemma` in `Cons` case
+- [x] prove `ipartl_spec`
+  - [x] prove `dispatch_preserves_length_append_ys_zs`
+  - [x] prove `dispatch_commutativity_seq_bind`
+  - [x] prove `ipartl_spec_lemma1`
+    - [x] prove `ipartl_spec_lemma1_step1`
+    - [x] prove `ipartl_spec_lemma1_step1`
+    - [x] prove `ipartl_spec_lemma1_step1`
+  - [x] prove `ipartl_spec_lemma2`
+    - [x] prove `ipartl_spec_lemma2_step1`
+    - [x] prove `ipartl_spec_lemma2_step2`
+    - [x] prove `ipartl_spec_lemma2_step3`
+  - [x] prove `ipartl_spec_lemma3`
+    - [x] prove `ipartl_spec_lemma3_aux1_Nil`
+    - [x] prove `ipartl_spec_lemma3_aux2_Nil`
+    - [x] case `Cons`
+    - [x] prove `ipartl_spec_lemma3_aux1_Cons`
+    - [x] prove `ipartl_spec_lemma3_aux2_Cons`
+  - [x] prove `ipartl_spec_steps1to3`
+    - [x] prove `ipartl_spec_steps1to3_lemma`
+  - [x] prove `ipartl_spec_steps3Ato4`
+  - [x] prove `ipartl_spec_steps4to7`
+    - [x] prove `ipartl_spec_steps4to7_lemma1`
+    - [x] prove `ipartl_spec_steps4to7_lemma2`
+    - [x] prove `ipartl_spec_steps4to5`
+      - [x] prove `ipartl_spec_steps4to5_lemma1`
+      - [x] prove `ipartl_spec_steps4to5_lemma2`
+    - [x] prove `ipartl_spec_steps5to6`
+    - [x] prove `ipartl_spec_steps6to7`
+  - [x] prove `ipartl_spec_steps7to8`
+    - [x] prove `ipartl_spec_steps7to8_lemma`
+  - [x] prove `ipartl_spec_steps8to9`
+  - [x] prove `ipartl_spec_steps`
+- [ ] prove termination `iqsort`
+- [x] prove `iqsort_spec`
+  - [x] prove `iqsort_step1`
+  - [x] prove `iqsort_step2`
+  - [x] prove `iqsort_step3`
+  - [x] prove `iqsort_step4`
 
 <!-- References -->
 

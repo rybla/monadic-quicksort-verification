@@ -1,81 +1,53 @@
 module Function where
 
 import Language.Haskell.Liquid.ProofCombinators
+import Prelude hiding (flip, map)
 
--- Types. Form of generic homogeneous operators.
--- - `Op<n>` is an `n`-ary operator.
+--
+-- utilities
+--
 
-type Op1 a = a -> a
+{-@ reflect apply @-}
+apply :: (a -> b) -> (a -> b)
+apply f = f
 
-type Op2 a = a -> a -> a
+{-@ reflect given @-}
+given :: a -> (a -> b) -> b
+given x f = f x
 
--- Predicates.
+{-@ reflect map @-}
+map :: (a -> b) -> ([a] -> [b])
+map f [] = []
+map f (x : xs) = f x : map f xs
 
-{-@ predicate IsAssociative  F X Y Z   = F X (F Y Z) = F (F X Y) Z @-}
-{-@ predicate IsCommutative  F X Y     = F X Y = F Y X @-}
-{-@ predicate IsDistributive F G X Y Z = F X (G Y Z) = G (F X Y) (F X Z) @-}
+{-@ reflect flip @-}
+flip :: (a -> b -> c) -> (b -> a -> c)
+flip f y x = f x y
 
-{-@ predicate IsIdentityLeft  F E X = F E X = X @-}
-{-@ predicate IsIdentityRight F E X = F X E = X @-}
-{-@ predicate IsIdentity      F E X = IsIdentityLeft F E X && IsIdentityRight F E X @-}
+{-@ reflect constant @-}
+constant :: a -> b -> a
+constant x _ = x
 
-{-@ predicate IsZeroLeft  F Z X = F Z X = Z @-}
-{-@ predicate IsZeroRight F Z X = F X Z = Z @-}
-{-@ predicate IsZero      F Z X = IsZeroLeft F Z X && IsZeroRight F Z X @-}
+{-@ reflect diagonalize @-}
+diagonalize :: (a -> a -> a) -> (a -> a)
+diagonalize f x = f x x
 
-{-@ predicate IsInvertibleLeft  F I X = F (I X) X = X @-}
-{-@ predicate IsInvertibleRight F I X = F X (I X) = X @-}
-{-@ predicate IsInvertible      F I X = IsInvertibleLeft F I X && IsInvertibleRight F I X @-}
+{-@ reflect identity @-}
+identity :: a -> a
+identity x = x
 
--- Functions.
+{-@ reflect compose @-}
+compose :: (b -> c) -> (a -> b) -> (a -> c)
+compose f g x = f (g x)
 
-{-@ reflect vid @-}
-vid :: forall a. a -> a
-vid x = x
+--
+-- lemmas
+--
 
-{-@ reflect vcomp @-}
-vcomp :: forall a b c. (b -> c) -> (a -> b) -> (a -> c)
-vcomp f g = \x -> f (g x)
-
-{-@ reflect vconst @-}
-vconst :: forall a b. a -> b -> a
-vconst x _ = x
-
-{-@ reflect vconstF @-}
-vconstF :: forall a b c. (b -> c) -> (a -> b -> c)
-vconstF f _ y = f y
-
-{-@ reflect vflip @-}
-vflip :: forall a b c. (b -> a -> c) -> (a -> b -> c)
-vflip f x y = f y x
-
-{-@ reflect vdiagonalize @-}
-vdiagonalize :: forall a. (a -> a -> a) -> (a -> a)
-vdiagonalize f x = f x x
-
-{-@ infix 0 & @-}
-infix 0 &
-
-{-@ reflect & @-}
-(&) :: forall a b. a -> (a -> b) -> b
-x & f = f x
-
-{-@ reflect vapply @-}
-vapply :: forall a b. (a -> b) -> a -> b
-vapply f x = f x
-
--- Axiom. Functional extensionality.
+{-
 {-@
-assume extensionality ::
-  forall a b.
-  f:(a -> b) -> g:(a -> b) ->
-  (x:a -> {f x == g x}) ->
-  {f == g}
+apply_if :: f:(a -> b) -> b:Bool -> a1:a -> a2:a -> {_:Proof | f (if b then a1 else a2) = if b then f a1 else f a2}
 @-}
-extensionality ::
-  forall a b.
-  (a -> b) ->
-  (a -> b) ->
-  (a -> Proof) ->
-  Proof
-extensionality _ _ _ = ()
+apply_if :: (a -> b) -> Bool -> a -> a -> Proof
+apply_if = undefined
+-}

@@ -1,55 +1,95 @@
-cabal-version:       >=1.10
+cabal-version: 1.12
 
-name:                monadic-quicksort-verification
-version:             0.1.0.0
--- synopsis:
--- description:
--- bug-reports:
-license-file:        LICENSE
-author:              Henry Blanchette
-maintainer:          henry@monkeyface.com
-copyright:           2020 Henry Blanchette, University of Maryland, College Park.
-category:            Language, Verification
-build-type:          Simple
-extra-source-files:  CHANGELOG.md
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: e514f34b520894ddc61672bfa009d37464f13e2caa1e9580c10167d750762354
 
+name:           monadic-quicksort-verification
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/monadic-quicksort-verification#readme>
+homepage:       https://github.com/githubuser/monadic-quicksort-verification#readme
+bug-reports:    https://github.com/githubuser/monadic-quicksort-verification/issues
+author:         Henry Blanchette
+maintainer:     blancheh@umd.edu
+copyright:      2021 Henry Blanchette
+license:        BSD3
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/monadic-quicksort-verification
 
 library
-  hs-source-dirs: src
   exposed-modules:
-    Equality,
-    EqualityMonadic,
-    Function,
-    -- PartitionArray,
-    -- QuickSortArray,
-    -- QuickSortList,
-    Relation,
-    -- SlowSortList,
-    -- Test
-    VBool,
-    VFunctor,
-    VGroup,
-    VIdentity,
-    VList,
-    VMonad,
-    VMonadArray,
-    VMonadPlus,
-    VMonoid,
-    VNat,
-    VOrdered,
-    VPartitioned,
-    VSemigroup,
-    VTuple,
-    VUnit
+      Control.Refined.Functor
+      Control.Refined.Monad
+      Control.Refined.Monad.Array
+      Control.Refined.Monad.ArrayPlus
+      Control.Refined.Monad.Plus
+      Data.Refined.Bool
+      Data.Refined.Constant
+      Data.Refined.List
+      Data.Refined.Nat
+      Data.Refined.Natural
+      Data.Refined.Tuple
+      Data.Refined.Unit
+      Function
+      Language.Haskell.Liquid.Custom.Equational
+      Language.Haskell.Liquid.Custom.ProofCombinators
+      Placeholder.M
+      Relation.Equality.Prop
+      Relation.Equality.Prop.EDSL
+      Relation.Equality.Prop.EDSL.Test
+      Relation.Equality.Prop.Reasoning
+      Relation.Equality.PropBlind
+      Relation.Equality.PropOld
+      Sort.Array
+      Sort.ArrayProto
+      Sort.ArrayProtoNew
+      Sort.ArrayProtoProto
+      Sort.List
+      Sort.ListProto
+      Sort.ListProtoOld
+  other-modules:
+      Paths_monadic_quicksort_verification
+  hs-source-dirs:
+      src
+  default-extensions: GADTs KindSignatures ExplicitForAll RankNTypes FlexibleInstances FlexibleContexts UndecidableInstances MultiParamTypeClasses ScopedTypeVariables LambdaCase MultiWayIf TupleSections ScopedTypeVariables
+  ghc-options: -Wall -Wno-name-shadowing -Wno-unused-imports -Wno-unused-matches -Wno-unused-local-binds -Wno-orphans -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--short-errors
   build-depends:
-    liquidhaskell == 0.8.10.2,
-    liquid-base,
-    liquid-prelude
-  ghc-options: -Wall -Wno-name-shadowing -Wno-unused-imports -Wno-unused-matches -Wno-unused-local-binds -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--prune-unsorted
-  default-extensions:
-    RankNTypes,
-    ScopedTypeVariables,
-    GADTs,
-    KindSignatures,
-    ExplicitForAll
+      haskell-src-meta
+    , liquid-base
+    , liquid-prelude
+    , liquidhaskell ==0.8.10.2
+    , neat-interpolation
+    , parsec
+    , template-haskell
+    , text
+  default-language: Haskell2010
+
+test-suite monadic-quicksort-verification-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Reader
+      Paths_monadic_quicksort_verification
+  hs-source-dirs:
+      test
+  default-extensions: GADTs KindSignatures ExplicitForAll RankNTypes FlexibleInstances UndecidableInstances MultiParamTypeClasses
+  ghc-options: -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local -fplugin-opt=LiquidHaskell:--diff -fplugin-opt=LiquidHaskell:--short-names -fplugin-opt=LiquidHaskell:--prune-unsorted
+  build-depends:
+      haskell-src-meta
+    , liquid-base
+    , liquid-prelude
+    , liquidhaskell ==0.8.10.2
+    , monadic-quicksort-verification
+    , neat-interpolation
+    , parsec
+    , template-haskell
+    , text
   default-language: Haskell2010
