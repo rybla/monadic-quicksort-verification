@@ -2,3 +2,6 @@
 .stack-work
 dist-newstyle
 .liquid
+eqpropchain-edsl/main.log
+eqpropchain-edsl/main.aux
+.gitignore

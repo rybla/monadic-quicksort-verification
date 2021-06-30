@@ -1,0 +1,114 @@
+\documentclass{article}
+\usepackage[landscape, margin=0.4in]{geometry}
+\usepackage{amsmath}
+
+\newcommand{\var}[1]{\langle#1\rangle}
+\newcommand{\kw}[1]{\text{#1}}
+% \newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\code}[1]{\text{#1}}
+\newcommand{\ctrl}[1]{\textbf{#1}}
+\newcommand{\where}{\ctrl{where}}
+\newcommand{\q}[1]{\text{``}#1\text{''}}
+
+\begin{document}
+\thispagestyle{empty}
+
+\section{Macros for Liquid Equality Chains}
+
+\noindent
+An $\var{expr}$ is a well-formed Haskell expression (typechecking is done later).
+A $\var{chain}$ is a list of same-typed Haskell expressions that are intercalated by $\var{expln}$s
+(which can be represented as an initial term and a list of $\var{clause}$s, where each $\var{clause}$ is a term along with an explanation of how it is liquid-equal (via \code{EqualProp}) to the previous term.
+An $\var{expln}$ is an explanation of the liquid equality (\code{EqualProp}) of two adjacent terms in a $\var{chain}$.
+
+% chain
+% clause
+\begin{align*}
+\begin{array}{rrl}
+  \var{chain} &::=& (\var{expr}, [\var{clause}])
+\\
+  \var{clause} &::=& (\var{expr}, \var{expln})
+\\
+  \var{expln} &::=&
+  \kw{by}~\kw{trivial} \\ &|&
+  \kw{by}~\var{proof} \\ &|& 
+  \kw{by}~\kw{reflexivity} \\ &|&
+  \kw{by}~\kw{symmetry}~\var{expln} \\ &|&
+  \kw{by}~\kw{rewrite}~\var{expr}~\kw{to}~\var{expr}~\var{expln} \\ &|&
+  \kw{by}~\kw{extend}~\var{pattern}~\var{expln} \\ &|&
+  \kw{by}~\kw{smt}~\kw{by}~\var{expr}
+\end{array}
+\end{align*}
+
+\noindent
+The functions $\code{go}$ and $\code{reify}$ are defined in a scope nested under $\code{lift}$'s scope.
+Note the convention that variable terms are substituted underneath quotes.
+
+% lift
+\begin{align*}
+\begin{array}{rrl}
+\code{lift} &:& \var{clause} \to \var{\q{expr}}
+\\
+\code{lift}~(t_1, cs) &=& \code{go}~(\code{reverse}~cs)
+\end{array}
+\end{align*}
+
+% go
+\begin{align*}
+\begin{array}{rrll}
+\code{go} &:& [\var{clause}] \to \var{\q{expr}} &
+\\
+\code{go}~[] &=&
+\q{\kw{reflexivity}~t_1} &
+\\
+\code{go}~((t_2, e) : []) &=&
+\q{\kw{transitivity}~t_1~t_2~t_2~p_{12}~(\kw{reflexivity}~t_2)}
+& \where~
+  p_{12} \gets \code{reify}~t_1~t_2~e
+\\
+\code{go}~((t_3, e_{23}) : (t_2, e_{12}) : []) &=&
+\q{\kw{transitivity}~t_1~t_2~t_3~p_{12}~p_{23}}
+& \where~
+  p_{12} \gets \code{reify}~t_1~t_2~e_{12};~
+  p_{23} \gets \code{reify}~t_2~t_3~e_{23}
+\\
+\code{go}~((t_k, e_{jk}) : (t_j, e_{ij}) : cs) &=&
+\q{\kw{transitivity}~t_1~t_j~t_k~e_{1j}~e_{jk})}
+& \where~
+  e_{1j} \gets \code{go}~((t_j, e_{ij}) : cs);~
+  e_{jk} \gets \code{reify}~t_j~t_k~e_{jk}
+\end{array}
+\end{align*}
+
+% reify
+\begin{align*}
+\begin{array}{rrll}
+\code{reify} &:& \var{expr} \to \var{expr} \to \var{expln} \to \var{\q{expr}} & \\
+\code{reify}~t_i~t_j~(\kw{by trivial}) &=&
+\q{\kw{reflexivity}~t_i} &
+\\
+\code{reify}~t_i~t_j~(\kw{by}~p_{ij}) &=&
+\q{p_{ij}} &
+\\
+\code{reify}~t_i~t_j~(\kw{by reflexivity}) &=&
+\q{\kw{reflexivity}~t_i} &
+\\
+\code{reify}~t_i~t_j~(\kw{by symmetry}~e) &=&
+\q{\kw{symmetry} t_j t_i p_{ij}} &
+\where~e_{ij} \gets \code{reify}~t_i~t_j~e
+\\
+\code{reify}~t_i~t_j~(\kw{by rewrite}~t_3~\kw{to}~t_4~e) &=&
+\code{rewrite}~\q{t_3}~\q{t_2}~\q{p_{12}} \q{t_i} &
+\where~e_{12} \gets \code{reify}~t_3~t_4~e
+\\
+\code{reify}~t_i~t_j~(\kw{by extend}~pat~e) &=&
+\q{\kw{extensionality}~t_i~t_j~p_{ij}} &
+\where~p_{ij}' \gets \code{reify}~(t_i~p)~(t_j~p)~e;~ p_{ij} \gets \q{\lambda~p \to p_{ij}' ?~t_i~p~?~t_j~p}
+\\
+\code{reify}~t_i~t_j~(\kw{by smt by}~p_{ij}) &=&
+\q{\kw{reflexivity}~t_i~?~p_{ij}} &
+\\
+\end{array}
+\end{align*}
+
+\end{document}
