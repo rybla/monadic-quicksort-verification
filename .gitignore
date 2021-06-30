@@ -4,4 +4,6 @@ dist-newstyle
 .liquid
 eqpropchain-edsl/main.log
 eqpropchain-edsl/main.aux
+eqpropchain-edsl/__latexindent_temp.tex
+eqpropchain-edsl/textput.log
 .gitignore
