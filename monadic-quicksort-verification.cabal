@@ -6,6 +6,7 @@ cabal-version: 1.12
 --
 -- hash: 7ceb82e1c16a159357cdb5615b0c40c50546c145f630c1addb4a3604606f8422
 
+
 name:           monadic-quicksort-verification
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/githubuser/monadic-quicksort-verification#readme>
@@ -27,11 +28,6 @@ source-repository head
 library
   exposed-modules:
       Sort.Array
-      Data.Refined.Bool
-      Data.Refined.List
-      Data.Refined.Natural
-      Data.Refined.Tuple
-      Placeholder.M
       Sort.List
   other-modules:
       Paths_monadic_quicksort_verification
