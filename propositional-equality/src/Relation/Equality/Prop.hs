@@ -21,9 +21,9 @@ refl :: a -> EqualityProp a
 refl x = reflexivity x
 
 
-{-@ reflP :: x:a -> EqualProp a {x} {x} @-}
-reflP :: a -> EqualityProp a
-reflP x = reflexivity x
+{-@ reflP :: x:a -> {x = x} @-}
+reflP :: a -> () -- EqualityProp a
+reflP x = () -- reflexivity x
 
 {-@ trans :: Transitivity' a =>  x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> EqualProp a {x} {z} @-}
 trans :: Transitivity' a => a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a 

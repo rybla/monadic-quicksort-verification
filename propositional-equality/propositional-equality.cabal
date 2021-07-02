@@ -38,8 +38,8 @@ test-suite test
       Reverse
       RefinedDomains
       Map
---       Folds
-       RunTimeCheck
+      Folds
+      RunTimeCheck
 --       Readers
 --       Endofunctors
   hs-source-dirs:
