@@ -29,12 +29,26 @@ reflP x = reflexivity x
 trans :: Transitivity' a => a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a 
 trans x y a p1 p2 = transitivity' x y a p1 p2 
 
-
--- NV -> Henry: why I cannot put ()  here??? 
+-- NV 
 {-@ fromEqSMT :: x:a -> y:a -> {v:() | x = y}-> EqualProp a {x} {y} @-}
 fromEqSMT :: a -> a -> () -> EqualityProp a 
 fromEqSMT x _ _ =  refl x 
 
+eqSMT' :: a -> a -> EqualityProp a -> EqualityProp a 
+{-@ ignore eqSMT' @-}
+{-@ assume eqSMT' :: forall <p :: a -> Bool>.
+       x:a<p> -> y:a<p> ->
+      EqualProp (a) {x} {y} ->
+      EqualProp (a<p>) {x} {y}
+@-}
+eqSMT' _ _ p = p 
+
+
+{-@ ignore deqFun @-}
+{-@ deqFun :: forall<p :: a -> b -> Bool>. f:(a -> b) -> g:(a -> b)
+          -> (x:a -> EqualProp b<p x> {f x} {g x}) -> EqualProp (y:a -> b<p y>) {f} {g}  @-}
+deqFun :: (a -> b) -> (a -> b) -> (a -> EqualityProp b) -> EqualityProp (a -> b)
+deqFun = extensionality
 
 {-
 # END OF Extra definitions to port old code

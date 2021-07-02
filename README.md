@@ -33,6 +33,8 @@ EqCtx                         & substitutability (+ flip args)     &
 eqRTCtx                       & same 
 EqSMT                         & reflexivity
 EqFun                         & extensionality
+eqSMT                         & eqSMT'            
+
 
 - Reverse.hs requires importing refined unit :(
 
