@@ -1,72 +1,73 @@
-{-@ LIQUID "--reflection" @-}
 {-@ LIQUID "--ple"        @-}
+
+{-# LANGUAGE IncoherentInstances #-}
 
 module Folds where
 
 import Prelude hiding (foldl, foldr, id)
 import Language.Haskell.Liquid.ProofCombinators
+import Data.Refined.Unit
+import Relation.Equality.Prop
 
-import PropositionalEquality
-import PEqProperties
 
-foldEq     :: AEq b => EqT  ((b -> a -> b) -> b -> [a] -> b)
-{-@ foldEq :: AEq b => EqRT ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
-foldEq = EqFun foldl foldl' $ \f ->
-           EqFun (foldl f) (foldl' f) $ \b ->
-             EqFun (foldl f b) (foldl' f b) $ \xs ->
-               eqSMT (foldl f b xs) (foldl' f b xs) (theorem f b xs ? reflP (foldl f b xs))
+foldEq     :: AEq b => EqualityProp  ((b -> a -> b) -> b -> [a] -> b)
+{-@ foldEq :: AEq b => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
+foldEq = extensionality foldl foldl' $ \f ->
+           extensionality (foldl f) (foldl' f) $ \b ->
+             extensionality (foldl f b) (foldl' f b) $ \xs ->
+               fromEqSMT (foldl f b xs) (foldl' f b xs) (theorem f b xs ? reflP (foldl f b xs))
 
-foldEq'     :: Reflexivity b => EqT  ((b -> a -> b) -> b -> [a] -> b)
-{-@ foldEq' :: Reflexivity b => EqRT ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
-foldEq' = EqFun foldl foldl' $ \f ->
-            EqFun (foldl f) (foldl' f) $ \b ->
-              EqFun (foldl f b) (foldl' f b) $ \xs ->
+foldEq'     :: Reflexivity b => EqualityProp  ((b -> a -> b) -> b -> [a] -> b)
+{-@ foldEq' :: Reflexivity b => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
+foldEq' = extensionality foldl foldl' $ \f ->
+            extensionality (foldl f) (foldl' f) $ \b ->
+              extensionality (foldl f b) (foldl' f b) $ \xs ->
                 refl (foldl f b xs) ? theorem f b xs
 
-foldEq''     :: (Reflexivity b, Transitivity b) => EqT ((b -> a -> b) -> b -> [a] -> b)
-{-@ foldEq'' :: (Reflexivity b, Transitivity b) => EqRT ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
-foldEq'' = EqFun foldl foldl' $ \f ->
-               EqFun (foldl f) (foldl' f) $ \b ->
-                   EqFun (foldl f b) (foldl' f b) $ \xs ->
-                     trans (foldl f b xs) (foldr (construct f) id xs b) (foldl'  f b xs)
+foldEq''     :: (Reflexivity b, Equality b) => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
+{-@ foldEq'' :: (Reflexivity b, Equality b) => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
+foldEq'' = extensionality foldl foldl' $ \f ->
+               extensionality (foldl f) (foldl' f) $ \b ->
+                   extensionality (foldl f b) (foldl' f b) $ \xs ->
+                     transitivity (foldl f b xs) (foldr (construct f) id xs b) (foldl'  f b xs)
                        (foldLemma f b xs)
                        (refl (foldl' f b xs))
 
 -- more awkward, original statement of the inner part above
-foldSame     :: (Reflexivity b, Symmetry b, Transitivity b) => (b -> a -> b) -> b -> [a] -> EqT b
-{-@ foldSame :: (Reflexivity b, Transitivity b) => f:(b -> a -> b) -> b:b -> xs:[a] 
-             -> EqRT b {foldl f b xs} {foldl' f b xs} @-}
+foldSame     :: (Reflexivity b, Equality b) => (b -> a -> b) -> b -> [a] -> EqualityProp b
+{-@ foldSame :: (Reflexivity b, Equality b) => f:(b -> a -> b) -> b:b -> xs:[a] 
+             -> EqualProp b {foldl f b xs} {foldl' f b xs} @-}
 foldSame f b xs =
-    trans (foldl' f b xs)
+    transitivity (foldl' f b xs)
         (foldr (construct f) id xs b)
         (foldl f b xs)
     (refl (foldl' f b xs))
-    (sym (foldl f b xs)
+    (symmetry (foldl f b xs)
          (foldr (construct f) id xs b)
        (foldLemma f b xs))
 
-foldLemma     :: (Reflexivity b, Transitivity b) => (b -> a -> b) -> b -> [a] -> EqT b
-{-@ foldLemma :: (Reflexivity b, Transitivity b) => f:(b -> a -> b) -> b:b -> xs:[a] -> EqRT b {foldl f b xs} {foldr (construct f) id xs b} @-}
+foldLemma     :: (Reflexivity b, Equality b) => (b -> a -> b) -> b -> [a] -> EqualityProp b
+{-@ foldLemma :: (Reflexivity b, Equality b) => f:(b -> a -> b) -> b:b -> xs:[a] -> EqualProp b {foldl f b xs} {foldr (construct f) id xs b} @-}
 foldLemma f b [] =
-  trans (foldl f b [])
+  transitivity (foldl f b [])
         b 
         (foldr (construct f) id [] b)
     (refl (foldl f b []))
-    (trans b
+    (transitivity b
            (id b)
            (foldr (construct f) id [] b)
       (refl b)
       (refl (id b)))
 foldLemma f b (x:xs) =
-  trans (foldl f b (x:xs))
+  transitivity (foldl f b (x:xs))
         (foldl f (f b x) xs)
         (foldr (construct f) id (x:xs) b)
     (refl (foldl f b (x:xs)))
-    (trans (foldl f (f b x) xs)
+    (transitivity (foldl f (f b x) xs)
            (foldr (construct f) id xs (f b x))
            (foldr (construct f) id (x:xs) b)
       (foldLemma f (f b x) xs)
-      (trans (foldr (construct f) id xs (f b x))
+      (transitivity (foldr (construct f) id xs (f b x))
              (construct f x (foldr (construct f) id xs) b)
              (foldr (construct f) id (x:xs) b)
         (refl (foldr (construct f) id xs (f b x)))

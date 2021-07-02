@@ -1,59 +1,59 @@
-{-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--ple"        @-}
-{-@ LIQUID "--no-adt"     @-} 
-
 module RefinedDomains where 
 
-import PropositionalEquality 
+{-@ LIQUID "--ple" @-}
+
+import Relation.Equality.Prop 
 -- import Language.Haskell.Liquid.ProofCombinators
+import Data.Refined.Unit
 
 --------------------------------------------------------------------------------
 -- | Main theorem
 --------------------------------------------------------------------------------
 
-pf :: EqT (Integer -> Integer)
-{-@ pf :: EqRT (x:{Integer | 0 <= x } -> Integer) add1Int add1Nat @-}
-pf = EqFun add1Int add1Nat (\x -> eqSMT (add1Int x) (add1Nat x) (reflP (add1Int x)))
+pf :: EqualityProp (Integer -> Integer)
+{-@ pf :: EqualProp (x:{Integer | 0 <= x } -> Integer) {add1Int} {add1Nat} @-}
+pf = extensionality add1Int add1Nat (\x -> fromEqSMT (add1Int x) (add1Nat x) (reflP (add1Int x)))
 
-pf' :: EqT (Integer -> Integer)
-{-@ pf' :: EqRT (x:{Integer | 0 <= x } -> {x:Integer | 0 <= x }) add1Int add1Nat @-}
-pf' = EqFun add1Int add1Nat pf0' 
 
-pf0' :: Integer -> EqT Integer
-{-@ pf0' :: x:{Integer | 0 <= x } ->  EqRT {x:Integer | 0 <= x } (add1Int x) (add1Nat x) @-}
-pf0' x = eqSMT (add1Int x)  (add1Nat x) (reflP (add1Int x)) 
+pf' :: EqualityProp (Integer -> Integer)
+{-@ pf' :: EqualProp (x:{Integer | 0 <= x } -> {x:Integer | 0 <= x }) add1Int add1Nat @-}
+pf' = extensionality add1Int add1Nat pf0' 
 
-pf'' :: EqT (Integer -> Integer)
-{-@ pf'' :: EqRT (x:{Integer | 0 <= x } -> {v:Integer | v = x + 1 }) add1Int add1Nat @-}
+pf0' :: Integer -> EqualityProp Integer
+{-@ pf0' :: x:{Integer | 0 <= x } ->  EqualProp {x:Integer | 0 <= x } (add1Int x) (add1Nat x) @-}
+pf0' x = fromEqSMT (add1Int x)  (add1Nat x) (reflP (add1Int x)) 
+
+pf'' :: EqualityProp (Integer -> Integer)
+{-@ pf'' :: EqualProp (x:{Integer | 0 <= x } -> {v:Integer | v = x + 1 }) add1Int add1Nat @-}
 pf'' = deqFun add1Int add1Nat pf0'' 
 
-pf0'' :: Integer -> EqT Integer
-{-@ pf0'' :: x:{Integer | 0 <= x } ->  EqRT {v:Integer | v = x + 1 } (add1Int x) (add1Nat x) @-}
-pf0'' x = eqSMT (add1Int x)  (add1Nat x) (reflP (add1Int x)) 
+pf0'' :: Integer -> EqualityProp Integer
+{-@ pf0'' :: x:{Integer | 0 <= x } ->  EqualProp {v:Integer | v = x + 1 } (add1Int x) (add1Nat x) @-}
+pf0'' x = fromEqSMT (add1Int x)  (add1Nat x) (reflP (add1Int x)) 
 
 
 --------------------------------------------------------------------------------
 -- | Bad proofs that should fail
 --------------------------------------------------------------------------------
 {- 
-pfBadRange :: () ->  EqT (Integer -> Integer)
+pfBadRange :: () ->  EqualityProp (Integer -> Integer)
 {-@ fail pfBadRange @-}
-{-@ pfBadRange :: () -> EqRT (x:{Integer | 0 <= x } -> {x:Integer | 0 > x }) add1Int add1Nat @-}
-pfBadRange _ = eqFun add1Int add1Nat (\x -> eqSMT (add1Int x) (add1Nat x) ())
+{-@ pfBadRange :: () -> EqualProp (x:{Integer | 0 <= x } -> {x:Integer | 0 > x }) add1Int add1Nat @-}
+pfBadRange _ = eqFun add1Int add1Nat (\x -> extensionality (add1Int x) (add1Nat x) ())
 
-pf0BadRange :: Integer -> EqT Integer
+pf0BadRange :: Integer -> EqualityProp Integer
 {-@ fail pf0BadRange @-}
-{-@ pf0BadRange :: x:{Integer | 0 <= x }-> EqRT {v:Integer | v < 0 } (add1Int x) (add1Nat x) @-}
-pf0BadRange x = eqSMT (add1Int x) (add1Nat x) ()
+{-@ pf0BadRange :: x:{Integer | 0 <= x }-> EqualProp {v:Integer | v < 0 } (add1Int x) (add1Nat x) @-}
+pf0BadRange x = extensionality (add1Int x) (add1Nat x) ()
 
-pfBadDomain :: () -> EqT (Integer -> Integer)
+pfBadDomain :: () -> EqualityProp (Integer -> Integer)
 {-@ fail pfBadDomain @-}
-{-@ pfBadDomain :: () -> EqRT (x:Integer -> Integer) add1Int add1Nat @-}
+{-@ pfBadDomain :: () -> EqualProp (x:Integer -> Integer) add1Int add1Nat @-}
 pfBadDomain _ = eqFun add1Int add1Nat (\x -> eqSMT (add1Int x) (add1Nat x) ())
 
-pf0BadDomain :: Integer -> EqT Integer
+pf0BadDomain :: Integer -> EqualityProp Integer
 {-@ fail pf0BadDomain @-}
-{-@ pf0BadDomain :: x:Integer-> EqRT Integer {add1Int x} (add1Nat x) @-}
+{-@ pf0BadDomain :: x:Integer-> EqualProp Integer {add1Int x} (add1Nat x) @-}
 pf0BadDomain x = eqSMT (add1Int x) (add1Nat x) () 
 -}
 

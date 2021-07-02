@@ -9,37 +9,40 @@ module Reverse where
 
 import Language.Haskell.Liquid.ProofCombinators
 import Prelude hiding ((++))
-import PropositionalEquality
-import PEqProperties
+import Relation.Equality.Prop
+import Data.Refined.Unit
+
 
 {-@ infix ++ @-}
 {-@ infix :  @-}
+
+
 
 
 ------------------------------------------------------------
 -- | Main Theorem   ----------------------------------------
 ------------------------------------------------------------
 -- This is SAFE 
-reverseFunEq :: AEq [a] => EqT ([a] -> [a])
-{-@ reverseFunEq :: AEq [a] => EqRT ([a] -> [a]) {fastReverse} {slowReverse} @-}
-reverseFunEq = EqFun fastReverse slowReverse reverseTEq
+reverseFunEq :: AEq [a] => EqualityProp ([a] -> [a])
+{-@ reverseFunEq :: AEq [a] => EqualProp ([a] -> [a]) {fastReverse} {slowReverse} @-}
+reverseFunEq = extensionality fastReverse slowReverse reverseTEq
 
 -- on arbitrary types, reuses existing infra
-reverseFunSimple :: Reflexivity [a] => [a] -> EqT [a]
-{-@ reverseFunSimple :: (Reflexivity [a], Transitivity [a]) => xs:[a] -> EqRT [a] {fastReverse xs} {slowReverse xs} @-}
+reverseFunSimple :: Reflexivity [a] => [a] -> EqualityProp [a]
+{-@ reverseFunSimple :: (Reflexivity [a], Transitivity' [a]) => xs:[a] -> EqualProp [a] {fastReverse xs} {slowReverse xs} @-}
 reverseFunSimple xs = refl (fastReverse xs) ? lemma xs [] ? rightId (slowReverse xs)
 
 -- on arbitrary types, uses explicit lemma
-reverseFunProp :: (Reflexivity [a], Transitivity [a]) => [a] -> EqT [a]
-{-@ reverseFunProp :: (Reflexivity [a], Transitivity [a]) => xs:[a] -> EqRT [a] {fastReverse xs} {slowReverse xs} @-}
+reverseFunProp :: (Reflexivity [a], Transitivity' [a]) => [a] -> EqualityProp [a]
+{-@ reverseFunProp :: (Reflexivity [a], Transitivity' [a]) => xs:[a] -> EqualProp [a] {fastReverse xs} {slowReverse xs} @-}
 reverseFunProp xs = trans (fastReverse xs) 
                           (slowReverse xs ++ []) 
                           (slowReverse xs) 
                           (reverseSameLemma [] xs) 
                           (rightIdP (slowReverse xs))
 
-reverseSameLemma :: (Reflexivity [a], Transitivity [a]) => [a] -> [a] -> EqT [a]
-{-@ reverseSameLemma :: (Reflexivity [a], Transitivity [a]) => rest:[a] -> xs:[a] -> EqRT [a] {fastReverse' rest xs} {slowReverse xs ++ rest} @-}
+reverseSameLemma :: (Reflexivity [a], Transitivity' [a]) => [a] -> [a] -> EqualityProp [a]
+{-@ reverseSameLemma :: (Reflexivity [a], Transitivity' [a]) => rest:[a] -> xs:[a] -> EqualProp [a] {fastReverse' rest xs} {slowReverse xs ++ rest} @-}
 reverseSameLemma rest [] = refl rest
 reverseSameLemma rest (x:xs) =
   trans (fastReverse' rest (x:xs))
@@ -49,8 +52,8 @@ reverseSameLemma rest (x:xs) =
     (assocP (slowReverse xs) [x] rest)
 
 
-{-@ rightIdP :: xs:[a] -> EqRT [a] {xs ++ []} {xs} @-}
-rightIdP :: (Reflexivity [a], Transitivity [a]) => [a] -> EqT [a]
+{-@ rightIdP :: xs:[a] -> EqualProp [a] {xs ++ []} {xs} @-}
+rightIdP :: (Reflexivity [a], Transitivity' [a]) => [a] -> EqualityProp [a]
 rightIdP []     = refl [] 
 rightIdP (x:xs) = trans ((x:xs) ++ [])
                         (cons x (xs++[]))
@@ -60,8 +63,8 @@ rightIdP (x:xs) = trans ((x:xs) ++ [])
 
 
 {-@ assocP :: xs:[a] -> ys:[a] -> zs:[a]
-          -> EqRT [a] {(xs ++ (ys ++ zs))} {((xs ++ ys) ++ zs)}  @-}
-assocP :: (Reflexivity [a], Transitivity [a]) => [a] -> [a] -> [a] -> EqT [a]
+          -> EqualProp [a] {(xs ++ (ys ++ zs))} {((xs ++ ys) ++ zs)}  @-}
+assocP :: (Reflexivity [a], Transitivity' [a]) => [a] -> [a] -> [a] -> EqualityProp [a]
 assocP []     ys zs = refl ([] ++ (ys ++ zs)) 
 assocP (x:xs) ys zs = trans ((x:xs) ++ (ys ++ zs)) 
                             (cons x (xs ++ (ys ++ zs)))
@@ -80,14 +83,14 @@ consP :: a -> [a] -> ()
 consP x xs = cons x xs *** QED 
 
 
-reverseOneSwoopEq :: AEq [a] => EqT ([a] -> [a])
-{-@ reverseOneSwoopEq :: AEq [a] => EqRT ([a] -> [a]) {fastReverse} {slowReverse} @-}
-reverseOneSwoopEq = EqFun fastReverse slowReverse $ \xs ->
-  EqSMT (fastReverse xs) (slowReverse xs) (reverseEq xs ? reflP (fastReverse xs))
+reverseOneSwoopEq :: AEq [a] => EqualityProp ([a] -> [a])
+{-@ reverseOneSwoopEq :: AEq [a] => EqualProp ([a] -> [a]) {fastReverse} {slowReverse} @-}
+reverseOneSwoopEq = extensionality fastReverse slowReverse $ \xs ->
+  fromEqSMT (fastReverse xs) (slowReverse xs) (reverseEq xs ? reflP (fastReverse xs))
 
-{-@ reverseTEq :: AEq [a] => xs:[a] -> EqRT [a] {fastReverse xs} {slowReverse xs} @-}
-reverseTEq :: AEq [a] => [a] -> EqT [a]
-reverseTEq xs = EqSMT (fastReverse xs) (slowReverse xs) (reverseEq xs ? reflP (fastReverse xs))
+{-@ reverseTEq :: AEq [a] => xs:[a] -> EqualProp [a] {fastReverse xs} {slowReverse xs} @-}
+reverseTEq :: AEq [a] => [a] -> EqualityProp [a]
+reverseTEq xs = fromEqSMT (fastReverse xs) (slowReverse xs) (reverseEq xs ? reflP (fastReverse xs))
 
 {-@ reverseEq :: xs:[a] -> { fastReverse xs = slowReverse xs } @-}
 reverseEq :: [a] -> ()
@@ -114,26 +117,26 @@ reverseNoEq xs
 -- NIKI TO FIX: nothing gets checked with the below uncommented :(
 
 {- 
-reverseFunEqWrong :: Eq a => EqT ([a] -> [a])
+reverseFunEqWrong :: Eq a => EqualityProp ([a] -> [a])
 {-@ fail reverseFunEqWrong @-}
 {-@ reverseFunEqWrong :: Eq a => EqRT ([a] -> [a]) (fastReverse) (badReverse) @-}
 reverseFunEqWrong = eqFun fastReverse slowReverse trivialTEq
 
 -- this shouldn't be provable! we're sending the wrong goals to SMT :(
-reverseFunEqDistressing :: Eq a => EqT ([a] -> [a])
+reverseFunEqDistressing :: Eq a => EqualityProp ([a] -> [a])
 {-@ fail reverseFunEqDistressing @-}
 {-@ reverseFunEqDistressing :: Eq a => EqRT ([a] -> [a]) (fastReverse) (badReverse) @-}
 reverseFunEqDistressing = eqFun fastReverse badReverse trivialTEq
 
 -- this shouldn't be provable... so easily.
-reverseFunEqTooGood :: Eq a => EqT ([a] -> [a])
+reverseFunEqTooGood :: Eq a => EqualityProp ([a] -> [a])
 {-@ fail reverseFunEqTooGood @-}
 {-@ reverseFunEqTooGood :: Eq a => EqRT ([a] -> [a]) (fastReverse) (slowReverse) @-}
 reverseFunEqTooGood = eqFun fastReverse slowReverse trivialTEq
 
 {-@ trivialTEq :: Eq a => xs:[a] -> EqRT [a] (xs) (xs) @-}
-trivialTEq :: Eq a => [a] -> EqT [a]
-trivialTEq xs = eqSMT xs xs ()
+trivialTEq :: Eq a => [a] -> EqualityProp [a]
+trivialTEq xs = fromEqSMT xs xs ()
 
 {-@ reverseFunNoExt :: { fastReverse = slowReverse } @-}
 {-@ fail reverseFunNoExt @-}

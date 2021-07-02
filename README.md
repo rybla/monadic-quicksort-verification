@@ -15,6 +15,33 @@ cd ..
 stack install 
 ```
 
+
+# EDITS
+
+old src:                      & new src                            & paper  
+PropositionalEquality         & Relation.Equality.Prop             & 
+PEqProperties                 & Relation.Equality.Prop             &  
+EqRT                          & EqualProp                          & 
+EqT                           & EqualityProp                       & 
+
+Reflexivity                   & Redefined as empty                 & 
+refl                          & reflexivity                        & 
+
+Symmetry                      & Equality 
+sym                           & symmetry 
+Transitivity                  & Transitivity'                      & 
+trans                         & transitivity'                      & 
+toSMT                         & concreteness                       & 
+EqCtx                         & substitutability (+ flip args)     & 
+eqRTCtx                       & same 
+EqSMT                         & fromEqSMT
+EqFun                         & extensionality
+eqSMT                         & reflexivity            
+
+
+- all require importing refined unit :(
+
+
 # TODO 
 Some restructuring could help. Maybe make them both top level dirsctories? 
 
