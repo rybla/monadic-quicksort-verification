@@ -35,7 +35,7 @@ test-suite test
   main-is: Test.hs
   other-modules:
       Unsoundness
---       Reverse
+      Reverse
 --       RefinedDomains
 --       Map
 --       Folds
@@ -45,6 +45,7 @@ test-suite test
   hs-source-dirs:
       test
   ghc-options: -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local 
+  -- default-extensions: IncoherentInstances
   build-depends:
       liquid-base
     , liquidhaskell

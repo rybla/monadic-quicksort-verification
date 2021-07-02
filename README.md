@@ -21,10 +21,21 @@ stack install
 old src:                      & new src                            & paper  
 PropositionalEquality         & Relation.Equality.Prop             & 
 PEqProperties                 & Relation.Equality.Prop             &  
-EqRT                          & EqRT                               & 
+EqRT                          & EqualProp                          & 
 EqT                           & EqualityProp                       & 
+
+Reflexivity                   & Redefined as empty                 & 
+refl                          & reflexivity                        & 
+Transitivity                  & Transitivity'                      & 
+trans                         & transitivity'                      & 
 toSMT                         & concreteness                       & 
 EqCtx                         & substitutability (+ flip args)     & 
+eqRTCtx                       & same 
+EqSMT                         & reflexivity
+EqFun                         & extensionality
+
+- Reverse.hs requires importing refined unit :(
+
 
 # TODO 
 Some restructuring could help. Maybe make them both top level dirsctories? 
