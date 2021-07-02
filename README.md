@@ -26,14 +26,17 @@ EqT                           & EqualityProp                       &
 
 Reflexivity                   & Redefined as empty                 & 
 refl                          & reflexivity                        & 
+
+Symmetry                      & Equality 
+sym                           & symmetry 
 Transitivity                  & Transitivity'                      & 
 trans                         & transitivity'                      & 
 toSMT                         & concreteness                       & 
 EqCtx                         & substitutability (+ flip args)     & 
 eqRTCtx                       & same 
-EqSMT                         & reflexivity
+EqSMT                         & fromEqSMT
 EqFun                         & extensionality
-eqSMT                         & eqSMT'            
+eqSMT                         & reflexivity            
 
 
 - all require importing refined unit :(
