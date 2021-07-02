@@ -1,5 +1,3 @@
-{-@ LIQUID "--compile-spec" @-}
-
 module Relation.Equality.Prop where
 
 import Data.Refined.Constant

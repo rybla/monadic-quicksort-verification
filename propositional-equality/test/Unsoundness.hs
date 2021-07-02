@@ -1,6 +1,5 @@
-{-@ LIQUID "--reflection" @-}
-
 module Unsoundness where 
+
 
 {-@ assume hab :: (x:a -> {false} ) -> { false }@-}
 hab :: (a -> ()) -> ()

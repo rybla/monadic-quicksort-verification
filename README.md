@@ -1,3 +1,24 @@
+# Propositional Equality for Refinement Types 
+
+## How to run 
+
+```
+# install the propositional equality library 
+cd propositional-equality
+stack install 
+
+# run the tests/ examples in the paper 
+stack test 
+
+# run the case study 
+cd .. 
+stack install 
+```
+
+# TODO 
+Some restructuring could help. Maybe make them both top level dirsctories? 
+
+
 # Monadic Quicksort Verification in Liquid Haskell
 
 A Liquid Haskell verification of Mu and Chiang's _[Deriving Monadic
