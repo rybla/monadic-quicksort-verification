@@ -13,7 +13,7 @@ stack test
 # run the case study 
 cd .. 
 stack install 
-``
+```
 
 # TODO 
 Some restructuring could help. Maybe make them both top level dirsctories? 
