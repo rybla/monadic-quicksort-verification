@@ -15,6 +15,17 @@ cd ..
 stack install 
 ```
 
+
+# EDITS
+
+old src:                      & new src                            & paper  
+PropositionalEquality         & Relation.Equality.Prop             & 
+PEqProperties                 & Relation.Equality.Prop             &  
+EqRT                          & EqRT                               & 
+EqT                           & EqualityProp                       & 
+toSMT                         & concreteness                       & 
+EqCtx                         & substitutability (+ flip args)     & 
+
 # TODO 
 Some restructuring could help. Maybe make them both top level dirsctories? 
 
