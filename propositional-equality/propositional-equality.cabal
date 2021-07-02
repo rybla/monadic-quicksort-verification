@@ -39,7 +39,7 @@ test-suite test
 --       RefinedDomains
 --       Map
 --       Folds
---       RunTimeCheck
+       RunTimeCheck
 --       Readers
 --       Endofunctors
   hs-source-dirs:
@@ -49,4 +49,5 @@ test-suite test
       liquid-base
     , liquidhaskell
     , liquid-prelude
+    , propositional-equality
   default-language: Haskell2010

@@ -1,31 +1,26 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MonoLocalBinds #-}
 
-{-@ LIQUID "--reflection" @-}
-{-@ LIQUID "--ple"        @-}
-{-@ LIQUID "--no-adt"     @-} 
-
 module RunTimeCheck where 
 
 import Language.Haskell.Liquid.ProofCombinators
 import Prelude hiding ((++))
-import PropositionalEquality
-import PEqProperties
+import Relation.Equality.Prop
 
 
 {-@ critical :: {x:a | slowSpec x } -> a @-}
 critical :: a -> a 
 critical x = x 
 
-{-@ bar :: EqRT (a -> Bool) {fastSpec} {slowSpec} -> a -> Maybe a @-}
-bar :: EqT (a -> Bool) -> a -> Maybe a 
-bar pf x = if fastSpec x ? toSMT (fastSpec x) (slowSpec x) (unExt x pf)
+{-@ bar :: EqualProp (a -> Bool) {fastSpec} {slowSpec} -> a -> Maybe a @-}
+bar :: EqualityProp (a -> Bool) -> a -> Maybe a 
+bar pf x = if fastSpec x ? concreteness (fastSpec x) (slowSpec x) (unExt x pf)
             then Just (critical x)
             else Nothing 
 
-{-@ unExt :: x:a -> EqRT (a -> Bool) {fastSpec} {slowSpec} -> EqRT Bool {fastSpec x} {slowSpec x} @-}
-unExt :: a -> EqT (a -> Bool) -> EqT Bool 
-unExt x p = EqCtx fastSpec slowSpec p (flip' x) ? flip' x fastSpec ? flip' x slowSpec 
+{-@ unExt :: x:a -> EqualProp (a -> Bool) {fastSpec} {slowSpec} -> EqualProp Bool {fastSpec x} {slowSpec x} @-}
+unExt :: a -> EqualityProp (a -> Bool) -> EqualityProp Bool 
+unExt x p = substitutability (flip' x) fastSpec slowSpec p  ? flip' x fastSpec ? flip' x slowSpec 
 
 
 
