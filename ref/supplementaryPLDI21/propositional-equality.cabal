@@ -10,18 +10,9 @@ source-repository head
 
 library
   exposed-modules:
-      PropositionalEquality
-  other-modules:
-      Unsoundness
-      Language.Haskell.Liquid.ProofCombinators
-      PEqProperties
-      Reverse
-      RefinedDomains
-      Map
-      Folds
-      RunTimeCheck
-      Readers
-      Endofunctors
+      Relation.Equality.Prop
+      Relation.Equality.Prop.EDSL
+      Relation.Equality.Prop.Reasoning
   hs-source-dirs:
       code
   ghc-options: -Wall -fplugin=LiquidHaskell

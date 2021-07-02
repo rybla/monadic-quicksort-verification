@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e514f34b520894ddc61672bfa009d37464f13e2caa1e9580c10167d750762354
+-- hash: 7ceb82e1c16a159357cdb5615b0c40c50546c145f630c1addb4a3604606f8422
 
 name:           monadic-quicksort-verification
 version:        0.1.0.0
@@ -26,35 +26,13 @@ source-repository head
 
 library
   exposed-modules:
-      Control.Refined.Functor
-      Control.Refined.Monad
-      Control.Refined.Monad.Array
-      Control.Refined.Monad.ArrayPlus
-      Control.Refined.Monad.Plus
+      Sort.Array
       Data.Refined.Bool
-      Data.Refined.Constant
       Data.Refined.List
-      Data.Refined.Nat
       Data.Refined.Natural
       Data.Refined.Tuple
-      Data.Refined.Unit
-      Function
-      Language.Haskell.Liquid.Custom.Equational
-      Language.Haskell.Liquid.Custom.ProofCombinators
       Placeholder.M
-      Relation.Equality.Prop
-      Relation.Equality.Prop.EDSL
-      Relation.Equality.Prop.EDSL.Test
-      Relation.Equality.Prop.Reasoning
-      Relation.Equality.PropBlind
-      Relation.Equality.PropOld
-      Sort.Array
-      Sort.ArrayProto
-      Sort.ArrayProtoNew
-      Sort.ArrayProtoProto
       Sort.List
-      Sort.ListProto
-      Sort.ListProtoOld
   other-modules:
       Paths_monadic_quicksort_verification
   hs-source-dirs:
@@ -70,6 +48,7 @@ library
     , parsec
     , template-haskell
     , text
+    , propositional-equality
   default-language: Haskell2010
 
 test-suite monadic-quicksort-verification-test
