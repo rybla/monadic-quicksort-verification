@@ -40,8 +40,8 @@ test-suite test
       Map
       Folds
       RunTimeCheck
+      Endofunctors
 --       Readers
---       Endofunctors
   hs-source-dirs:
       test
   ghc-options: -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local 

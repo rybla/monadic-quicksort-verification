@@ -10,6 +10,10 @@ import Language.Haskell.Liquid.ProofCombinators
 # Extra definitions to port old code
 -}
 
+infixl 3 =~=
+
+(=~=) :: a -> a -> a
+_ =~= y = y
 -- NV -> Henry:  since this constraint does not exis it means we just trust SMT equalityies???
 class AEq a where 
   aeq :: a -> a 
