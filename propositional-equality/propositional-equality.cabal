@@ -30,7 +30,7 @@ library
   default-language: Haskell2010
 
 
-  test-suite test
+test-suite test
   type: exitcode-stdio-1.0
   main-is: Test.hs
   other-modules:
@@ -45,4 +45,8 @@ library
   hs-source-dirs:
       test
   ghc-options: -fplugin=LiquidHaskell -fplugin-opt=LiquidHaskell:--reflection -fplugin-opt=LiquidHaskell:--ple-local 
+  build-depends:
+      liquid-base
+    , liquidhaskell
+    , liquid-prelude
   default-language: Haskell2010
