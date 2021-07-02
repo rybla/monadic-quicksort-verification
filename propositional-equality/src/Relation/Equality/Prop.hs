@@ -29,11 +29,12 @@ reflP x = reflexivity x
 trans :: Transitivity' a => a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a 
 trans x y a p1 p2 = transitivity' x y a p1 p2 
 
--- NV 
 {-@ fromEqSMT :: x:a -> y:a -> {v:() | x = y}-> EqualProp a {x} {y} @-}
 fromEqSMT :: a -> a -> () -> EqualityProp a 
 fromEqSMT x _ _ =  refl x 
 
+
+-- Hacks with Abstract Refinement to preserve domains 
 eqSMT' :: a -> a -> EqualityProp a -> EqualityProp a 
 {-@ ignore eqSMT' @-}
 {-@ assume eqSMT' :: forall <p :: a -> Bool>.

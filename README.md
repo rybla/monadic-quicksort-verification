@@ -36,7 +36,7 @@ EqFun                         & extensionality
 eqSMT                         & eqSMT'            
 
 
-- Reverse.hs requires importing refined unit :(
+- all require importing refined unit :(
 
 
 # TODO 

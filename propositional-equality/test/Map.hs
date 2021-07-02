@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MonoLocalBinds #-}
-{-@ LIQUID "--reflection" @-}
 {-@ LIQUID "--ple"        @-}
 {-@ LIQUID "--no-adt"     @-} 
 
@@ -8,28 +7,28 @@ module Map where
 
 import Language.Haskell.Liquid.ProofCombinators
 import Prelude hiding (map)
-import PropositionalEquality
-import PEqProperties
+import Relation.Equality.Prop
 import RefinedDomains
+import Data.Refined.Unit
 
 {-@ infix :  @-}
 
 
-client :: [Integer] -> EqT [Integer] 
-{-@ client :: xs:[{v:Integer | 0 <= v}] -> EqRT [Integer] {map add1Int xs} {map add1Nat xs}@-}
+client :: [Integer] -> EqualityProp [Integer] 
+{-@ client :: xs:[{v:Integer | 0 <= v}] -> EqualProp [Integer] {map add1Int xs} {map add1Nat xs}@-}
 client = mapEq add1Int add1Nat pf 
 
-client'' ::  EqT ([Integer] -> [Integer])
-{-@ client'' ::  EqRT ([{v:Integer | 0 <= v}] -> [Integer]) {map add1Int} {map add1Nat}@-}
+client'' ::  EqualityProp ([Integer] -> [Integer])
+{-@ client'' ::  EqualProp ([{v:Integer | 0 <= v}] -> [Integer]) {map add1Int} {map add1Nat}@-}
 client'' = mapEq'' add1Int add1Nat pf 
 
 
-mapEq     :: (a -> b) -> (a -> b) -> EqT (a -> b) -> [a] -> EqT [b]
+mapEq     :: (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> [a] -> EqualityProp [b]
 {-@ mapEq :: f:(a -> b) -> g:(a -> b) ->
-             EqRT (a -> b) {f} {g} ->
-             xs:[a] -> EqRT [b] {map f xs} {map g xs} @-}
+             EqualProp (a -> b) {f} {g} ->
+             xs:[a] -> EqualProp [b] {map f xs} {map g xs} @-}
 mapEq f g mpf xs =
-  EqCtx f g mpf (flipMap xs)
+  substitutability (flipMap xs) f g mpf 
   ? mapFlipMap f xs
   ? mapFlipMap g xs
 
@@ -37,10 +36,10 @@ mapFlipMap     :: (a -> b) -> [a] -> ()
 {-@ mapFlipMap :: f:(a -> b) -> xs:[a] -> {map f xs = flipMap xs f} @-}
 mapFlipMap _f _xs = ()
 
-mapEq'     :: (Reflexivity [b], Transitivity [b]) => (a -> b) -> (a -> b) -> EqT (a -> b) -> [a] -> EqT [b]
-{-@ mapEq' :: (Reflexivity [b], Transitivity [b]) => f:(a -> b) -> g:(a -> b) ->
-                  EqRT (a -> b) {f} {g} ->
-                  xs:[a] -> EqRT [b] {map f xs} {map g xs} @-}
+mapEq'     :: (Reflexivity [b], Transitivity' [b]) => (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> [a] -> EqualityProp [b]
+{-@ mapEq' :: (Reflexivity [b], Transitivity' [b]) => f:(a -> b) -> g:(a -> b) ->
+                  EqualProp (a -> b) {f} {g} ->
+                  xs:[a] -> EqualProp [b] {map f xs} {map g xs} @-}
 mapEq' f g mpf xs =
   trans (map f xs)
         (flipMap xs f)
@@ -49,14 +48,14 @@ mapEq' f g mpf xs =
     (trans (flipMap xs f)
            (flipMap xs g)
            (map g xs)
-      (EqCtx f g mpf (flipMap xs))
+      (substitutability (flipMap xs) f g mpf )
       (refl (flipMap xs g)))
 
-mapEq''     :: (a -> b) -> (a -> b) -> EqT (a -> b) -> EqT ([a] -> [b])
+mapEq''     :: (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> EqualityProp ([a] -> [b])
 {-@ mapEq'' :: f:(a -> b) -> g:(a -> b) ->
-               EqRT (a -> b) {f} {g} ->
-               EqRT ([a] -> [b]) {map f} {map g} @-}
-mapEq'' f g mpf = EqCtx f g mpf map   
+               EqualProp (a -> b) {f} {g} ->
+               EqualProp ([a] -> [b]) {map f} {map g} @-}
+mapEq'' f g mpf = substitutability map f g mpf    
 
 
 
