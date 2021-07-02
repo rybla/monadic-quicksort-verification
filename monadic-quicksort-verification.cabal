@@ -29,6 +29,11 @@ library
   exposed-modules:
       Sort.Array
       Sort.List
+      Data.Refined.Bool
+      Data.Refined.List
+      Data.Refined.Natural
+      Data.Refined.Tuple
+      Placeholder.M
   other-modules:
       Paths_monadic_quicksort_verification
   hs-source-dirs:
