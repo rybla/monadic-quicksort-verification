@@ -93,15 +93,16 @@ monoid_associativity x y z =
             *** QED
         )
 
--- {-@ monoid_associativity_macros :: Reflexivity a =>
---       x:(Endo a) -> y:(Endo a) -> z:(Endo a) ->
---       EqualProp (Endo a) {mappend (mappend x y) z} {mappend x (mappend y z)} @-}
--- monoid_associativity_macros :: Reflexivity a => Endo a -> Endo a -> Endo a -> EqualityProp (Endo a)
--- monoid_associativity_macros x y z =
---   [eqp| mappend (mappend x y) z
---     %== apply $ \
---     %==
---     %==
---     %==
---     %== mappend x (mappend y z)
---   |]
+{-@ monoid_associativity_macros :: Equality (Endo a) =>
+      x:(Endo a) -> y:(Endo a) -> z:(Endo a) ->
+      EqualProp (Endo a) {mappend (mappend x y) z} {mappend x (mappend y z)} @-}
+monoid_associativity_macros :: Equality (Endo a) => Endo a -> Endo a -> Endo a -> EqualityProp (Endo a)
+monoid_associativity_macros x y z =
+  [eqp| mappend (mappend x y) z
+    %== apply $ \a -> mappend (mappend x y) z a  %by %extend a %by %reflexivity
+    %== apply $ \a -> (mappend x y) (z a)        %by %extend a %by %reflexivity
+    %== apply $ \a -> x (y (z a))                %by %extend a %by %reflexivity
+    %== apply $ \a -> x ((mappend y z) a)        %by %extend a %by %reflexivity
+    %== apply $ \a -> mappend x (mappend y z) a  %by %extend a %by %reflexivity
+    %== mappend x (mappend y z)                  %by %extend a %by %reflexivity
+  |]
