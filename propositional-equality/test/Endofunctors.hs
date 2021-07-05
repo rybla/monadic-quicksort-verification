@@ -51,9 +51,9 @@ monoid_leftIdentity_macros :: (Equality (Endo a), Equality a) => x:(Endo a) -> E
 monoid_leftIdentity_macros :: (Equality (Endo a), Equality a) => Endo a -> EqualityProp (Endo a)
 monoid_leftIdentity_macros x =
   [eqp| mappend mempty x
-    %== apply (\a -> mappend mempty x a)  %by %extend a %by %reflexivity
-    %== apply (\a -> mempty (x a))        %by %extend a %by %reflexivity
-    %== apply (\a -> x a)                 %by %extend a %by %reflexivity
+    %== apply $ \a -> mappend mempty x a  %by %extend a %by %reflexivity
+    %== apply $ \a -> mempty (x a)        %by %extend a %by %reflexivity
+    %== apply $ \a -> x a                 %by %extend a %by %reflexivity
     %== x                                 %by %extend a %by %reflexivity
   |]
 
@@ -72,9 +72,9 @@ monoid_rightIdentity x =
 monoid_rightIdentity_macros :: Equality (Endo a) => Endo a -> EqualityProp (Endo a)
 monoid_rightIdentity_macros x =
   [eqp| x
-    %== apply (\a -> x a)                 %by %extend a %by %reflexivity
-    %== apply (\a -> x (mempty a))        %by %extend a %by %reflexivity
-    %== apply (\a -> mappend x mempty a)  %by %extend a %by %reflexivity
+    %== apply $ \a -> x a                 %by %extend a %by %reflexivity
+    %== apply $ \a -> x (mempty a)        %by %extend a %by %reflexivity
+    %== apply $ \a -> mappend x mempty a  %by %extend a %by %reflexivity
     %== mappend x mempty                  %by %extend a %by %reflexivity
   |]
 
@@ -92,3 +92,16 @@ monoid_associativity x y z =
             =~= mappend x (mappend y z) a
             *** QED
         )
+
+-- {-@ monoid_associativity_macros :: Reflexivity a =>
+--       x:(Endo a) -> y:(Endo a) -> z:(Endo a) ->
+--       EqualProp (Endo a) {mappend (mappend x y) z} {mappend x (mappend y z)} @-}
+-- monoid_associativity_macros :: Reflexivity a => Endo a -> Endo a -> Endo a -> EqualityProp (Endo a)
+-- monoid_associativity_macros x y z =
+--   [eqp| mappend (mappend x y) z
+--     %== apply $ \
+--     %==
+--     %==
+--     %==
+--     %== mappend x (mappend y z)
+--   |]
