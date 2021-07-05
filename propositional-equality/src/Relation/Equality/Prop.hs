@@ -79,6 +79,14 @@ data EqualityProp a = EqualityProp
 type EqualProp a X Y = {w:EqualityProp a | eqprop X Y}
 @-}
 
+-- NV suggests to keep the below 
+{-@
+type PEq a X Y = {w:EqualityProp a | eqprop X Y}
+@-}
+
+
+
+
 {-@
 type NEqualProp a X Y = EqualProp a {X} {Y} -> Void
 @-}
