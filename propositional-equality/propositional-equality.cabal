@@ -34,7 +34,7 @@ test-suite test
   type: exitcode-stdio-1.0
   main-is: Test.hs
   other-modules:
-      Unsoundness
+      Inconsistency
       Reverse
       RefinedDomains
       Map
