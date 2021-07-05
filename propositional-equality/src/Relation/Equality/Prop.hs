@@ -75,13 +75,10 @@ data EqualityProp a = EqualityProp
 type EqualProp a X Y = {w:EqualityProp a | eqprop X Y}
 @-}
 
--- NV suggests to keep the below 
+-- NV suggests to keep the below
 {-@
 type PEq a X Y = {w:EqualityProp a | eqprop X Y}
 @-}
-
-
-
 
 {-@
 type NEqualProp a X Y = EqualProp a {X} {Y} -> Void
@@ -101,7 +98,10 @@ reflexivity :: a -> EqualityProp a
 reflexivity x = EqualityProp
 
 {-@ assume
-extensionality :: f:(a -> b) -> g:(a -> b) -> (x:a -> EqualProp b {f x} {g x}) -> EqualProp (a -> b) {f} {g}
+extensionality ::
+  f:(a -> b) -> g:(a -> b) ->
+  (x:a -> EqualProp b {f x} {g x}) ->
+  EqualProp (a -> b) {f} {g}
 @-}
 extensionality :: (a -> b) -> (a -> b) -> (a -> EqualityProp b) -> EqualityProp (a -> b)
 extensionality f g pf = EqualityProp
