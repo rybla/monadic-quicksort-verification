@@ -16,39 +16,36 @@ infixl 3 =~=
 _ =~= y = y
 
 -- NV -> Henry:  since this constraint does not exis it means we just trust SMT equalityies???
-class AEq a where 
-  aeq :: a -> a 
+class AEq a where
+  aeq :: a -> a
 
-class Reflexivity a where 
+class Reflexivity a
 
 {-@ refl :: x:a -> EqualProp a {x} {x} @-}
 refl :: a -> EqualityProp a
 refl x = reflexivity x
-
 
 {-@ reflP :: x:a -> {x = x} @-}
 reflP :: a -> () -- EqualityProp a
 reflP x = () -- reflexivity x
 
 {-@ trans :: Transitivity' a =>  x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> EqualProp a {x} {z} @-}
-trans :: Transitivity' a => a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a 
-trans x y a p1 p2 = transitivity' x y a p1 p2 
+trans :: Transitivity' a => a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
+trans x y a p1 p2 = transitivity' x y a p1 p2
 
 {-@ fromEqSMT :: x:a -> y:a -> {v:() | x = y}-> EqualProp a {x} {y} @-}
-fromEqSMT :: a -> a -> () -> EqualityProp a 
-fromEqSMT x _ _ =  refl x 
+fromEqSMT :: a -> a -> () -> EqualityProp a
+fromEqSMT x _ _ = refl x
 
-
--- Hacks with Abstract Refinement to preserve domains 
-eqSMT' :: a -> a -> EqualityProp a -> EqualityProp a 
+-- Hacks with Abstract Refinement to preserve domains
+eqSMT' :: a -> a -> EqualityProp a -> EqualityProp a
 {-@ ignore eqSMT' @-}
 {-@ assume eqSMT' :: forall <p :: a -> Bool>.
        x:a<p> -> y:a<p> ->
       EqualProp (a) {x} {y} ->
       EqualProp (a<p>) {x} {y}
 @-}
-eqSMT' _ _ p = p 
-
+eqSMT' _ _ p = p
 
 {-@ ignore deqFun @-}
 {-@ deqFun :: forall<p :: a -> b -> Bool>. f:(a -> b) -> g:(a -> b)
@@ -59,7 +56,6 @@ deqFun = extensionality
 {-
 # END OF Extra definitions to port old code
 -}
-
 
 {-
 # Propositional Equality
@@ -108,10 +104,9 @@ substitutability :: f:(a -> b) -> x:a -> y:a -> EqualProp a {x} {y} -> EqualProp
 substitutability :: (a -> b) -> a -> a -> EqualityProp a -> EqualityProp b
 substitutability f x y pf = EqualityProp
 
-
 {-@ eqRTCtx :: x:a -> y:a -> EqualProp a {x} {y} -> f:(a -> b) -> EqualProp b {f x} {f y} @-}
 eqRTCtx :: a -> a -> EqualityProp a -> (a -> b) -> EqualityProp b
-eqRTCtx x y p f = substitutability f x y p 
+eqRTCtx x y p f = substitutability f x y p
 
 {-
 ### Witnesses
@@ -196,7 +191,7 @@ concreteness_EqSMT _ _ _ = ()
 {-@
 retractability :: f:(a -> b) -> g:(a -> b) -> EqualProp (a -> b) {f} {g} -> (x:a -> EqualProp b {f x} {g x})
 @-}
-retractability :: :: (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> (a -> EqualityProp b)
+retractability :: (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> (a -> EqualityProp b)
 retractability f g efg x =
   substitutability (given x) f g efg
     ? (given x (f)) -- instantiate `f x`
