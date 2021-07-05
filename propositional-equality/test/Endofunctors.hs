@@ -46,10 +46,10 @@ monoid_leftIdentity x =
         )
 
 {-@
-monoid_leftIdentity' :: (Equality (Endo a), Equality a) => x:(Endo a) -> EqualProp (Endo a) {mappend mempty x} {x}
+monoid_leftIdentity_macros :: (Equality (Endo a), Equality a) => x:(Endo a) -> EqualProp (Endo a) {mappend mempty x} {x}
 @-}
-monoid_leftIdentity' :: (Equality (Endo a), Equality a) => Endo a -> EqualityProp (Endo a)
-monoid_leftIdentity' x =
+monoid_leftIdentity_macros :: (Equality (Endo a), Equality a) => Endo a -> EqualityProp (Endo a)
+monoid_leftIdentity_macros x =
   [eqp| mappend mempty x
     %== apply (\a -> mappend mempty x a)  %by %extend a %by %reflexivity
     %== apply (\a -> mempty (x a))        %by %extend a %by %reflexivity
@@ -67,6 +67,16 @@ monoid_rightIdentity x =
             =~= mappend x mempty a
             *** QED
         )
+
+{-@ monoid_rightIdentity_macros :: Equality (Endo a) => x:(Endo a) -> EqualProp (Endo a) {x} {mappend x mempty} @-}
+monoid_rightIdentity_macros :: Equality (Endo a) => Endo a -> EqualityProp (Endo a)
+monoid_rightIdentity_macros x =
+  [eqp| x
+    %== apply (\a -> x a)                 %by %extend a %by %reflexivity
+    %== apply (\a -> x (mempty a))        %by %extend a %by %reflexivity
+    %== apply (\a -> mappend x mempty a)  %by %extend a %by %reflexivity
+    %== mappend x mempty                  %by %extend a %by %reflexivity
+  |]
 
 {-@ monoid_associativity :: Reflexivity a =>
       x:(Endo a) -> y:(Endo a) -> z:(Endo a) ->
