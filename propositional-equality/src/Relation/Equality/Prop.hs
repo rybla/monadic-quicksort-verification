@@ -229,9 +229,9 @@ instance Concreteness a => Symmetry' a where
   symmetry' x y exy =
     reflexivity x ? concreteness x y exy
 
-instance (Symmetry' b, Retractability a b) => Symmetry' (a -> b) where
+instance (Symmetry' b) => Symmetry' (a -> b) where
   symmetry' f g efg =
-    let efxgx = retractability f g efg
+    let efxgx x = substitutability (given x) f g efg ? (given x f) ? (given x g)
         egxfx x = symmetry' (f x) (g x) (efxgx x)
      in extensionality g f egxfx
 
