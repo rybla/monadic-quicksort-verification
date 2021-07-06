@@ -1,3 +1,4 @@
+{-# LANGUAGE BlockArguments #-}
 {-@ LIQUID "--ple"        @-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE IncoherentInstances #-}
@@ -142,14 +143,12 @@ applicativeLaw_identity_macros :: (Equality (Reader r a), Equality a) => Reader 
 {-@ applicativeLaw_identity_macros :: (Equality (Reader r a), Equality a) => v:Reader r a ->
       EqualProp (Reader r a) (ap (pure id) v) v @-}
 applicativeLaw_identity_macros v =
-  (extensionality (ap (pure id) v) v)
-    ( \r ->
-        [eqp| ap (pure id) v r
-          %== (pure id) r (v r)
-          %== id (v r)
-          %== v r
-      |]
-    )
+  (extensionality (ap (pure id) v) v) \r ->
+    [eqp| ap (pure id) v r
+      %== (pure id) r (v r)
+      %== id (v r)
+      %== v r
+    |]
 
 applicativeLaw_homomorphism :: (Reflexivity b, Transitivity' b) => (a -> b) -> a -> EqualityProp (Reader r b)
 {-@ applicativeLaw_homomorphism :: (Reflexivity b, Transitivity' b) => f:(a->b) -> v:a ->
@@ -183,14 +182,12 @@ applicativeLaw_homomorphism_macros :: (Equality (Reader r b), Equality b) => (a 
 {-@ applicativeLaw_homomorphism_macros :: (Equality (Reader r b), Equality b) => f:(a->b) -> v:a ->
       EqualProp (Reader r b) (ap (pure f) (pure v)) (pure (f v)) @-}
 applicativeLaw_homomorphism_macros f v =
-  (extensionality (ap (pure f) (pure v)) (pure (f v)))
-    ( \r ->
-        [eqp| ap (pure f) (pure v) r
-          %== pure f r (pure v r)
-          %== pure f r v
-          %== pure (f v) r
+  extensionality (ap (pure f) (pure v)) (pure (f v)) \r ->
+    [eqp| ap (pure f) (pure v) r
+      %== pure f r (pure v r)
+      %== pure f r v
+      %== pure (f v) r
     |]
-    )
 
 applicativeLaw_interchange :: (Reflexivity b, Transitivity' b) => Reader r (a -> b) -> a -> EqualityProp (Reader r b)
 {-@ applicativeLaw_interchange :: (Reflexivity b, Transitivity' b) => u:(Reader r (a -> b)) -> y:a ->
@@ -225,6 +222,19 @@ applicativeLaw_interchange u y =
               )
           )
     )
+
+applicativeLaw_interchange_macros :: Equality b => Reader r (a -> b) -> a -> EqualityProp (Reader r b)
+{-@ applicativeLaw_interchange_macros :: Equality b => u:(Reader r (a -> b)) -> y:a ->
+      EqualProp (Reader r b) (ap u (pure y)) (ap (pure (on y)) u) @-}
+applicativeLaw_interchange_macros u y =
+  extensionality (ap u (pure y)) (ap (pure (on y)) u) \r ->
+    [eqp| ap u (pure y) r
+      %== u r (pure y r)
+      %== u r y
+      %== (on y) (u r)
+      %== (pure (on y)) r (u r)
+      %== ap (pure (on y)) u r
+    |]
 
 --- WHEW this one takes a long time
 applicativeLaw_composition ::
