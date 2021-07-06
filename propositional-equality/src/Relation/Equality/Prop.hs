@@ -83,12 +83,13 @@ assumedProp = EqualityProp
 ### Axioms
 -}
 
+{- 
 {-@ assume
 reflexivity :: x:a -> EqualProp a {x} {x}
 @-}
 reflexivity :: a -> EqualityProp a
 reflexivity x = EqualityProp
-
+-}
 
 
 {-@ assume
