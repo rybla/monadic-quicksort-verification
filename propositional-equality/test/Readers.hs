@@ -1,15 +1,23 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, IncoherentInstances #-}
+{-# LANGUAGE BlockArguments #-}
+{-@ LIQUID "--ple"        @-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE IncoherentInstances #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 {-@ LIQUID "--ple"         @-}
 {-@ LIQUID "--fast"        @-}
 
 module Readers where
 
-import Language.Haskell.Liquid.ProofCombinators
 import Data.Refined.Unit
+import Function hiding (compose)
+import Language.Haskell.Liquid.ProofCombinators
+import Language.Haskell.TH.Ppr
+import Language.Haskell.TH.Syntax
 import Relation.Equality.Prop
-
-import Prelude hiding (id, fmap, (<$>), pure, (<*>), (>>=))
+import Relation.Equality.Prop.EDSL
+import Prelude hiding (fmap, id, pure, (<$>), (<*>), (>>=))
 
 type Reader a b = a -> b
 
@@ -18,7 +26,7 @@ fmap :: (a -> b) -> Reader r a -> Reader r b
 fmap fab fra r = fab (fra r)
 
 {-@ reflect id @-}
-id :: a -> a 
+id :: a -> a
 id x = x
 
 {-@ reflect dollar @-}
@@ -44,6 +52,16 @@ functorLaw_identity =
          =~= id r a
          *** QED)))
 
+functorLaw_identity_macros :: Equality (Reader r a -> Reader r a) => EqualityProp (Reader r a -> Reader r a)
+{-@ functorLaw_identity_macros :: Equality (Reader r a -> Reader r a) => EqualProp (Reader r a -> Reader r a) (fmap id) id @-}
+functorLaw_identity_macros =
+  [eqp| fmap id %== id
+          %by %extend r
+          %by %extend a
+          %by %smt
+          %by id (r a)
+  |]
+
 functorLaw_composition :: Reflexivity c => (a -> b) -> (b -> c) -> EqualityProp (Reader r a -> Reader r c)
 {-@ functorLaw_composition :: Reflexivity c => f:(a -> b) -> g:(b -> c) ->
       EqualProp (Reader r a -> Reader r c) (fmap (compose g f)) (compose (fmap g) (fmap f)) @-}
@@ -59,6 +77,19 @@ functorLaw_composition f g =
          =~= fmap g ((fmap f) rdr) r    
          =~= (compose (fmap g) (fmap f)) rdr r
          *** QED)))
+
+functorLaw_composition_macros :: Equality (Reader r a -> Reader r c) => (a -> b) -> (b -> c) -> EqualityProp (Reader r a -> Reader r c)
+{-@ functorLaw_composition_macros :: Equality (Reader r a -> Reader r c) => f:(a -> b) -> g:(b -> c) ->
+      EqualProp (Reader r a -> Reader r c) (fmap (compose g f)) (compose (fmap g) (fmap f)) @-}
+functorLaw_composition_macros f g =
+  [eqp| fmap (compose g f) %== compose (fmap g) (fmap f)
+          %by %extend rdr
+          %by %extend r
+          %by %smt
+          %by (compose g f) (rdr r)
+            ? g (((fmap f) rdr) r)
+            ? fmap g ((fmap f) rdr) r
+  |]
 
 {-@ reflect pure @-}
 pure :: a -> Reader r a
@@ -83,6 +114,17 @@ applicativeLaw_identity v =
               (v r)
          (refl ((pure id) r (v r)))
          (refl (id (v r)))))
+
+applicativeLaw_identity_macros :: (Equality (Reader r a), Equality a) => Reader r a -> EqualityProp (Reader r a)
+{-@ applicativeLaw_identity_macros :: (Equality (Reader r a), Equality a) => v:Reader r a ->
+      EqualProp (Reader r a) (ap (pure id) v) v @-}
+applicativeLaw_identity_macros v =
+  (extensionality (ap (pure id) v) v) \r ->
+    [eqp| ap (pure id) v r
+      %== (pure id) r (v r)
+      %== id (v r)
+      %== v r
+    |]
 
 applicativeLaw_homomorphism :: (Reflexivity b, Transitivity b) => (a -> b) -> a -> EqualityProp (Reader r b)
 {-@ applicativeLaw_homomorphism :: (Reflexivity b, Transitivity b) => f:(a->b) -> v:a ->
@@ -168,6 +210,31 @@ applicativeLaw_composition u v w =
                     (refl (u r (v r (w r))))
                     (refl (u r (ap v w r))))))))))
 
+applicativeLaw_homomorphism_macros :: (Equality (Reader r b), Equality b) => (a -> b) -> a -> EqualityProp (Reader r b)
+{-@ applicativeLaw_homomorphism_macros :: (Equality (Reader r b), Equality b) => f:(a->b) -> v:a ->
+      EqualProp (Reader r b) (ap (pure f) (pure v)) (pure (f v)) @-}
+applicativeLaw_homomorphism_macros f v =
+  extensionality (ap (pure f) (pure v)) (pure (f v)) \r ->
+    [eqp| ap (pure f) (pure v) r
+      %== pure f r (pure v r)
+      %== pure f r v
+      %== pure (f v) r
+    |]
+
+applicativeLaw_interchange_macros :: Equality b => Reader r (a -> b) -> a -> EqualityProp (Reader r b)
+{-@ applicativeLaw_interchange_macros :: Equality b => u:(Reader r (a -> b)) -> y:a ->
+      EqualProp (Reader r b) (ap u (pure y)) (ap (pure (on y)) u) @-}
+applicativeLaw_interchange_macros u y =
+  extensionality (ap u (pure y)) (ap (pure (on y)) u) \r ->
+    [eqp| ap u (pure y) r
+      %== u r (pure y r)
+      %== u r y
+      %== (on y) (u r)
+      %== (pure (on y)) r (u r)
+      %== ap (pure (on y)) u r
+    |]
+
+
 ap_fmap :: (Reflexivity b, Transitivity b) => (a -> b) -> Reader r a -> EqualityProp (Reader r b)
 {-@ ap_fmap :: f:(a -> b) -> a:(Reader r a) -> EqualProp (Reader r b) (fmap f a) (ap (pure f) a) @-}
 ap_fmap f a =
@@ -182,6 +249,7 @@ ap_fmap f a =
              (ap (pure f) a r)
         (refl (f (a r)))
         (refl ((pure f) r (a r)))))
+
 
 {-@ reflect bind @-}
 bind :: Reader r a -> (a -> Reader r b) -> Reader r b
@@ -239,3 +307,4 @@ monadLaw_associativity m f g =
            (trans el eml em (refl el) (refl eml))
            (trans em emr er (refl em) (refl emr))
   )
+

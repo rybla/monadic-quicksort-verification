@@ -16,8 +16,6 @@ infixl 3 =~=
 _ =~= y = y
 
 
-
-
 -- Hacks with Abstract Refinement to preserve domains 
 eqSMT' :: a -> a -> EqualityProp a -> EqualityProp a 
 {-@ ignore eqSMT' @-}
@@ -26,8 +24,7 @@ eqSMT' :: a -> a -> EqualityProp a -> EqualityProp a
       EqualProp (a) {x} {y} ->
       EqualProp (a<p>) {x} {y}
 @-}
-eqSMT' _ _ p = p 
-
+eqSMT' _ _ p = p
 
 {-@ ignore deqFun @-}
 {-@ deqFun :: forall<p :: a -> b -> Bool>. f:(a -> b) -> g:(a -> b)
@@ -38,7 +35,6 @@ deqFun = extensionality
 {-
 # END OF Extra definitions to port old code
 -}
-
 
 {-
 # Propositional Equality
@@ -58,13 +54,10 @@ data EqualityProp a = EqualityProp
 type EqualProp a X Y = {w:EqualityProp a | eqprop X Y}
 @-}
 
--- NV suggests to keep the below 
+-- NV suggests to keep the below
 {-@
 type PEq a X Y = {w:EqualityProp a | eqprop X Y}
 @-}
-
-
-
 
 {-@
 type NEqualProp a X Y = EqualProp a {X} {Y} -> Void
@@ -96,7 +89,10 @@ baseEq _ _ _ = EqualityProp
 
 
 {-@ assume
-extensionality :: f:(a -> b) -> g:(a -> b) -> (x:a -> EqualProp b {f x} {g x}) -> EqualProp (a -> b) {f} {g}
+extensionality ::
+  f:(a -> b) -> g:(a -> b) ->
+  (x:a -> EqualProp b {f x} {g x}) ->
+  EqualProp (a -> b) {f} {g}
 @-}
 extensionality :: (a -> b) -> (a -> b) -> (a -> EqualityProp b) -> EqualityProp (a -> b)
 extensionality f g pf = EqualityProp
@@ -107,10 +103,10 @@ substitutability :: f:(a -> b) -> x:a -> y:a -> EqualProp a {x} {y} -> EqualProp
 substitutability :: (a -> b) -> a -> a -> EqualityProp a -> EqualityProp b
 substitutability f x y pf = EqualityProp
 
-
 {-@ eqRTCtx :: x:a -> y:a -> EqualProp a {x} {y} -> f:(a -> b) -> EqualProp b {f x} {f y} @-}
 eqRTCtx :: a -> a -> EqualityProp a -> (a -> b) -> EqualityProp b
-eqRTCtx x y p f = substitutability f x y p 
+eqRTCtx x y p f = substitutability f x y p
+
 {-
 ### Witnesses
 -}
@@ -141,7 +137,6 @@ Combines together the equality properties:
 - substitutability
 -}
 
--- TODO: parsing error when I tried to use type synonym
 {-@
 class Equality a where
   symmetry :: x:a -> y:a -> {_:EqualityProp a | eqprop x y} -> {_:EqualityProp a | eqprop y x}
@@ -204,17 +199,13 @@ class Reflexivity a where
 @-}
 
 {-@
-class Retractability a b where
-  retractability :: f:(a -> b) -> g:(a -> b) -> EqualProp (a -> b) {f} {g} -> (x:a -> EqualProp b {f x} {g x})
+retractability :: f:(a -> b) -> g:(a -> b) -> EqualProp (a -> b) {f} {g} -> (x:a -> EqualProp b {f x} {g x})
 @-}
-class Retractability a b where
-  retractability :: (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> (a -> EqualityProp b)
-
-instance Retractability a b where
-  retractability f g efg x =
-    substitutability (given x) f g efg
-      ? (given x (f)) -- instantiate `f x`
-      ? (given x (g)) -- instantiate `g x`
+retractability :: (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> (a -> EqualityProp b)
+retractability f g efg x =
+  substitutability (given x) f g efg
+    ? (given x (f)) -- instantiate `f x`
+    ? (given x (g)) -- instantiate `g x`
 
 {-
 ### Symmetry'
