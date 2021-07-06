@@ -21,20 +21,26 @@ foldEq = extensionality foldl foldl' $ \f ->
     extensionality (foldl f b) (foldl' f b) $ \xs ->
       fromEqSMT (foldl f b xs) (foldl' f b xs) (theorem f b xs ? reflP (foldl f b xs))
 
--- TODO: problem with order format of n-extending?
-{-@ ignore foldEq_macros @-}
 foldEq_macros :: Equality ((b -> a -> b) -> b -> [a] -> b) => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
 {-@ foldEq_macros :: Equality ((b -> a -> b) -> b -> [a] -> b) => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
 foldEq_macros =
-  [eqp| foldl
-    %== apply (\f -> foldl f)                                     %by                              %extend f %by %reflexivity
+  [eqp| foldl %== foldl'
+          %by %extend f
+          %by %extend b
+          %by %extend xs
+          %by %smt
+          %by theorem f b xs
+  |]
+
+{-
+%== apply (\f -> foldl f)                                     %by                              %extend f %by %reflexivity
     %== apply (\b -> apply (\f -> foldl f) b)                     %by                %extend b %by %extend f %by %reflexivity
     %== apply (\xs -> apply (\b -> apply (\f -> foldl f) b) xs)   %by %extend xs %by %extend b %by %extend f %by %reflexivity
     %== apply (\xs -> apply (\b -> apply (\f -> foldl' f) b) xs)  %by %extend xs %by %extend b %by %extend f %by %smt %by theorem xs b f
     %== apply (\b -> apply (\f -> foldl' f) b)                    %by %extend xs %by %extend b %by %extend f %by %reflexivity
     %== apply (\f -> foldl' f)                                    %by                %extend b %by %extend f %by %reflexivity
     %== foldl'                                                    %by                              %extend f %by %reflexivity
-  |]
+-}
 
 foldEq' :: Reflexivity b => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
 {-@ foldEq' :: Reflexivity b => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
