@@ -151,11 +151,13 @@ Combines together the equality properties:
 {-@
 class Equality a where
   symmetry :: x:a -> y:a -> {_:EqualityProp a | eqprop x y} -> {_:EqualityProp a | eqprop y x}
-  transitivity :: x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> EqualProp a {x} {z}
+  transitivity :: x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> {_:EqualityProp a | eqprop x z} 
+  reflexivity  :: x:a -> EqualProp a {x} {x}
 @-}
 class Equality a where
   symmetry :: a -> a -> EqualityProp a -> EqualityProp a
   transitivity :: a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
+  reflexivity  :: a -> EqualityProp a 
 
 {-
 ### SMT Equality
@@ -198,13 +200,13 @@ concreteness_EqSMT _ _ _ = ()
 ### Retractability
 -}
 
-class Reflexivity a where 
-  refl :: a -> EqualityProp a 
+class Reflexivity' a where 
+  refl' :: a -> EqualityProp a 
 
 
 {-@
-class Reflexivity a where 
-  refl :: x:a -> PEq a {x} {x}
+class Reflexivity' a where 
+  refl' :: x:a -> PEq a {x} {x}
 @-}
 
 {-@
@@ -231,9 +233,9 @@ class Symmetry' a where
 class Symmetry' a where
   symmetry' :: a -> a -> EqualityProp a -> EqualityProp a
 
-instance Concreteness a => Symmetry' a where
+instance (Concreteness a, Reflexivity' a) => Symmetry' a where
   symmetry' x y exy =
-    reflexivity x ? concreteness x y exy
+    refl' x ? concreteness x y exy
 
 instance (Symmetry' b) => Symmetry' (a -> b) where
   symmetry' f g efg =
@@ -252,9 +254,9 @@ class Transitivity' a where
 class Transitivity' a where
   transitivity' :: a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
 
-instance Concreteness a => Transitivity' a where
+instance (Concreteness a, Reflexivity' a) => Transitivity' a where
   transitivity' x y z exy eyz =
-    reflexivity x
+    refl' x
       ? concreteness x y exy
       ? concreteness y z eyz
 
@@ -291,14 +293,17 @@ etaEquivalency x y =
 instance Equality Bool where
   symmetry = undefined
   transitivity = undefined
+  reflexivity = undefined 
 
 instance Equality Int where
   symmetry = undefined
   transitivity = undefined
+  reflexivity = undefined 
 
 instance Equality () where
   symmetry = undefined
   transitivity = undefined
+  reflexivity = undefined 
 
 
 
