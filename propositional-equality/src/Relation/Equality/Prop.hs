@@ -15,27 +15,11 @@ infixl 3 =~=
 (=~=) :: a -> a -> a
 _ =~= y = y
 
--- NV -> Henry:  since this constraint does not exis it means we just trust SMT equalityies???
-class AEq a where
-  aeq :: a -> a
-
-class Reflexivity a
-
-{-@ refl :: x:a -> EqualProp a {x} {x} @-}
-refl :: a -> EqualityProp a
-refl x = reflexivity x
-
-{-@ reflP :: x:a -> {x = x} @-}
-reflP :: a -> () -- EqualityProp a
-reflP x = () -- reflexivity x
 
 {-@ trans :: Transitivity' a =>  x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> EqualProp a {x} {z} @-}
 trans :: Transitivity' a => a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
 trans x y a p1 p2 = transitivity' x y a p1 p2
 
-{-@ fromEqSMT :: x:a -> y:a -> {v:() | x = y}-> EqualProp a {x} {y} @-}
-fromEqSMT :: a -> a -> () -> EqualityProp a
-fromEqSMT x _ _ = refl x
 
 -- Hacks with Abstract Refinement to preserve domains
 eqSMT' :: a -> a -> EqualityProp a -> EqualityProp a
@@ -91,11 +75,23 @@ assumedProp = EqualityProp
 ### Axioms
 -}
 
+{- 
 {-@ assume
 reflexivity :: x:a -> EqualProp a {x} {x}
 @-}
 reflexivity :: a -> EqualityProp a
 reflexivity x = EqualityProp
+-}
+
+
+{-@ assume
+baseEq :: AEq a => x:a -> y:a -> {v:() | bbEq x y } -> EqualProp a {x} {x}
+@-}
+baseEq :: a -> a -> () -> EqualityProp a
+baseEq _ _ _ = EqualityProp
+
+
+
 
 {-@ assume
 extensionality ::
@@ -149,11 +145,13 @@ Combines together the equality properties:
 {-@
 class Equality a where
   symmetry :: x:a -> y:a -> {_:EqualityProp a | eqprop x y} -> {_:EqualityProp a | eqprop y x}
-  transitivity :: x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> EqualProp a {x} {z}
+  transitivity :: x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> {_:EqualityProp a | eqprop x z} 
+  reflexivity  :: x:a -> EqualProp a {x} {x}
 @-}
 class Equality a where
   symmetry :: a -> a -> EqualityProp a -> EqualityProp a
   transitivity :: a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
+  reflexivity  :: a -> EqualityProp a 
 
 {-
 ### SMT Equality
@@ -196,6 +194,15 @@ concreteness_EqSMT _ _ _ = ()
 ### Retractability
 -}
 
+class Reflexivity' a where 
+  refl' :: a -> EqualityProp a 
+
+
+{-@
+class Reflexivity' a where 
+  refl' :: x:a -> PEq a {x} {x}
+@-}
+
 {-@
 retractability :: f:(a -> b) -> g:(a -> b) -> EqualProp (a -> b) {f} {g} -> (x:a -> EqualProp b {f x} {g x})
 @-}
@@ -216,13 +223,13 @@ class Symmetry' a where
 class Symmetry' a where
   symmetry' :: a -> a -> EqualityProp a -> EqualityProp a
 
-instance Concreteness a => Symmetry' a where
+instance (Concreteness a, Reflexivity' a) => Symmetry' a where
   symmetry' x y exy =
-    reflexivity x ? concreteness x y exy
+    refl' x ? concreteness x y exy
 
 instance Symmetry' b => Symmetry' (a -> b) where
   symmetry' f g efg =
-    let efxgx = retractability f g efg
+    let efxgx x = substitutability (given x) f g efg ? (given x f) ? (given x g)
         egxfx x = symmetry' (f x) (g x) (efxgx x)
      in extensionality g f egxfx
 
@@ -237,9 +244,9 @@ class Transitivity' a where
 class Transitivity' a where
   transitivity' :: a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
 
-instance Concreteness a => Transitivity' a where
+instance (Concreteness a, Reflexivity' a) => Transitivity' a where
   transitivity' x y z exy eyz =
-    reflexivity x
+    refl' x
       ? concreteness x y exy
       ? concreteness y z eyz
 
@@ -276,11 +283,61 @@ etaEquivalency x y =
 instance Equality Bool where
   symmetry = undefined
   transitivity = undefined
+  reflexivity = undefined 
 
 instance Equality Int where
   symmetry = undefined
   transitivity = undefined
+  reflexivity = undefined 
 
 instance Equality () where
   symmetry = undefined
   transitivity = undefined
+  reflexivity = undefined 
+
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------
+-- | Axiomatized Equality -------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------
+
+
+class AEq a where
+  bEq :: a -> a -> Bool
+  reflP :: a -> ()
+  symmP :: a -> a -> ()
+  transP :: a -> a -> a -> ()
+  smtP   :: a -> a -> () -> () 
+
+
+{-@ measure bbEq :: a -> a -> Bool @-}
+{-@ class AEq a where
+     bEq    :: x:a -> y:a -> {v:Bool | v <=> bbEq x y }
+     reflP  :: x:a -> {bbEq x x}
+     symmP  :: x:a -> y:a -> { bbEq x y => bbEq y x }
+     transP :: x:a -> y:a -> z:a -> { ( bbEq x y && bbEq y z) => bbEq x z }
+     smtP   :: x:a -> y:a -> {v:() | bbEq x y} -> {x = y}
+@-}
+
+instance AEq Integer where
+  bEq = bEqInteger
+  reflP x = const () (bEqInteger x x)
+  symmP x y = () `const` (bEqInteger x y)
+  transP x y _ = () `const` (bEqInteger x y)
+  smtP x y _ = () `const` (bEqInteger x y)
+
+instance AEq Bool where
+  bEq = bEqBool
+  reflP x = const () (bEqBool x x)
+  symmP x y = () `const` (bEqBool x y)
+  transP x y _ = () `const` (bEqBool x y)
+  smtP x y _ = () `const` (bEqBool x y)
+
+{-@ assume bEqInteger :: x:Integer -> y:Integer -> {v:Bool | (v <=> bbEq x y) && (v <=> x = y)} @-}
+bEqInteger :: Integer -> Integer -> Bool
+bEqInteger x y = x == y
+
+{-@ assume bEqBool :: x:Bool -> y:Bool -> {v:Bool | (v <=> bbEq x y) && (v <=> x = y)} @-}
+bEqBool :: Bool -> Bool -> Bool
+bEqBool x y = x == y

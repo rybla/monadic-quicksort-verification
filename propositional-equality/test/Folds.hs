@@ -14,6 +14,7 @@ import Relation.Equality.Prop
 import Relation.Equality.Prop.EDSL
 import Prelude hiding (foldl, foldr, id)
 
+
 foldEq :: AEq b => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
 {-@ foldEq :: AEq b => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
 foldEq = extensionality foldl foldl' $ \f ->
@@ -42,6 +43,7 @@ foldEq' = extensionality foldl foldl' $ \f ->
 foldEq'' :: (Reflexivity b, Equality b) => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
 {-@ foldEq'' :: (Reflexivity b, Equality b) => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
 foldEq'' = extensionality foldl foldl' $ \f ->
+
   extensionality (foldl f) (foldl' f) $ \b ->
     extensionality (foldl f b) (foldl' f b) $ \xs ->
       transitivity
