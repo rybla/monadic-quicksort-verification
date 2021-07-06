@@ -179,16 +179,18 @@ applicativeLaw_homomorphism f v =
           )
     )
 
--- TODO: causes smt error...
-{-@ ignore applicativeLaw_homomorphism_macros @-}
-applicativeLaw_homomorphism_macros :: Equality (Reader r b) => (a -> b) -> a -> EqualityProp (Reader r b)
-{-@ applicativeLaw_homomorphism_macros :: Equality (Reader r b) => f:(a->b) -> v:a ->
+applicativeLaw_homomorphism_macros :: (Equality (Reader r b), Equality b) => (a -> b) -> a -> EqualityProp (Reader r b)
+{-@ applicativeLaw_homomorphism_macros :: (Equality (Reader r b), Equality b) => f:(a->b) -> v:a ->
       EqualProp (Reader r b) (ap (pure f) (pure v)) (pure (f v)) @-}
 applicativeLaw_homomorphism_macros f v =
-  [eqp| ap (pure f) (pure v)
-    %== apply (\r -> ap (pure f) (pure v) r) %by undefined
-    %== pure (f v) %by undefined
-  |]
+  (extensionality (ap (pure f) (pure v)) (pure (f v)))
+    ( \r ->
+        [eqp| ap (pure f) (pure v) r
+          %== pure f r (pure v r)
+          %== pure f r v
+          %== pure (f v) r
+    |]
+    )
 
 applicativeLaw_interchange :: (Reflexivity b, Transitivity' b) => Reader r (a -> b) -> a -> EqualityProp (Reader r b)
 {-@ applicativeLaw_interchange :: (Reflexivity b, Transitivity' b) => u:(Reader r (a -> b)) -> y:a ->
