@@ -15,9 +15,8 @@ infixl 3 =~=
 (=~=) :: a -> a -> a
 _ =~= y = y
 
-
--- Hacks with Abstract Refinement to preserve domains 
-eqSMT' :: a -> a -> EqualityProp a -> EqualityProp a 
+-- Hacks with Abstract Refinement to preserve domains
+eqSMT' :: a -> a -> EqualityProp a -> EqualityProp a
 {-@ ignore eqSMT' @-}
 {-@ assume eqSMT' :: forall <p :: a -> Bool>.
        x:a<p> -> y:a<p> ->
@@ -70,7 +69,7 @@ assumedProp = EqualityProp
 ### Axioms
 -}
 
-{- 
+{-
 {-@ assume
 reflexivity :: x:a -> EqualProp a {x} {x}
 @-}
@@ -78,15 +77,11 @@ reflexivity :: a -> EqualityProp a
 reflexivity x = EqualityProp
 -}
 
-
 {-@ assume
 baseEq :: AEq a => x:a -> y:a -> {v:() | bbEq x y } -> EqualProp a {x} {x}
 @-}
 baseEq :: a -> a -> () -> EqualityProp a
 baseEq _ _ _ = EqualityProp
-
-
-
 
 {-@ assume
 extensionality ::
@@ -140,13 +135,13 @@ Combines together the equality properties:
 {-@
 class Equality a where
   symmetry :: x:a -> y:a -> {_:EqualityProp a | eqprop x y} -> {_:EqualityProp a | eqprop y x}
-  transitivity :: x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> {_:EqualityProp a | eqprop x z} 
+  transitivity :: x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> {_:EqualityProp a | eqprop x z}
   reflexivity  :: x:a -> EqualProp a {x} {x}
 @-}
 class Equality a where
   symmetry :: a -> a -> EqualityProp a -> EqualityProp a
   transitivity :: a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
-  reflexivity  :: a -> EqualityProp a 
+  reflexivity :: a -> EqualityProp a
 
 {-
 ### SMT Equality
@@ -189,12 +184,11 @@ concreteness_EqSMT _ _ _ = ()
 ### Retractability
 -}
 
-class Reflexivity a where 
-  refl :: a -> EqualityProp a 
-
+class Reflexivity a where
+  refl :: a -> EqualityProp a
 
 {-@
-class Reflexivity a where 
+class Reflexivity a where
   refl :: x:a -> PEq a {x} {x}
 @-}
 
@@ -245,7 +239,7 @@ instance (Concreteness a, Reflexivity a) => Transitivity a where
       ? concreteness x y exy
       ? concreteness y z eyz
 
-instance (Transitivity b, Retractability a b) => Transitivity (a -> b) where
+instance Transitivity b => Transitivity (a -> b) where
   trans f g h efg egh =
     let es_fx_gx = retractability f g efg
         es_gx_hx = retractability g h egh
@@ -278,33 +272,30 @@ etaEquivalency x y =
 instance Equality Bool where
   symmetry = undefined
   transitivity = undefined
-  reflexivity = undefined 
+  reflexivity = undefined
 
 instance Equality Int where
   symmetry = undefined
   transitivity = undefined
-  reflexivity = undefined 
+  reflexivity = undefined
 
 instance Equality () where
   symmetry = undefined
   transitivity = undefined
-  reflexivity = undefined 
-
-
-
+  reflexivity = undefined
 
 ---------------------------------------------------------------------------------------------------------------------------------------
+
 -- | Axiomatized Equality -------------------------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------------------------------------
 
+---------------------------------------------------------------------------------------------------------------------------------------
 
 class AEq a where
   bEq :: a -> a -> Bool
   reflP :: a -> ()
   symmP :: a -> a -> ()
   transP :: a -> a -> a -> ()
-  smtP   :: a -> a -> () -> () 
-
+  smtP :: a -> a -> () -> ()
 
 {-@ measure bbEq :: a -> a -> Bool @-}
 {-@ class AEq a where
@@ -315,7 +306,7 @@ class AEq a where
      smtP   :: x:a -> y:a -> {v:() | bbEq x y} -> {x = y}
 @-}
 
-instance Reflexivity Integer where 
+instance Reflexivity Integer where
   refl x = baseEq x x (reflP x)
 
 instance AEq Integer where
