@@ -16,24 +16,20 @@ infixl 3 =~=
 _ =~= y = y
 
 
-
-
 {-@ trans :: Transitivity' a =>  x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> EqualProp a {x} {z} @-}
-trans :: Transitivity' a => a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a 
-trans x y a p1 p2 = transitivity' x y a p1 p2 
+trans :: Transitivity' a => a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
+trans x y a p1 p2 = transitivity' x y a p1 p2
 
 
-
--- Hacks with Abstract Refinement to preserve domains 
-eqSMT' :: a -> a -> EqualityProp a -> EqualityProp a 
+-- Hacks with Abstract Refinement to preserve domains
+eqSMT' :: a -> a -> EqualityProp a -> EqualityProp a
 {-@ ignore eqSMT' @-}
 {-@ assume eqSMT' :: forall <p :: a -> Bool>.
        x:a<p> -> y:a<p> ->
       EqualProp (a) {x} {y} ->
       EqualProp (a<p>) {x} {y}
 @-}
-eqSMT' _ _ p = p 
-
+eqSMT' _ _ p = p
 
 {-@ ignore deqFun @-}
 {-@ deqFun :: forall<p :: a -> b -> Bool>. f:(a -> b) -> g:(a -> b)
@@ -44,7 +40,6 @@ deqFun = extensionality
 {-
 # END OF Extra definitions to port old code
 -}
-
 
 {-
 # Propositional Equality
@@ -64,13 +59,10 @@ data EqualityProp a = EqualityProp
 type EqualProp a X Y = {w:EqualityProp a | eqprop X Y}
 @-}
 
--- NV suggests to keep the below 
+-- NV suggests to keep the below
 {-@
 type PEq a X Y = {w:EqualityProp a | eqprop X Y}
 @-}
-
-
-
 
 {-@
 type NEqualProp a X Y = EqualProp a {X} {Y} -> Void
@@ -102,7 +94,10 @@ baseEq _ _ _ = EqualityProp
 
 
 {-@ assume
-extensionality :: f:(a -> b) -> g:(a -> b) -> (x:a -> EqualProp b {f x} {g x}) -> EqualProp (a -> b) {f} {g}
+extensionality ::
+  f:(a -> b) -> g:(a -> b) ->
+  (x:a -> EqualProp b {f x} {g x}) ->
+  EqualProp (a -> b) {f} {g}
 @-}
 extensionality :: (a -> b) -> (a -> b) -> (a -> EqualityProp b) -> EqualityProp (a -> b)
 extensionality f g pf = EqualityProp
@@ -113,10 +108,10 @@ substitutability :: f:(a -> b) -> x:a -> y:a -> EqualProp a {x} {y} -> EqualProp
 substitutability :: (a -> b) -> a -> a -> EqualityProp a -> EqualityProp b
 substitutability f x y pf = EqualityProp
 
-
 {-@ eqRTCtx :: x:a -> y:a -> EqualProp a {x} {y} -> f:(a -> b) -> EqualProp b {f x} {f y} @-}
 eqRTCtx :: a -> a -> EqualityProp a -> (a -> b) -> EqualityProp b
-eqRTCtx x y p f = substitutability f x y p 
+eqRTCtx x y p f = substitutability f x y p
+
 {-
 ### Witnesses
 -}
@@ -147,7 +142,6 @@ Combines together the equality properties:
 - substitutability
 -}
 
--- TODO: parsing error when I tried to use type synonym
 {-@
 class Equality a where
   symmetry :: x:a -> y:a -> {_:EqualityProp a | eqprop x y} -> {_:EqualityProp a | eqprop y x}
@@ -210,17 +204,13 @@ class Reflexivity' a where
 @-}
 
 {-@
-class Retractability a b where
-  retractability :: f:(a -> b) -> g:(a -> b) -> EqualProp (a -> b) {f} {g} -> (x:a -> EqualProp b {f x} {g x})
+retractability :: f:(a -> b) -> g:(a -> b) -> EqualProp (a -> b) {f} {g} -> (x:a -> EqualProp b {f x} {g x})
 @-}
-class Retractability a b where
-  retractability :: (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> (a -> EqualityProp b)
-
-instance Retractability a b where
-  retractability f g efg x =
-    substitutability (given x) f g efg
-      ? (given x (f)) -- instantiate `f x`
-      ? (given x (g)) -- instantiate `g x`
+retractability :: (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> (a -> EqualityProp b)
+retractability f g efg x =
+  substitutability (given x) f g efg
+    ? (given x (f)) -- instantiate `f x`
+    ? (given x (g)) -- instantiate `g x`
 
 {-
 ### Symmetry'
@@ -237,7 +227,7 @@ instance (Concreteness a, Reflexivity' a) => Symmetry' a where
   symmetry' x y exy =
     refl' x ? concreteness x y exy
 
-instance (Symmetry' b) => Symmetry' (a -> b) where
+instance Symmetry' b => Symmetry' (a -> b) where
   symmetry' f g efg =
     let efxgx x = substitutability (given x) f g efg ? (given x f) ? (given x g)
         egxfx x = symmetry' (f x) (g x) (efxgx x)
@@ -260,7 +250,7 @@ instance (Concreteness a, Reflexivity' a) => Transitivity' a where
       ? concreteness x y exy
       ? concreteness y z eyz
 
-instance (Transitivity' b, Retractability a b) => Transitivity' (a -> b) where
+instance Transitivity' b => Transitivity' (a -> b) where
   transitivity' f g h efg egh =
     let es_fx_gx = retractability f g efg
         es_gx_hx = retractability g h egh

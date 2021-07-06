@@ -5,6 +5,7 @@
 
 module Relation.Equality.Prop.EDSL
   ( eqpropchain,
+    eqp,
     compileChain,
     parseChain,
     Chain (..),
@@ -121,6 +122,15 @@ instance Lift Chain where
 
 eqpropchain :: QuasiQuoter
 eqpropchain =
+  QuasiQuoter
+    { quoteExp = compileChain,
+      quotePat = undefined,
+      quoteType = undefined,
+      quoteDec = undefined
+    }
+
+eqp :: QuasiQuoter
+eqp =
   QuasiQuoter
     { quoteExp = compileChain,
       quotePat = undefined,
