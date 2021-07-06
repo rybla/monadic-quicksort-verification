@@ -10,7 +10,9 @@
 module Readers where
 
 import Data.Refined.Unit
+import Function hiding (compose)
 import Language.Haskell.Liquid.ProofCombinators
+import Language.Haskell.TH.Ppr
 import Language.Haskell.TH.Syntax
 import Relation.Equality.Prop
 import Relation.Equality.Prop.EDSL
@@ -136,6 +138,19 @@ applicativeLaw_identity v =
           )
     )
 
+applicativeLaw_identity_macros :: (Equality (Reader r a), Equality a) => Reader r a -> EqualityProp (Reader r a)
+{-@ applicativeLaw_identity_macros :: (Equality (Reader r a), Equality a) => v:Reader r a ->
+      EqualProp (Reader r a) (ap (pure id) v) v @-}
+applicativeLaw_identity_macros v =
+  (extensionality (ap (pure id) v) v)
+    ( \r ->
+        [eqp| ap (pure id) v r
+          %== (pure id) r (v r)
+          %== id (v r)
+          %== v r
+      |]
+    )
+
 applicativeLaw_homomorphism :: (Reflexivity b, Transitivity' b) => (a -> b) -> a -> EqualityProp (Reader r b)
 {-@ applicativeLaw_homomorphism :: (Reflexivity b, Transitivity' b) => f:(a->b) -> v:a ->
       EqualProp (Reader r b) (ap (pure f) (pure v)) (pure (f v)) @-}
@@ -163,6 +178,17 @@ applicativeLaw_homomorphism f v =
               )
           )
     )
+
+-- TODO: causes smt error...
+{-@ ignore applicativeLaw_homomorphism_macros @-}
+applicativeLaw_homomorphism_macros :: Equality (Reader r b) => (a -> b) -> a -> EqualityProp (Reader r b)
+{-@ applicativeLaw_homomorphism_macros :: Equality (Reader r b) => f:(a->b) -> v:a ->
+      EqualProp (Reader r b) (ap (pure f) (pure v)) (pure (f v)) @-}
+applicativeLaw_homomorphism_macros f v =
+  [eqp| ap (pure f) (pure v)
+    %== apply (\r -> ap (pure f) (pure v) r) %by undefined
+    %== pure (f v) %by undefined
+  |]
 
 applicativeLaw_interchange :: (Reflexivity b, Transitivity' b) => Reader r (a -> b) -> a -> EqualityProp (Reader r b)
 {-@ applicativeLaw_interchange :: (Reflexivity b, Transitivity' b) => u:(Reader r (a -> b)) -> y:a ->
