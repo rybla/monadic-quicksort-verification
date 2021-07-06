@@ -23,31 +23,31 @@ import Data.Refined.Unit
 -- | Main Theorem   ----------------------------------------
 ------------------------------------------------------------
 -- This is SAFE 
-theoremFirstStyle :: EqualityProp ([a] -> [a])
+theoremFirstStyle :: AEq [a] => EqualityProp ([a] -> [a])
 {-@ theoremFirstStyle :: EqualProp ([a] -> [a]) {fastReverse} {slowReverse} @-}
 theoremFirstStyle = extensionality fastReverse slowReverse reverseTEq
 
-{-@ reverseTEq :: xs:[a] -> EqualProp [a] {fastReverse xs} {slowReverse xs} @-}
-reverseTEq :: [a] -> EqualityProp [a]
-reverseTEq xs = reflexivity (fastReverse xs) ? (reverseEq xs)
+{-@ reverseTEq :: AEq [a] => xs:[a] -> EqualProp [a] {fastReverse xs} {slowReverse xs} @-}
+reverseTEq :: AEq [a] => [a] -> EqualityProp [a]
+reverseTEq xs = baseEq (fastReverse xs) (slowReverse xs) ((reverseEq xs) ? reflP (fastReverse xs))
 
-theoremSecondStyle :: (Transitivity' [a]) => EqualityProp ([a] -> [a])
-{-@ theoremSecondStyle :: (Transitivity' [a]) => EqualProp ([a] -> [a]) {fastReverse} {slowReverse} @-}
+theoremSecondStyle :: AEq [a] => EqualityProp ([a] -> [a])
+{-@ theoremSecondStyle :: AEq [a] => EqualProp ([a] -> [a]) {fastReverse} {slowReverse} @-}
 theoremSecondStyle = extensionality fastReverse slowReverse reverseTEq
 
 
 -- on arbitrary types, uses explicit lemma
-reverseFunProp :: (Transitivity' [a]) => [a] -> EqualityProp [a]
-{-@ reverseFunProp :: (Transitivity' [a]) => xs:[a] -> EqualProp [a] {fastReverse xs} {slowReverse xs} @-}
+reverseFunProp :: (Transitivity [a], Reflexivity [a]) => [a] -> EqualityProp [a]
+{-@ reverseFunProp :: (Transitivity [a], Reflexivity [a]) => xs:[a] -> EqualProp [a] {fastReverse xs} {slowReverse xs} @-}
 reverseFunProp xs = trans (fastReverse xs) 
                           (slowReverse xs ++ []) 
                           (slowReverse xs) 
                           (reverseSameLemma [] xs) 
                           (rightIdP (slowReverse xs))
 
-reverseSameLemma :: (Transitivity' [a]) => [a] -> [a] -> EqualityProp [a]
-{-@ reverseSameLemma :: (Transitivity' [a]) => rest:[a] -> xs:[a] -> EqualProp [a] {fastReverse' rest xs} {slowReverse xs ++ rest} @-}
-reverseSameLemma rest [] = reflexivity rest
+reverseSameLemma :: (Transitivity [a], Reflexivity [a]) => [a] -> [a] -> EqualityProp [a]
+{-@ reverseSameLemma :: (Transitivity [a], Reflexivity [a]) => rest:[a] -> xs:[a] -> EqualProp [a] {fastReverse' rest xs} {slowReverse xs ++ rest} @-}
+reverseSameLemma rest [] = refl rest
 reverseSameLemma rest (x:xs) =
   trans (fastReverse' rest (x:xs))
         (slowReverse xs ++ (x:rest))
@@ -57,23 +57,23 @@ reverseSameLemma rest (x:xs) =
 
 
 {-@ rightIdP :: xs:[a] -> EqualProp [a] {xs ++ []} {xs} @-}
-rightIdP :: (Transitivity' [a]) => [a] -> EqualityProp [a]
-rightIdP []     = reflexivity [] 
+rightIdP :: (Transitivity [a], Reflexivity [a]) => [a] -> EqualityProp [a]
+rightIdP []     = refl [] 
 rightIdP (x:xs) = trans ((x:xs) ++ [])
                         (cons x (xs++[]))
                         (cons x xs)
-                        (reflexivity (x:(xs ++[])))
+                        (refl (x:(xs ++[])))
                         (eqRTCtx (xs ++ []) (xs) (rightIdP xs) (cons x)) 
 
 
 {-@ assocP :: xs:[a] -> ys:[a] -> zs:[a]
           -> EqualProp [a] {(xs ++ (ys ++ zs))} {((xs ++ ys) ++ zs)}  @-}
-assocP :: (Transitivity' [a]) => [a] -> [a] -> [a] -> EqualityProp [a]
-assocP []     ys zs = reflexivity ([] ++ (ys ++ zs)) 
+assocP :: (Transitivity [a], Reflexivity [a]) => [a] -> [a] -> [a] -> EqualityProp [a]
+assocP []     ys zs = refl ([] ++ (ys ++ zs)) 
 assocP (x:xs) ys zs = trans ((x:xs) ++ (ys ++ zs)) 
                             (cons x (xs ++ (ys ++ zs)))
                             (cons x  ((xs ++ ys) ++ zs))
-                            (reflexivity ((x:xs) ++ (ys ++ zs)))
+                            (refl ((x:xs) ++ (ys ++ zs)))
                             (eqRTCtx ((xs ++ (ys ++ zs))) ((xs ++ ys) ++ zs) (assocP xs ys zs) (cons x))
                             
 
@@ -90,7 +90,7 @@ consP x xs = cons x xs *** QED
 reverseOneSwoopEq :: AEq [a] => EqualityProp ([a] -> [a])
 {-@ reverseOneSwoopEq :: AEq [a] => EqualProp ([a] -> [a]) {fastReverse} {slowReverse} @-}
 reverseOneSwoopEq = extensionality fastReverse slowReverse $ \xs ->
-  fromEqSMT (fastReverse xs) (slowReverse xs) (reverseEq xs ? reflP (fastReverse xs))
+  baseEq (fastReverse xs) (slowReverse xs) (reverseEq xs ? reflP (fastReverse xs))
 
 
 

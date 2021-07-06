@@ -74,7 +74,7 @@ incrExtGood _ = extensionality incrPos incrInt incrEq
 incrEq :: Integer -> EqualityProp Integer
 {-@ incrEq :: n:Pos -> PEq Integer {incrPos n} {incrInt n} @-}
 {-@ ple incrEq @-}
-incrEq n = reflexivity (incrPos n)
+incrEq n = refl (incrPos n)
 
 
 -- ACCEPTED AND IMPOSSIBLE
@@ -96,7 +96,7 @@ incrExtGood3 _ = extensionality incrPos incrInt incrEq3 -- REJECTED!
 
 incrEq3  :: Integer -> EqualityProp Integer
 {-@ incrEq3 :: n:Empty -> PEq Integer {incrPos n} {incrInt n} @-}
-incrEq3 n = reflexivity (incrPos n)
+incrEq3 n = refl (incrPos n)
 
 -- | We use substitutability instead of subst 
 

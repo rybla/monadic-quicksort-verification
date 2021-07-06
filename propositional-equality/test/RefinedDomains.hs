@@ -12,7 +12,7 @@ import Data.Refined.Unit
 
 pf :: EqualityProp (Integer -> Integer)
 {-@ pf :: EqualProp (x:{Integer | 0 <= x } -> Integer) {add1Int} {add1Nat} @-}
-pf = extensionality add1Int add1Nat (\x -> reflexivity (add1Int x))
+pf = extensionality add1Int add1Nat (\x -> refl (add1Int x))
 
 
 pf' :: EqualityProp (Integer -> Integer)
@@ -21,7 +21,7 @@ pf' = extensionality add1Int add1Nat pf0'
 
 pf0' :: Integer -> EqualityProp Integer
 {-@ pf0' :: x:{Integer | 0 <= x } ->  EqualProp {x:Integer | 0 <= x } (add1Int x) (add1Nat x) @-}
-pf0' x = reflexivity (add1Int x)  
+pf0' x = baseEq (add1Int x) (add1Nat x) (reflP (add1Int x))
 
 pf'' :: EqualityProp (Integer -> Integer)
 {-@ pf'' :: EqualProp (x:{Integer | 0 <= x } -> {v:Integer | v = x + 1 }) add1Int add1Nat @-}
@@ -29,7 +29,7 @@ pf'' = deqFun add1Int add1Nat pf0''
 
 pf0'' :: Integer -> EqualityProp Integer
 {-@ pf0'' :: x:{Integer | 0 <= x } ->  EqualProp {v:Integer | v = x + 1 } (add1Int x) (add1Nat x) @-}
-pf0'' x = reflexivity (add1Int x) 
+pf0'' x = baseEq (add1Int x) (add1Nat x) (reflP (add1Int x))
 
 
 --------------------------------------------------------------------------------

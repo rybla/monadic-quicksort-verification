@@ -16,13 +16,8 @@ infixl 3 =~=
 _ =~= y = y
 
 
-{-@ trans :: Transitivity' a =>  x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> EqualProp a {x} {z} @-}
-trans :: Transitivity' a => a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
-trans x y a p1 p2 = transitivity' x y a p1 p2
-
-
--- Hacks with Abstract Refinement to preserve domains
-eqSMT' :: a -> a -> EqualityProp a -> EqualityProp a
+-- Hacks with Abstract Refinement to preserve domains 
+eqSMT' :: a -> a -> EqualityProp a -> EqualityProp a 
 {-@ ignore eqSMT' @-}
 {-@ assume eqSMT' :: forall <p :: a -> Bool>.
        x:a<p> -> y:a<p> ->
@@ -194,13 +189,13 @@ concreteness_EqSMT _ _ _ = ()
 ### Retractability
 -}
 
-class Reflexivity' a where 
-  refl' :: a -> EqualityProp a 
+class Reflexivity a where 
+  refl :: a -> EqualityProp a 
 
 
 {-@
-class Reflexivity' a where 
-  refl' :: x:a -> PEq a {x} {x}
+class Reflexivity a where 
+  refl :: x:a -> PEq a {x} {x}
 @-}
 
 {-@
@@ -217,20 +212,20 @@ retractability f g efg x =
 -}
 
 {-@
-class Symmetry' a where
-  symmetry' :: x:a -> y:a -> EqualProp a {x} {y} -> EqualProp a {y} {x}
+class Symmetry a where
+  symm :: x:a -> y:a -> EqualProp a {x} {y} -> EqualProp a {y} {x}
 @-}
-class Symmetry' a where
-  symmetry' :: a -> a -> EqualityProp a -> EqualityProp a
+class Symmetry a where
+  symm :: a -> a -> EqualityProp a -> EqualityProp a
 
-instance (Concreteness a, Reflexivity' a) => Symmetry' a where
-  symmetry' x y exy =
-    refl' x ? concreteness x y exy
+instance (Concreteness a, Reflexivity a) => Symmetry a where
+  symm x y exy =
+    refl x ? concreteness x y exy
 
-instance Symmetry' b => Symmetry' (a -> b) where
-  symmetry' f g efg =
+instance (Symmetry b) => Symmetry (a -> b) where
+  symm f g efg =
     let efxgx x = substitutability (given x) f g efg ? (given x f) ? (given x g)
-        egxfx x = symmetry' (f x) (g x) (efxgx x)
+        egxfx x = symm (f x) (g x) (efxgx x)
      in extensionality g f egxfx
 
 {-
@@ -238,23 +233,23 @@ instance Symmetry' b => Symmetry' (a -> b) where
 -}
 
 {-@
-class Transitivity' a where
-  transitivity' :: x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> EqualProp a {x} {z}
+class Transitivity a where
+  trans :: x:a -> y:a -> z:a -> EqualProp a {x} {y} -> EqualProp a {y} {z} -> EqualProp a {x} {z}
 @-}
-class Transitivity' a where
-  transitivity' :: a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
+class Transitivity a where
+  trans :: a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
 
-instance (Concreteness a, Reflexivity' a) => Transitivity' a where
-  transitivity' x y z exy eyz =
-    refl' x
+instance (Concreteness a, Reflexivity a) => Transitivity a where
+  trans x y z exy eyz =
+    refl x
       ? concreteness x y exy
       ? concreteness y z eyz
 
-instance Transitivity' b => Transitivity' (a -> b) where
-  transitivity' f g h efg egh =
+instance (Transitivity b, Retractability a b) => Transitivity (a -> b) where
+  trans f g h efg egh =
     let es_fx_gx = retractability f g efg
         es_gx_hx = retractability g h egh
-        es_fx_hx x = transitivity' (f x) (g x) (h x) (es_fx_gx x) (es_gx_hx x)
+        es_fx_hx x = trans (f x) (g x) (h x) (es_fx_gx x) (es_gx_hx x)
      in extensionality f h es_fx_hx
 
 {-
@@ -319,6 +314,9 @@ class AEq a where
      transP :: x:a -> y:a -> z:a -> { ( bbEq x y && bbEq y z) => bbEq x z }
      smtP   :: x:a -> y:a -> {v:() | bbEq x y} -> {x = y}
 @-}
+
+instance Reflexivity Integer where 
+  refl x = baseEq x x (reflP x)
 
 instance AEq Integer where
   bEq = bEqInteger

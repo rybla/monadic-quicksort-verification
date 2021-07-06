@@ -15,12 +15,19 @@ import Relation.Equality.Prop.EDSL
 import Prelude hiding (foldl, foldr, id)
 
 
-foldEq :: AEq b => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
-{-@ foldEq :: AEq b => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
+foldEq     :: Reflexivity b => EqualityProp  ((b -> a -> b) -> b -> [a] -> b)
+{-@ foldEq :: EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
 foldEq = extensionality foldl foldl' $ \f ->
-  extensionality (foldl f) (foldl' f) $ \b ->
-    extensionality (foldl f b) (foldl' f b) $ \xs ->
-      fromEqSMT (foldl f b xs) (foldl' f b xs) (theorem f b xs ? reflP (foldl f b xs))
+           extensionality (foldl f) (foldl' f) $ \b ->
+             extensionality (foldl f b) (foldl' f b) $ \xs ->
+               refl (foldl f b xs) ?  (theorem f b xs)
+
+foldEq'     :: Reflexivity b => EqualityProp  ((b -> a -> b) -> b -> [a] -> b)
+{-@ foldEq' :: Reflexivity b => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
+foldEq' = extensionality foldl foldl' $ \f ->
+            extensionality (foldl f) (foldl' f) $ \b ->
+              extensionality (foldl f b) (foldl' f b) $ \xs ->
+                refl (foldl f b xs) ? theorem f b xs
 
 foldEq_macros :: Equality ((b -> a -> b) -> b -> [a] -> b) => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
 {-@ foldEq_macros :: Equality ((b -> a -> b) -> b -> [a] -> b) => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
@@ -33,25 +40,14 @@ foldEq_macros =
           %by theorem f b xs
   |]
 
-foldEq' :: Reflexivity b => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
-{-@ foldEq' :: Reflexivity b => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
-foldEq' = extensionality foldl foldl' $ \f ->
-  extensionality (foldl f) (foldl' f) $ \b ->
-    extensionality (foldl f b) (foldl' f b) $ \xs ->
-      refl (foldl f b xs) ? theorem f b xs
-
 foldEq'' :: (Reflexivity b, Equality b) => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
 {-@ foldEq'' :: (Reflexivity b, Equality b) => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
 foldEq'' = extensionality foldl foldl' $ \f ->
-
-  extensionality (foldl f) (foldl' f) $ \b ->
-    extensionality (foldl f b) (foldl' f b) $ \xs ->
-      transitivity
-        (foldl f b xs)
-        (foldr (construct f) id xs b)
-        (foldl' f b xs)
-        (foldLemma f b xs)
-        (refl (foldl' f b xs))
+               extensionality (foldl f) (foldl' f) $ \b ->
+                   extensionality (foldl f b) (foldl' f b) $ \xs ->
+                     transitivity (foldl f b xs) (foldr (construct f) id xs b) (foldl'  f b xs)
+                       (foldLemma f b xs)
+                       (refl (foldl' f b xs))
 
 -- more awkward, original statement of the inner part above
 foldSame :: (Reflexivity b, Equality b) => (b -> a -> b) -> b -> [a] -> EqualityProp b
