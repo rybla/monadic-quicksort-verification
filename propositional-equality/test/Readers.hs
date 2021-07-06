@@ -93,6 +93,19 @@ functorLaw_composition f g =
           )
     )
 
+functorLaw_composition_macros :: Equality (Reader r a -> Reader r c) => (a -> b) -> (b -> c) -> EqualityProp (Reader r a -> Reader r c)
+{-@ functorLaw_composition_macros :: Equality (Reader r a -> Reader r c) => f:(a -> b) -> g:(b -> c) ->
+      EqualProp (Reader r a -> Reader r c) (fmap (compose g f)) (compose (fmap g) (fmap f)) @-}
+functorLaw_composition_macros f g =
+  [eqp| fmap (compose g f) %== compose (fmap g) (fmap f)
+          %by %extend rdr
+          %by %extend r
+          %by %smt
+          %by (compose g f) (rdr r)
+            ? g (((fmap f) rdr) r)
+            ? fmap g ((fmap f) rdr) r
+  |]
+
 {-@ reflect pure @-}
 pure :: a -> Reader r a
 pure a _r = a
