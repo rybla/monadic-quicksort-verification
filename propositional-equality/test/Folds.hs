@@ -108,7 +108,12 @@ foldLemma f b (x : xs) =
 
 foldLemma_macros :: (Reflexivity b, Equality b) => (b -> a -> b) -> b -> [a] -> EqualityProp b
 {-@ foldLemma_macros :: (Reflexivity b, Equality b) => f:(b -> a -> b) -> b:b -> xs:[a] -> EqualProp b {foldl f b xs} {foldr (construct f) id xs b} @-}
-foldLemma_macros f b [] = undefined
+foldLemma_macros f b [] =
+  [eqp| foldl f b []
+    %== b
+    %== id b
+    %== foldr (construct f) id [] b
+  |]
 foldLemma_macros f b (x : xs) =
   [eqp| foldl f b (x : xs)
     %== foldl f (f b x) xs
