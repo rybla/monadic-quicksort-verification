@@ -36,8 +36,8 @@ mapFlipMap     :: (a -> b) -> [a] -> ()
 {-@ mapFlipMap :: f:(a -> b) -> xs:[a] -> {map f xs = flipMap xs f} @-}
 mapFlipMap _f _xs = ()
 
-mapEq'     :: (Reflexivity [b], Transitivity' [b]) => (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> [a] -> EqualityProp [b]
-{-@ mapEq' :: (Reflexivity [b], Transitivity' [b]) => f:(a -> b) -> g:(a -> b) ->
+mapEq'     :: (Reflexivity [b], Transitivity [b]) => (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> [a] -> EqualityProp [b]
+{-@ mapEq' :: (Reflexivity [b], Transitivity [b]) => f:(a -> b) -> g:(a -> b) ->
                   EqualProp (a -> b) {f} {g} ->
                   xs:[a] -> EqualProp [b] {map f xs} {map g xs} @-}
 mapEq' f g mpf xs =
