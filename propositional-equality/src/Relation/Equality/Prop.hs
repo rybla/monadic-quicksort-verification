@@ -143,6 +143,12 @@ class Equality a where
   transitivity :: a -> a -> a -> EqualityProp a -> EqualityProp a -> EqualityProp a
   reflexivity :: a -> EqualityProp a
 
+instance Equality a => Reflexivity a where refl = reflexivity
+
+instance Equality a => Symmetry a where symm = symmetry
+
+instance Equality a => Transitivity a where trans = transitivity
+
 {-
 ### SMT Equality
 -}

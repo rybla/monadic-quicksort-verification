@@ -14,19 +14,19 @@ import Relation.Equality.Prop
 import Relation.Equality.Prop.EDSL
 import Prelude hiding (foldl, foldr, id)
 
-foldEq :: Reflexivity b => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
+foldEq :: Equality b => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
 {-@ foldEq :: EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
 foldEq = extensionality foldl foldl' $ \f ->
   extensionality (foldl f) (foldl' f) $ \b ->
     extensionality (foldl f b) (foldl' f b) $ \xs ->
-      refl (foldl f b xs) ? (theorem f b xs)
+      reflexivity (foldl f b xs) ? (theorem f b xs)
 
-foldEq' :: Reflexivity b => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
-{-@ foldEq' :: Reflexivity b => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
+foldEq' :: Equality b => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
+{-@ foldEq' :: Equality b => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
 foldEq' = extensionality foldl foldl' $ \f ->
   extensionality (foldl f) (foldl' f) $ \b ->
     extensionality (foldl f b) (foldl' f b) $ \xs ->
-      refl (foldl f b xs) ? theorem f b xs
+      reflexivity (foldl f b xs) ? theorem f b xs
 
 foldEq_macros :: (Equality b, Equality ((b -> a -> b) -> b -> [a] -> b)) => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
 {-@ foldEq_macros :: (Equality b, Equality ((b -> a -> b) -> b -> [a] -> b)) => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
@@ -39,8 +39,8 @@ foldEq_macros =
           %by theorem f b xs
   |]
 
-foldEq'' :: (Reflexivity b, Equality b) => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
-{-@ foldEq'' :: (Reflexivity b, Equality b) => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
+foldEq'' :: Equality b => EqualityProp ((b -> a -> b) -> b -> [a] -> b)
+{-@ foldEq'' :: Equality b => EqualProp ((b -> a -> b) -> b -> [a] -> b) {foldl} {foldl'} @-}
 foldEq'' = extensionality foldl foldl' $ \f ->
   extensionality (foldl f) (foldl' f) $ \b ->
     extensionality (foldl f b) (foldl' f b) $ \xs ->
@@ -49,45 +49,58 @@ foldEq'' = extensionality foldl foldl' $ \f ->
         (foldr (construct f) id xs b)
         (foldl' f b xs)
         (foldLemma f b xs)
-        (refl (foldl' f b xs))
+        (reflexivity (foldl' f b xs))
 
 -- more awkward, original statement of the inner part above
-foldSame :: (Reflexivity b, Equality b) => (b -> a -> b) -> b -> [a] -> EqualityProp b
-{-@ foldSame :: (Reflexivity b, Equality b) => f:(b -> a -> b) -> b:b -> xs:[a]
+foldSame :: Equality b => (b -> a -> b) -> b -> [a] -> EqualityProp b
+{-@ foldSame :: Equality b => f:(b -> a -> b) -> b:b -> xs:[a]
              -> EqualProp b {foldl f b xs} {foldl' f b xs} @-}
 foldSame f b xs =
   transitivity
     (foldl' f b xs)
     (foldr (construct f) id xs b)
     (foldl f b xs)
-    (refl (foldl' f b xs))
+    (reflexivity (foldl' f b xs))
     ( symmetry
         (foldl f b xs)
         (foldr (construct f) id xs b)
         (foldLemma f b xs)
     )
 
-foldLemma :: (Reflexivity b, Equality b) => (b -> a -> b) -> b -> [a] -> EqualityProp b
-{-@ foldLemma :: (Reflexivity b, Equality b) => f:(b -> a -> b) -> b:b -> xs:[a] -> EqualProp b {foldl f b xs} {foldr (construct f) id xs b} @-}
+-- more awkward, original statement of the inner part above
+foldSame_macros :: Equality b => (b -> a -> b) -> b -> [a] -> EqualityProp b
+{-@ foldSame_macros :: Equality b => f:(b -> a -> b) -> b:b -> xs:[a]
+             -> EqualProp b {foldl f b xs} {foldl' f b xs} @-}
+foldSame_macros f b xs =
+  [eqp| foldl f b xs
+    %== foldr (construct f) id xs b
+          %by foldLemma f b xs
+    %== foldl' f b xs
+          %by %symmetry
+          %by %reflexivity
+  |]
+
+foldLemma :: Equality b => (b -> a -> b) -> b -> [a] -> EqualityProp b
+{-@ foldLemma :: Equality b => f:(b -> a -> b) -> b:b -> xs:[a] -> EqualProp b {foldl f b xs} {foldr (construct f) id xs b} @-}
 foldLemma f b [] =
   transitivity
     (foldl f b [])
     b
     (foldr (construct f) id [] b)
-    (refl (foldl f b []))
+    (reflexivity (foldl f b []))
     ( transitivity
         b
         (id b)
         (foldr (construct f) id [] b)
-        (refl b)
-        (refl (id b))
+        (reflexivity b)
+        (reflexivity (id b))
     )
 foldLemma f b (x : xs) =
   transitivity
     (foldl f b (x : xs))
     (foldl f (f b x) xs)
     (foldr (construct f) id (x : xs) b)
-    (refl (foldl f b (x : xs)))
+    (reflexivity (foldl f b (x : xs)))
     ( transitivity
         (foldl f (f b x) xs)
         (foldr (construct f) id xs (f b x))
@@ -97,13 +110,13 @@ foldLemma f b (x : xs) =
             (foldr (construct f) id xs (f b x))
             (construct f x (foldr (construct f) id xs) b)
             (foldr (construct f) id (x : xs) b)
-            (refl (foldr (construct f) id xs (f b x)))
-            (refl (construct f x (foldr (construct f) id xs) b))
+            (reflexivity (foldr (construct f) id xs (f b x)))
+            (reflexivity (construct f x (foldr (construct f) id xs) b))
         )
     )
 
-foldLemma_macros :: (Reflexivity b, Equality b) => (b -> a -> b) -> b -> [a] -> EqualityProp b
-{-@ foldLemma_macros :: (Reflexivity b, Equality b) => f:(b -> a -> b) -> b:b -> xs:[a] -> EqualProp b {foldl f b xs} {foldr (construct f) id xs b} @-}
+foldLemma_macros :: Equality b => (b -> a -> b) -> b -> [a] -> EqualityProp b
+{-@ foldLemma_macros :: Equality b => f:(b -> a -> b) -> b:b -> xs:[a] -> EqualProp b {foldl f b xs} {foldr (construct f) id xs b} @-}
 foldLemma_macros f b [] =
   [eqp| foldl f b []
     %== b
