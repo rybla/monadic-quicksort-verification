@@ -214,12 +214,12 @@ applicativeLaw_interchange u y =
 
 --- WHEW this one takes a long time
 applicativeLaw_composition ::
-  (Equality c, Transitivity c) =>
+  Equality c =>
   Reader r (b -> c) ->
   Reader r (a -> b) ->
   Reader r a ->
   EqualityProp (Reader r c)
-{-@ applicativeLaw_composition :: (Equality c, Transitivity c) =>
+{-@ applicativeLaw_composition :: Equality c =>
       u:(Reader r (b -> c)) -> v:(Reader r (a -> b)) -> w:(Reader r a) ->
       EqualProp (Reader r c) (ap (ap (ap (pure compose) u) v) w) (ap u (ap v w)) @-}
 applicativeLaw_composition u v w =
@@ -388,13 +388,18 @@ monadLaw_rightIdentity m =
             )
     )
 
+monadLaw_rightIdentity_macros :: Equality a => (Reader r a) -> EqualityProp (Reader r a)
+{-@ monadLaw_rightIdentity_macros :: Equality a => m:(Reader r a) -> EqualProp (Reader r a) (bind m pure) m @-}
+monadLaw_rightIdentity_macros m = (extensionality (bind m pure) m)
+  \r -> [eqp| bind m pure r %== pure (m r) r |]
+
 {-@ reflect kleisli @-}
 kleisli :: (a -> Reader r b) -> (b -> Reader r c) -> a -> Reader r c
 kleisli f g x = bind (f x) g
 
 monadLaw_associativity ::
-  (Equality c, Transitivity c) => (Reader r a) -> (a -> Reader r b) -> (b -> Reader r c) -> EqualityProp (Reader r c)
-{-@ monadLaw_associativity :: (Equality c, Transitivity c) =>
+  Equality c => (Reader r a) -> (a -> Reader r b) -> (b -> Reader r c) -> EqualityProp (Reader r c)
+{-@ monadLaw_associativity :: Equality c =>
       m:(Reader r a) -> f:(a -> Reader r b) -> g:(b -> Reader r c) ->
       EqualProp (Reader r c) (bind (bind m f) g) (bind m (kleisli f g))
 @-}
@@ -415,3 +420,19 @@ monadLaw_associativity m f g =
               (transitivity el eml em (reflexivity el) (reflexivity eml))
               (transitivity em emr er (reflexivity em) (reflexivity emr))
     )
+
+monadLaw_associativity_macros ::
+  Equality c => (Reader r a) -> (a -> Reader r b) -> (b -> Reader r c) -> EqualityProp (Reader r c)
+{-@ monadLaw_associativity_macros :: Equality c =>
+      m:(Reader r a) -> f:(a -> Reader r b) -> g:(b -> Reader r c) ->
+      EqualProp (Reader r c) (bind (bind m f) g) (bind m (kleisli f g))
+@-}
+monadLaw_associativity_macros m f g =
+  (extensionality (bind (bind m f) g) (bind m (kleisli f g)))
+    \r ->
+      [eqp| bind (bind m f) g r
+        %== g (bind m f r) r
+        %== (bind (f (m r)) g) r
+        %== kleisli f g (m r) r
+        %== bind m (kleisli f g) r
+      |]
