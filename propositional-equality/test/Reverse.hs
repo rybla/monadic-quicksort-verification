@@ -90,6 +90,15 @@ rightIdP (x : xs) =
     (reflexivity (x : (xs ++ [])))
     (eqRTCtx (xs ++ []) (xs) (rightIdP xs) (cons x))
 
+{-@ rightIdP_macros :: xs:[a] -> EqualProp [a] {xs ++ []} {xs} @-}
+rightIdP_macros :: (Equality [a], Equality [a]) => [a] -> EqualityProp [a]
+rightIdP_macros [] = reflexivity []
+rightIdP_macros (x : xs) =
+  [eqp| (x : xs) ++ []
+    %== cons x (xs ++ [])
+    %== cons x xs          %by eqRTCtx (xs ++ []) (xs) (rightIdP xs) (cons x)
+  |]
+
 {-@ assocP :: xs:[a] -> ys:[a] -> zs:[a]
           -> EqualProp [a] {(xs ++ (ys ++ zs))} {((xs ++ ys) ++ zs)}  @-}
 assocP :: (Equality [a], Equality [a]) => [a] -> [a] -> [a] -> EqualityProp [a]
