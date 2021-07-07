@@ -70,6 +70,15 @@ reverseSameLemma rest (x : xs) =
     (reverseSameLemma (x : rest) xs)
     (assocP (slowReverse xs) [x] rest)
 
+reverseSameLemma_macros :: (Equality [a], Equality [a]) => [a] -> [a] -> EqualityProp [a]
+{-@ reverseSameLemma_macros :: (Equality [a], Equality [a]) => rest:[a] -> xs:[a] -> EqualProp [a] {fastReverse' rest xs} {slowReverse xs ++ rest} @-}
+reverseSameLemma_macros rest [] = reflexivity rest
+reverseSameLemma_macros rest (x : xs) =
+  [eqp| fastReverse' rest (x : xs)
+    %== slowReverse xs ++ (x : rest)  %by reverseSameLemma_macros (x : rest) xs
+    %== slowReverse (x : xs) ++ rest  %by assocP (slowReverse xs) [x] rest
+  |]
+
 {-@ rightIdP :: xs:[a] -> EqualProp [a] {xs ++ []} {xs} @-}
 rightIdP :: (Equality [a], Equality [a]) => [a] -> EqualityProp [a]
 rightIdP [] = reflexivity []
