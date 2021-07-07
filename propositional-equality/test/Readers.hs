@@ -351,6 +351,16 @@ monadLaw_leftIdentity a f =
           (reflexivity (f (pure a r) r))
     )
 
+monadLaw_leftIdentity_macros :: Equality b => a -> (a -> Reader r b) -> EqualityProp (Reader r b)
+{-@ monadLaw_leftIdentity_macros :: Reflexivity b => a:a -> f:(a -> Reader r b) ->
+      EqualProp (Reader r b) (bind (pure a) f) (f a)
+@-}
+monadLaw_leftIdentity_macros a f =
+  extensionality
+    (bind (pure a) f)
+    (f a)
+    (\r -> [eqp| bind (pure a) f r %== f (pure a r) r |])
+
 monadLaw_leftIdentity' :: Equality b => a -> (a -> Reader r b) -> EqualityProp (Reader r b)
 {-@ monadLaw_leftIdentity' :: Reflexivity b => a:a -> f:(a -> Reader r b) ->
       EqualProp (Reader r b) (bind (pure a) f) (f a)
