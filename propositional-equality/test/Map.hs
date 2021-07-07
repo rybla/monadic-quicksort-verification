@@ -1,5 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MonoLocalBinds #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 {-@ LIQUID "--ple"        @-}
 {-@ LIQUID "--no-adt"     @-}
@@ -7,10 +9,13 @@
 module Map where
 
 import Data.Refined.Unit
+import Function hiding (map)
 import Language.Haskell.Liquid.ProofCombinators
+import Language.Haskell.TH.Syntax
 import RefinedDomains
 import Relation.Equality.Prop
-import Prelude hiding (map)
+import Relation.Equality.Prop.EDSL
+import Prelude hiding (foldl, foldr, id, map)
 
 {-@ infix :  @-}
 
@@ -35,23 +40,35 @@ mapFlipMap :: (a -> b) -> [a] -> ()
 {-@ mapFlipMap :: f:(a -> b) -> xs:[a] -> {map f xs = flipMap xs f} @-}
 mapFlipMap _f _xs = ()
 
-mapEq' :: (Reflexivity [b], Transitivity [b]) => (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> [a] -> EqualityProp [b]
-{-@ mapEq' :: (Reflexivity [b], Transitivity [b]) => f:(a -> b) -> g:(a -> b) ->
+mapEq' :: Equality [b] => (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> [a] -> EqualityProp [b]
+{-@ mapEq' :: Equality [b] => f:(a -> b) -> g:(a -> b) ->
                   EqualProp (a -> b) {f} {g} ->
                   xs:[a] -> EqualProp [b] {map f xs} {map g xs} @-}
 mapEq' f g mpf xs =
-  trans
+  transitivity
     (map f xs)
     (flipMap xs f)
     (map g xs)
-    (refl (map f xs))
-    ( trans
+    (reflexivity (map f xs))
+    ( transitivity
         (flipMap xs f)
         (flipMap xs g)
         (map g xs)
         (substitutability (flipMap xs) f g mpf)
-        (refl (flipMap xs g))
+        (reflexivity (flipMap xs g))
     )
+
+mapEq'_macros :: Equality [b] => (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> [a] -> EqualityProp [b]
+{-@ mapEq'_macros :: Equality [b] => f:(a -> b) -> g:(a -> b) ->
+                  EqualProp (a -> b) {f} {g} ->
+                  xs:[a] -> EqualProp [b] {map f xs} {map g xs} @-}
+mapEq'_macros f g mpf xs =
+  [eqp| map f xs
+    %== flipMap xs f
+    %== flipMap xs g
+          %by substitutability (flipMap xs) f g mpf
+    %== map g xs
+  |]
 
 mapEq'' :: (a -> b) -> (a -> b) -> EqualityProp (a -> b) -> EqualityProp ([a] -> [b])
 {-@ mapEq'' :: f:(a -> b) -> g:(a -> b) ->
