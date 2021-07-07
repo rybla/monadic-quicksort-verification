@@ -41,8 +41,8 @@ on v f = f v
 compose :: (b -> c) -> (a -> b) -> (a -> c)
 compose g f x = g (f x)
 
-functorLaw_identity :: Reflexivity a => EqualityProp (Reader r a -> Reader r a)
-{-@ functorLaw_identity :: Reflexivity a -> EqualProp (Reader r a -> Reader r a) (fmap id) id @-}
+functorLaw_identity :: Equality a => EqualityProp (Reader r a -> Reader r a)
+{-@ functorLaw_identity :: Equality a -> EqualProp (Reader r a -> Reader r a) (fmap id) id @-}
 functorLaw_identity =
   extensionality
     (fmap id)
@@ -52,7 +52,7 @@ functorLaw_identity =
           (fmap id r)
           (id r)
           ( \a ->
-              refl (fmap id r a)
+              reflexivity (fmap id r a)
                 ? ( fmap id r a
                       =~= id (r a)
                       =~= id r a
@@ -71,8 +71,8 @@ functorLaw_identity_macros =
           %by id (r a)
   |]
 
-functorLaw_composition :: Reflexivity c => (a -> b) -> (b -> c) -> EqualityProp (Reader r a -> Reader r c)
-{-@ functorLaw_composition :: Reflexivity c => f:(a -> b) -> g:(b -> c) ->
+functorLaw_composition :: Equality c => (a -> b) -> (b -> c) -> EqualityProp (Reader r a -> Reader r c)
+{-@ functorLaw_composition :: Equality c => f:(a -> b) -> g:(b -> c) ->
       EqualProp (Reader r a -> Reader r c) (fmap (compose g f)) (compose (fmap g) (fmap f)) @-}
 functorLaw_composition f g =
   extensionality
@@ -83,7 +83,7 @@ functorLaw_composition f g =
           (fmap (compose g f) rdr)
           ((compose (fmap g) (fmap f)) rdr)
           ( \r ->
-              refl
+              reflexivity
                 (fmap (compose g f) rdr r)
                 ? ( fmap (compose g f) rdr r
                       =~= (compose g f) (rdr r)
@@ -117,25 +117,25 @@ pure a _r = a
 ap :: Reader r (a -> b) -> Reader r a -> Reader r b
 ap frab fra r = frab r (fra r)
 
-applicativeLaw_identity :: (Reflexivity a, Transitivity a) => Reader r a -> EqualityProp (Reader r a)
-{-@ applicativeLaw_identity :: (Reflexivity a, Transitivity a) => v:Reader r a ->
+applicativeLaw_identity :: Equality a => Reader r a -> EqualityProp (Reader r a)
+{-@ applicativeLaw_identity :: Equality a => v:Reader r a ->
       EqualProp (Reader r a) (ap (pure id) v) v @-}
 applicativeLaw_identity v =
   extensionality
     (ap (pure id) v)
     v
     ( \r ->
-        trans
+        transitivity
           (ap (pure id) v r)
           ((pure id) r (v r))
           (v r)
-          (refl (ap (pure id) v r))
-          ( trans
+          (reflexivity (ap (pure id) v r))
+          ( transitivity
               ((pure id) r (v r))
               (id (v r))
               (v r)
-              (refl ((pure id) r (v r)))
-              (refl (id (v r)))
+              (reflexivity ((pure id) r (v r)))
+              (reflexivity (id (v r)))
           )
     )
 
@@ -150,63 +150,63 @@ applicativeLaw_identity_macros v =
       %== v r
     |]
 
-applicativeLaw_homomorphism :: (Reflexivity b, Transitivity b) => (a -> b) -> a -> EqualityProp (Reader r b)
-{-@ applicativeLaw_homomorphism :: (Reflexivity b, Transitivity b) => f:(a->b) -> v:a ->
+applicativeLaw_homomorphism :: Equality b => (a -> b) -> a -> EqualityProp (Reader r b)
+{-@ applicativeLaw_homomorphism :: Equality b => f:(a->b) -> v:a ->
       EqualProp (Reader r b) (ap (pure f) (pure v)) (pure (f v)) @-}
 applicativeLaw_homomorphism f v =
   extensionality
     (ap (pure f) (pure v))
     (pure (f v))
     ( \r ->
-        trans
+        transitivity
           (ap (pure f) (pure v) r)
           (pure f r (pure v r))
           (pure (f v) r)
-          (refl (ap (pure f) (pure v) r))
-          ( trans
+          (reflexivity (ap (pure f) (pure v) r))
+          ( transitivity
               (pure f r (pure v r))
               (pure f r v)
               (pure (f v) r)
-              (refl (pure f r (pure v r)))
-              ( trans
+              (reflexivity (pure f r (pure v r)))
+              ( transitivity
                   (pure f r v)
                   (f v)
                   (pure (f v) r)
-                  (refl (pure f r v))
-                  (refl (f v))
+                  (reflexivity (pure f r v))
+                  (reflexivity (f v))
               )
           )
     )
 
-applicativeLaw_interchange :: (Reflexivity b, Transitivity b) => Reader r (a -> b) -> a -> EqualityProp (Reader r b)
-{-@ applicativeLaw_interchange :: (Reflexivity b, Transitivity b) => u:(Reader r (a -> b)) -> y:a ->
+applicativeLaw_interchange :: Equality b => Reader r (a -> b) -> a -> EqualityProp (Reader r b)
+{-@ applicativeLaw_interchange :: Equality b => u:(Reader r (a -> b)) -> y:a ->
       EqualProp (Reader r b) (ap u (pure y)) (ap (pure (on y)) u) @-}
 applicativeLaw_interchange u y =
   extensionality
     (ap u (pure y))
     (ap (pure (on y)) u)
     ( \r ->
-        trans
+        transitivity
           (ap u (pure y) r)
           (u r (pure y r))
           (ap (pure (on y)) u r)
-          (refl (ap u (pure y) r))
-          ( trans
+          (reflexivity (ap u (pure y) r))
+          ( transitivity
               (u r (pure y r))
               (u r y)
               (ap (pure (on y)) u r)
-              (refl (u r (pure y r)))
-              ( trans
+              (reflexivity (u r (pure y r)))
+              ( transitivity
                   (u r y)
                   ((on y) (u r))
                   (ap (pure (on y)) u r)
-                  (refl (u r y))
-                  ( trans
+                  (reflexivity (u r y))
+                  ( transitivity
                       ((on y) (u r))
                       ((pure (on y)) r (u r))
                       (ap (pure (on y)) u r)
-                      (refl ((on y) (u r)))
-                      (refl ((pure (on y)) r (u r)))
+                      (reflexivity ((on y) (u r)))
+                      (reflexivity ((pure (on y)) r (u r)))
                   )
               )
           )
@@ -214,12 +214,12 @@ applicativeLaw_interchange u y =
 
 --- WHEW this one takes a long time
 applicativeLaw_composition ::
-  (Reflexivity c, Transitivity c) =>
+  (Equality c, Transitivity c) =>
   Reader r (b -> c) ->
   Reader r (a -> b) ->
   Reader r a ->
   EqualityProp (Reader r c)
-{-@ applicativeLaw_composition :: (Reflexivity c, Transitivity c) =>
+{-@ applicativeLaw_composition :: (Equality c, Transitivity c) =>
       u:(Reader r (b -> c)) -> v:(Reader r (a -> b)) -> w:(Reader r a) ->
       EqualProp (Reader r c) (ap (ap (ap (pure compose) u) v) w) (ap u (ap v w)) @-}
 applicativeLaw_composition u v w =
@@ -227,42 +227,42 @@ applicativeLaw_composition u v w =
     (ap (ap (ap (pure compose) u) v) w)
     (ap u (ap v w))
     ( \r ->
-        trans
+        transitivity
           (ap (ap (ap (pure compose) u) v) w r)
           ((ap (ap (pure compose) u) v) r (w r))
           (ap u (ap v w) r)
-          (refl (ap (ap (ap (pure compose) u) v) w r))
-          ( trans
+          (reflexivity (ap (ap (ap (pure compose) u) v) w r))
+          ( transitivity
               ((ap (ap (pure compose) u) v) r (w r))
               ((ap (pure compose) u) r (v r) (w r))
               (ap u (ap v w) r)
-              (refl ((ap (ap (pure compose) u) v) r (w r)))
-              ( trans
+              (reflexivity ((ap (ap (pure compose) u) v) r (w r)))
+              ( transitivity
                   ((ap (pure compose) u) r (v r) (w r))
                   ((pure compose) r (u r) (v r) (w r))
                   (ap u (ap v w) r)
-                  (refl ((ap (pure compose) u) r (v r) (w r)))
-                  ( trans
+                  (reflexivity ((ap (pure compose) u) r (v r) (w r)))
+                  ( transitivity
                       ((pure compose) r (u r) (v r) (w r)) -- skipped ((\_r -> compose) r (u r) (v r) (w r))
                       (compose (u r) (v r) (w r))
                       (ap u (ap v w) r)
-                      (refl ((pure compose) r (u r) (v r) (w r)))
-                      ( trans
+                      (reflexivity ((pure compose) r (u r) (v r) (w r)))
+                      ( transitivity
                           (compose (u r) (v r) (w r))
                           ((u r) ((v r) (w r)))
                           (ap u (ap v w) r)
-                          (refl (compose (u r) (v r) (w r)))
-                          ( trans
+                          (reflexivity (compose (u r) (v r) (w r)))
+                          ( transitivity
                               ((u r) ((v r) (w r)))
                               (u r (v r (w r)))
                               (ap u (ap v w) r)
-                              (refl ((u r) ((v r) (w r))))
-                              ( trans
+                              (reflexivity ((u r) ((v r) (w r))))
+                              ( transitivity
                                   (u r (v r (w r)))
                                   (u r (ap v w r))
                                   (ap u (ap v w) r)
-                                  (refl (u r (v r (w r))))
-                                  (refl (u r (ap v w r)))
+                                  (reflexivity (u r (v r (w r))))
+                                  (reflexivity (u r (ap v w r)))
                               )
                           )
                       )
@@ -295,32 +295,46 @@ applicativeLaw_interchange_macros u y =
       %== ap (pure (on y)) u r
     |]
 
-ap_fmap :: (Reflexivity b, Transitivity b) => (a -> b) -> Reader r a -> EqualityProp (Reader r b)
+ap_fmap :: Equality b => (a -> b) -> Reader r a -> EqualityProp (Reader r b)
 {-@ ap_fmap :: f:(a -> b) -> a:(Reader r a) -> EqualProp (Reader r b) (fmap f a) (ap (pure f) a) @-}
 ap_fmap f a =
   extensionality
     (fmap f a)
     (ap (pure f) a)
     ( \r ->
-        trans
+        transitivity
           (fmap f a r)
           (f (a r))
           (ap (pure f) a r)
-          (refl (fmap f a r))
-          ( trans
+          (reflexivity (fmap f a r))
+          ( transitivity
               (f (a r))
               ((pure f) r (a r))
               (ap (pure f) a r)
-              (refl (f (a r)))
-              (refl ((pure f) r (a r)))
+              (reflexivity (f (a r)))
+              (reflexivity ((pure f) r (a r)))
           )
+    )
+
+ap_fmap_macros :: Equality b => (a -> b) -> Reader r a -> EqualityProp (Reader r b)
+{-@ ap_fmap_macros :: f:(a -> b) -> a:(Reader r a) -> EqualProp (Reader r b) {fmap f a} {ap (pure f) a} @-}
+ap_fmap_macros f a =
+  extensionality
+    (fmap f a)
+    (ap (pure f) a)
+    ( \r ->
+        [eqp| fmap f a r
+          %== f (a r)
+          %== (pure f) r (a r)
+          %== ap (pure f) a r
+        |]
     )
 
 {-@ reflect bind @-}
 bind :: Reader r a -> (a -> Reader r b) -> Reader r b
 bind fra farb = \r -> farb (fra r) r
 
-monadLaw_leftIdentity :: (Reflexivity b, Transitivity b) => a -> (a -> Reader r b) -> EqualityProp (Reader r b)
+monadLaw_leftIdentity :: Equality b => a -> (a -> Reader r b) -> EqualityProp (Reader r b)
 {-@ monadLaw_leftIdentity :: Reflexivity b => a:a -> f:(a -> Reader r b) ->
       EqualProp (Reader r b) (bind (pure a) f) (f a)
 @-}
@@ -329,15 +343,15 @@ monadLaw_leftIdentity a f =
     (bind (pure a) f)
     (f a)
     ( \r ->
-        trans
+        transitivity
           (bind (pure a) f r)
           (f (pure a r) r)
           (f a r)
-          (refl (bind (pure a) f r))
-          (refl (f (pure a r) r))
+          (reflexivity (bind (pure a) f r))
+          (reflexivity (f (pure a r) r))
     )
 
-monadLaw_leftIdentity' :: (Reflexivity b, Transitivity b) => a -> (a -> Reader r b) -> EqualityProp (Reader r b)
+monadLaw_leftIdentity' :: Equality b => a -> (a -> Reader r b) -> EqualityProp (Reader r b)
 {-@ monadLaw_leftIdentity' :: Reflexivity b => a:a -> f:(a -> Reader r b) ->
       EqualProp (Reader r b) (bind (pure a) f) (f a)
 @-}
@@ -346,18 +360,18 @@ monadLaw_leftIdentity' a f =
     (bind (pure a) f)
     (f a)
     ( \r ->
-        refl (bind (pure a) f r)
+        reflexivity (bind (pure a) f r)
           ? (bind (pure a) f r =~= f (pure a r) r *** QED)
     )
 
-monadLaw_rightIdentity :: Reflexivity a => (Reader r a) -> EqualityProp (Reader r a)
-{-@ monadLaw_rightIdentity :: Reflexivity a => m:(Reader r a) -> EqualProp (Reader r a) (bind m pure) m @-}
+monadLaw_rightIdentity :: Equality a => (Reader r a) -> EqualityProp (Reader r a)
+{-@ monadLaw_rightIdentity :: Equality a => m:(Reader r a) -> EqualProp (Reader r a) (bind m pure) m @-}
 monadLaw_rightIdentity m =
   extensionality
     (bind m pure)
     m
     ( \r ->
-        refl (bind m pure r)
+        reflexivity (bind m pure r)
           ? ( (bind m pure r)
                 =~= pure (m r) r
                 *** QED
@@ -369,8 +383,8 @@ kleisli :: (a -> Reader r b) -> (b -> Reader r c) -> a -> Reader r c
 kleisli f g x = bind (f x) g
 
 monadLaw_associativity ::
-  (Reflexivity c, Transitivity c) => (Reader r a) -> (a -> Reader r b) -> (b -> Reader r c) -> EqualityProp (Reader r c)
-{-@ monadLaw_associativity :: (Reflexivity c, Transitivity c) =>
+  (Equality c, Transitivity c) => (Reader r a) -> (a -> Reader r b) -> (b -> Reader r c) -> EqualityProp (Reader r c)
+{-@ monadLaw_associativity :: (Equality c, Transitivity c) =>
       m:(Reader r a) -> f:(a -> Reader r b) -> g:(b -> Reader r c) ->
       EqualProp (Reader r c) (bind (bind m f) g) (bind m (kleisli f g))
 @-}
@@ -384,10 +398,10 @@ monadLaw_associativity m f g =
             em = (bind (f (m r)) g) r
             emr = kleisli f g (m r) r
             er = bind m (kleisli f g) r
-         in trans
+         in transitivity
               el
               em
               er
-              (trans el eml em (refl el) (refl eml))
-              (trans em emr er (refl em) (refl emr))
+              (transitivity el eml em (reflexivity el) (reflexivity eml))
+              (transitivity em emr er (reflexivity em) (reflexivity emr))
     )
