@@ -1,9 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-{-@ LIQUID "--compile-spec" @-}
-
-module Sort.List where
+module Sort.ListTodo where
 
 import Data.Refined.Bool
 import Data.Refined.List
@@ -17,87 +15,9 @@ import Placeholder.M
 import Relation.Equality.Prop
 import Relation.Equality.Prop.EDSL
 import Relation.Equality.Prop.Reasoning
+import Sort.ListDone
+import Sort.ListWork
 import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (++), (>>), (>>=))
-
-{-
-## Slowsort
--}
-
-{-@ reflect slowsort @-}
-slowsort :: List Int -> M (List Int)
-slowsort xs = permute xs >>= guardBy sorted
-
-{-@ reflect sorted @-}
-sorted :: List Int -> Bool
-sorted Nil = True
-sorted (Cons x xs) = all (leq x) xs && sorted xs
-
--- [ref] display 5
-{-@ automatic-instances sorted_middle @-}
-{-@
-sorted_middle ::
-  ys:List Int -> x:Int -> zs:List Int ->
-  {sorted (append ys (append (Cons x Nil) zs)) <=>
-   sorted ys && sorted zs && all (geq x) ys && all (leq x) zs}
-@-}
-sorted_middle :: List Int -> Int -> List Int -> Proof
-sorted_middle Nil x zs = ()
-sorted_middle (Cons y ys) x zs = undefined
-
--- TODO: prove termination?
-{-@ lazy permute @-}
-{-@ reflect permute @-}
-permute :: List Int -> M (List Int)
-permute Nil = pure Nil
-permute (Cons x xs) = split xs >>= permute_aux1 x
-
-{-@ reflect permute_aux1 @-}
-permute_aux1 :: Int -> (List Int, List Int) -> M (List Int)
-permute_aux1 x (ys, zs) = liftM2 (permute_aux2 x) (permute ys) (permute zs)
-
-{-@ reflect permute_aux2 @-}
-permute_aux2 :: Int -> List Int -> List Int -> List Int
-permute_aux2 x ys' zs' = ys' ++ Cons x Nil ++ zs'
-
-{-@
-permute_preserves_length ::
-  (Equality Natural, Equality (M (List Int)), Equality (M Natural)) =>
-  xs:List Int ->
-  EqualProp (M Natural)
-    {pure (length xs)}
-    {liftM length (permute xs)}
-@-}
-permute_preserves_length :: (Equality (M Natural), Equality Natural, Equality (M (List Int))) => List Int -> EqualityProp (M Natural)
-permute_preserves_length Nil =
-  [eqpropchain|
-      pure (length Nil)
-    %==
-      (\xs' -> pure (length xs')) Nil
-        %by %symmetry
-        %by %reflexivity
-    %==
-      pure Nil >>= \xs' -> pure (length xs')
-        %by %symmetry
-        %by pure_bind Nil (\xs' -> pure (length xs'))
-    %==
-      permute Nil >>= \xs' -> pure (length xs')
-        %by %rewrite pure Nil 
-                 %to permute Nil
-        %by %symmetry
-        %by %reflexivity
-    %==
-      liftM length (permute Nil)
-        %by %symmetry
-        %by %reflexivity
-  |]
-permute_preserves_length (Cons x xs) =
-  [eqpropchain|
-      pure (length (Cons x xs))
-    %==
-      pure (S (length xs))
-    %==
-      liftM length (permute (Cons x xs))
-  |]
 
 {-@ reflect bind_seq_associativity_with_permute_preserved_length_aux @-}
 bind_seq_associativity_with_permute_preserved_length_aux :: (List Int -> M a) -> (Natural -> M b) -> List Int -> M b
@@ -320,15 +240,6 @@ permute_commutativity_seq_bind m1 xs k =
     %==
         bind (permute xs) (seqk m1 k)
   |]
-
-{-@ reflect split @-}
-split :: List Int -> M (List Int, List Int)
-split Nil = pure (Nil, Nil)
-split (Cons x xs) = split xs >>= split_aux x
-
-{-@ reflect split_aux @-}
-split_aux :: Int -> (List Int, List Int) -> M (List Int, List Int)
-split_aux x (ys, zs) = pure (Cons x ys, zs) <+> pure (ys, Cons x zs)
 
 {-
 ## Divide-and-Conquer

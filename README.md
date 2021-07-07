@@ -1,50 +1,38 @@
-# Propositional Equality for Refinement Types 
+# Propositional Equality for Refinement Types
 
-## How to run 
+## How to run
 
 ```
-# install the propositional equality library 
+# install the propositional equality library
 cd propositional-equality
-stack install 
+stack install
 
-# run the tests/ examples in the paper 
-stack test 
+# run the tests/ examples in the paper
+stack test
 
-# run the case study 
-cd .. 
-stack install 
+# run the case study
+cd ..
+stack install
 ```
-
 
 # EDITS
 
-old src:                      & new src                            & paper  
-PropositionalEquality         & Relation.Equality.Prop             & 
-PEqProperties                 & Relation.Equality.Prop             &  
-EqRT                          & EqualProp                          & 
-EqT                           & EqualityProp                       & 
+old src: & new src & paper  
+PropositionalEquality & Relation.Equality.Prop & PEqProperties &
+Relation.Equality.Prop &  
+EqRT & EqualProp & EqT & EqualityProp &
 
-Reflexivity                   & Redefined as empty                 & 
-refl                          & reflexivity                        & 
+Reflexivity & Redefined as empty & refl & reflexivity &
 
-Symmetry                      & Equality 
-sym                           & symmetry 
-Transitivity                  & Transitivity'                      & 
-trans                         & transitivity'                      & 
-toSMT                         & concreteness                       & 
-EqCtx                         & substitutability (+ flip args)     & 
-eqRTCtx                       & same 
-EqSMT                         & fromEqSMT
-EqFun                         & extensionality
-eqSMT                         & reflexivity            
-
+Symmetry & Equality sym & symmetry Transitivity & Transitivity' & trans &
+transitivity' & toSMT & concreteness & EqCtx & substitutability (+ flip args) &
+eqRTCtx & same EqSMT & fromEqSMT EqFun & extensionality eqSMT & reflexivity
 
 - all require importing refined unit :(
 
+# TODO
 
-# TODO 
-Some restructuring could help. Maybe make them both top level dirsctories? 
-
+Some restructuring could help. Maybe make them both top level dirsctories?
 
 # Monadic Quicksort Verification in Liquid Haskell
 
@@ -52,6 +40,10 @@ A Liquid Haskell verification of Mu and Chiang's _[Deriving Monadic
 Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 
 ## Tasks
+
+- [ ] remove all top-level references to infixed notation, it seems to cause
+      problems that I cannot avoid. This will take a lot of effort, but its the
+      only thing I've found to work
 
 - [ ] try `--fast` option
 

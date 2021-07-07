@@ -121,11 +121,23 @@ join mm = mm >>= identity
 
 {-@ reflect liftM @-}
 liftM :: (a -> b) -> (M a -> M b)
-liftM f m = m >>= \x -> pure (f x)
+liftM f m = m >>= liftM_aux f
+
+{-@ reflect liftM_aux @-}
+liftM_aux :: (a -> b) -> a -> M b
+liftM_aux f x = pure (f x)
 
 {-@ reflect liftM2 @-}
 liftM2 :: (a -> b -> c) -> (M a -> M b -> M c)
-liftM2 f ma mb = ma >>= \x -> mb >>= \y -> pure (f x y)
+liftM2 f ma mb = ma >>= liftM2_aux f mb
+
+{-@ reflect liftM2_aux @-}
+liftM2_aux :: (a -> b -> c) -> M b -> a -> M c
+liftM2_aux f mb x = mb >>= liftM2_aux_aux f x
+
+{-@ reflect liftM2_aux_aux @-}
+liftM2_aux_aux :: (a -> b -> c) -> a -> b -> M c
+liftM2_aux_aux f x y = pure (f x y)
 
 {-@ reflect second @-}
 second :: (b -> M c) -> (a, b) -> M (a, c)
@@ -139,7 +151,29 @@ bind2 ma mb k = ma >>= \x -> mb >>= \y -> k x y
 bindFirst :: M a -> M b -> (a -> M c) -> M c
 bindFirst ma mb k = ma >>= \x -> mb >> k x
 
+{-@ reflect pureF @-}
+pureF :: (a -> b) -> (a -> M b)
+pureF f x = pure (f x)
+
 -- monad laws
+
+{-@
+subst_cont ::
+  m:M a -> k1:(a -> M b) -> k2:(a -> M b) ->
+  (x:a -> EqualProp (M b) {k1 x} {k2 x}) ->
+  EqualProp (M b) {m >>= k1} {m >>= k2}
+@-}
+subst_cont :: M a -> (a -> M b) -> (a -> M b) -> (a -> EqualityProp (M b)) -> EqualityProp (M b)
+subst_cont m k1 k2 pf = undefined
+
+{-@ assume
+subst_curr ::
+  m1:M a -> m2:M a -> k:(a -> M b) ->
+  (EqualProp (M a) {m1} {m2}) ->
+  EqualProp (M b) {m1 >>= k} {m2 >>= k}
+@-}
+subst_curr :: M a -> M a -> (a -> M b) -> EqualityProp (M a) -> EqualityProp (M b)
+subst_curr m1 m2 k pf = assumedProp
 
 {-@
 assume

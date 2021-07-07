@@ -1,9 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-{-@ LIQUID "--compile-spec" @-}
-
-module Sort.Array where
+module Sort.ListWork where
 
 import Data.Refined.Bool
 import Data.Refined.List
@@ -18,6 +16,4 @@ import Relation.Equality.Prop
 import Relation.Equality.Prop.EDSL
 import Relation.Equality.Prop.Reasoning
 import Sort.ListDone
-import Sort.ListTodo
-import Sort.ListWork
-import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (*), (+), (++), (>>), (>>=))
+import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (++), (>>), (>>=))
