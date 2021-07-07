@@ -96,7 +96,7 @@ rightIdP_macros [] = reflexivity []
 rightIdP_macros (x : xs) =
   [eqp| (x : xs) ++ []
     %== cons x (xs ++ [])
-    %== cons x xs          %by eqRTCtx (xs ++ []) (xs) (rightIdP xs) (cons x)
+    %== cons x xs          %by eqRTCtx (xs ++ []) (xs) (rightIdP_macros xs) (cons x)
   |]
 
 {-@ assocP :: xs:[a] -> ys:[a] -> zs:[a]
@@ -110,6 +110,16 @@ assocP (x : xs) ys zs =
     (cons x ((xs ++ ys) ++ zs))
     (reflexivity ((x : xs) ++ (ys ++ zs)))
     (eqRTCtx ((xs ++ (ys ++ zs))) ((xs ++ ys) ++ zs) (assocP xs ys zs) (cons x))
+
+{-@ assocP_macros :: xs:[a] -> ys:[a] -> zs:[a]
+          -> EqualProp [a] {(xs ++ (ys ++ zs))} {((xs ++ ys) ++ zs)}  @-}
+assocP_macros :: (Equality [a], Equality [a]) => [a] -> [a] -> [a] -> EqualityProp [a]
+assocP_macros [] ys zs = reflexivity ([] ++ (ys ++ zs))
+assocP_macros (x : xs) ys zs =
+  [eqp| (x : xs) ++ (ys ++ zs)
+    %== cons x (xs ++ (ys ++ zs))
+    %== cons x ((xs ++ ys) ++ zs)  %by eqRTCtx ((xs ++ (ys ++ zs))) ((xs ++ ys) ++ zs) (assocP_macros xs ys zs) (cons x)
+  |]
 
 {-@ reflect cons @-}
 cons :: a -> [a] -> [a]
