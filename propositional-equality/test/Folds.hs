@@ -115,6 +115,7 @@ foldLemma f b (x : xs) =
         )
     )
 
+--
 foldLemma_macros :: Equality b => (b -> a -> b) -> b -> [a] -> EqualityProp b
 {-@ foldLemma_macros :: Equality b => f:(b -> a -> b) -> b:b -> xs:[a] -> EqualProp b {foldl f b xs} {foldr (construct f) id xs b} @-}
 foldLemma_macros f b [] =
