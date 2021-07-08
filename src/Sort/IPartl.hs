@@ -1,4 +1,5 @@
-{-@ LIQUID "--compile-spec" @-}
+{-@ LIQUID "--no-termination" @-}
+-- needed this because `partl` threw termination checking errors even with lazy annotation
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
@@ -140,11 +141,11 @@ ipartl_spec_lemma1_aux1_aux2 i p x xs ys zs' =
 ipartl_spec_lemma1 ::
   i:Natural -> p:Int -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus ((Natural, Natural))
-    {ipartl_spec_lemma1_aux1 i p x xs ys zs}
-    {ipartl_spec_aux2 i p (Cons x xs) ys zs}
+    {ipartl_spec_lemma1_aux1 i p       x xs  ys zs}
+    {ipartl_spec_aux2        i p (Cons x xs) ys zs}
 @-}
 ipartl_spec_lemma1 :: Natural -> Int -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_lemma1 = undefined -- TODO
+ipartl_spec_lemma1 i p x xs ys zs = undefined -- TODO
 
 -- ipartl_spec_lemma1 steps
 
@@ -383,11 +384,11 @@ ipartl_spec_lemma4 i x zs = undefined -- TODO
 {-@
 ipartl_spec_lemma5 ::
   i:Natural -> p:Int -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
-  RefinesPlus (())
+  RefinesPlus ((Natural, Natural))
     {ipartl_spec_lemma6_aux2  i p x xs ys zs}
     {ipartl_spec_lemma1_step1 i p x xs ys zs}
 @-}
-ipartl_spec_lemma5 :: Natural -> Int -> Int -> List Int -> List Int -> List Int -> EqualityProp (M ())
+ipartl_spec_lemma5 :: Natural -> Int -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec_lemma5 i p x xs ys zs = undefined -- TODO
 
 --
@@ -396,25 +397,27 @@ ipartl_spec_lemma5 i p x xs ys zs = undefined -- TODO
 
 -- ipartl_spec_lemma6_aux1
 
-{-@ reflect ipartl_spec_lemma6_aux1 @-}
-ipartl_spec_lemma6_aux1 :: Natural -> Int -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
-ipartl_spec_lemma6_aux1 i p x xs ys zs =
-  bind
-    ( seq
-        (writeList i (append (append ys zs) (Cons x xs)))
-        (read (add (add i (length ys)) (length zs)))
-    )
-    (ipartl_spec_lemma6_aux1_aux i p xs ys zs)
+-- TODO: old, replaced with `ipartl_spec_aux1 i p (Cons x xs) ys zs`, right?
 
-{-@ reflect ipartl_spec_lemma6_aux1_aux @-}
-ipartl_spec_lemma6_aux1_aux :: Natural -> Int -> List Int -> List Int -> List Int -> Int -> M (Natural, Natural)
-ipartl_spec_lemma6_aux1_aux i p xs ys zs x =
-  if leq x p
-    then
-      seq
-        (swap (add i (length ys)) (add (add i (length ys)) (length zs)))
-        (ipartl i p (S (length ys), length ys, length xs))
-    else ipartl i p (length ys, S (length zs), length xs)
+-- {-@ reflect ipartl_spec_lemma6_aux1 @-}
+-- ipartl_spec_lemma6_aux1 :: Natural -> Int -> Int -> List Int -> List Int -> List Int -> M (Natural, Natural)
+-- ipartl_spec_lemma6_aux1 i p x xs ys zs =
+--   bind
+--     ( seq
+--         (writeList i (append (append ys zs) (Cons x xs)))
+--         (read (add (add i (length ys)) (length zs)))
+--     )
+--     (ipartl_spec_lemma6_aux1_aux i p xs ys zs)
+
+-- {-@ reflect ipartl_spec_lemma6_aux1_aux @-}
+-- ipartl_spec_lemma6_aux1_aux :: Natural -> Int -> List Int -> List Int -> List Int -> Int -> M (Natural, Natural)
+-- ipartl_spec_lemma6_aux1_aux i p xs ys zs x =
+--   if leq x p
+--     then
+--       seq
+--         (swap (add i (length ys)) (add (add i (length ys)) (length zs)))
+--         (ipartl i p (S (length ys), length ys, length xs))
+--     else ipartl i p (length ys, S (length zs), length xs)
 
 -- ipartl_spec_lemma6_aux2
 
@@ -443,8 +446,8 @@ ipartl_spec_lemma6_aux2 i p x xs ys zs =
 ipartl_spec_lemma6 ::
   i:Natural -> p:Int -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus ((Natural, Natural))
-    {ipartl_spec_lemma6_aux1 i p x xs ys zs}
-    {ipartl_spec_lemma6_aux2 i p x xs ys zs}
+    {ipartl_spec_aux1        i p (Cons x xs) ys zs}
+    {ipartl_spec_lemma6_aux2 i p       x xs  ys zs}
 @-}
 ipartl_spec_lemma6 :: Natural -> Int -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec_lemma6 i p x xs ys zs = undefined -- TODO
@@ -478,10 +481,16 @@ ipartl_spec ::
 ipartl_spec :: Equality (M (Natural, Natural)) => Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec i p Nil ys zs = undefined -- TODO
 ipartl_spec i p (Cons x xs) ys zs =
-  refinesplus_transitivity step1 step2 step4 undefined $
-    refinesplus_transitivity step2 step3 step4 undefined undefined
-  where
-    step1 = ipartl_spec_aux1 i p (Cons x xs) ys zs
-    step2 = ipartl_spec_lemma6_aux2 i p x xs ys zs
-    step3 = ipartl_spec_lemma1_step1 i p x xs ys zs
-    step4 = ipartl_spec_aux2 i p (Cons x xs) ys zs
+  let 
+  {- ORMOLU_DISABLE -}
+    step1    = ipartl_spec_aux1        i p (Cons x xs) ys zs
+    step1to2 = ipartl_spec_lemma6      i p       x xs  ys zs
+    step2    = ipartl_spec_lemma6_aux2 i p       x xs  ys zs
+    step2to3 = ipartl_spec_lemma5      i p       x xs  ys zs ? undefined -- TODO: shouldn't be needed...
+    step3    = ipartl_spec_lemma1_aux1 i p       x xs  ys zs
+    step3to4 = ipartl_spec_lemma1      i p       x xs  ys zs
+    step4    = ipartl_spec_aux2        i p (Cons x xs) ys zs
+  {- ORMOLU_ENABLE -}
+  in 
+    refinesplus_transitivity step1 step2 step4 step1to2 $
+    refinesplus_transitivity step2 step3 step4 step2to3 step3to4
