@@ -38,6 +38,10 @@ append (Cons x xs) ys = Cons x (append xs ys)
 snoc :: List a -> a -> List a
 snoc xs x = xs ++ Cons x Nil
 
+{-@ reflect single @-}
+single :: a -> List a
+single x = Cons x Nil
+
 {-@ infixr 5 ++ @-}
 infixr 5 ++
 
