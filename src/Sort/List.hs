@@ -63,6 +63,10 @@ permute_aux1 x (ys, zs) = liftM2 (permute_aux2 x) (permute ys) (permute zs)
 permute_aux2 :: Int -> List Int -> List Int -> List Int
 permute_aux2 x ys' zs' = ys' ++ Cons x Nil ++ zs'
 
+{-@ reflect sandwich @-}
+sandwich :: List Int -> Int -> List Int -> List Int
+sandwich ys x zs = append (append ys (single x)) zs
+
 --
 -- ### Lemmas
 --
@@ -73,7 +77,7 @@ permute_aux2 x ys' zs' = ys' ++ Cons x Nil ++ zs'
 {-@ assume
 sorted_middle ::
   ys:List Int -> x:Int -> zs:List Int ->
-  {sorted (append ys (append (Cons x Nil) zs)) <=>
+  {sorted (sandwich ys x zs) <=>
    sorted ys && sorted zs && all (geq x) ys && all (leq x) zs}
 @-}
 sorted_middle :: List Int -> Int -> List Int -> Proof
