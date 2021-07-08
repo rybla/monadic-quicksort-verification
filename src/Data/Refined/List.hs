@@ -5,7 +5,7 @@ module Data.Refined.List where
 import Data.Refined.Natural
 import Language.Haskell.Liquid.ProofCombinators
 import Relation.Equality.Prop
-import Prelude hiding (all, foldl, length, (+), (++))
+import Prelude hiding (all, concat, foldl, length, (+), (++))
 
 {-
 # List
@@ -29,10 +29,10 @@ length :: List a -> Natural
 length Nil = Z
 length (Cons _ xs) = S (length xs)
 
-{-@ reflect append @-}
-append :: List a -> List a -> List a
-append Nil ys = ys
-append (Cons x xs) ys = Cons x (append xs ys)
+{-@ reflect concat @-}
+concat :: List a -> List a -> List a
+concat Nil ys = ys
+concat (Cons x xs) ys = Cons x (concat xs ys)
 
 {-@ reflect snoc @-}
 snoc :: List a -> a -> List a
@@ -47,26 +47,26 @@ infixr 5 ++
 
 {-@ reflect ++ @-}
 (++) :: List a -> List a -> List a
-(++) = append
+(++) = concat
 
 -- {-@ infixr 5 ++ @-}
 -- {-@ reflect ++ @-}
 -- (++) :: List a -> List a -> List a
--- xs ++ ys = append xs ys
+-- xs ++ ys = concat xs ys
 
-{-@ automatic-instances append_identity @-}
+{-@ automatic-instances concat_identity @-}
 {-@
-append_identity :: xs:List a -> {(append xs Nil = xs) && (append Nil xs = xs)}
+concat_identity :: xs:List a -> {(concat xs Nil = xs) && (concat Nil xs = xs)}
 @-}
-append_identity :: List a -> Proof
-append_identity Nil = trivial
-append_identity (Cons _ xs) = append_identity xs
+concat_identity :: List a -> Proof
+concat_identity Nil = trivial
+concat_identity (Cons _ xs) = concat_identity xs
 
 {-@
-append_associativity :: xs:List a -> ys:List a -> zs:List a -> {xs ++ ys ++ zs = (xs ++ ys) ++ zs}
+concat_associativity :: xs:List a -> ys:List a -> zs:List a -> {xs ++ ys ++ zs = (xs ++ ys) ++ zs}
 @-}
-append_associativity :: List a -> List a -> List a -> Proof
-append_associativity xs ys zs = undefined -- TODO
+concat_associativity :: List a -> List a -> List a -> Proof
+concat_associativity xs ys zs = undefined -- TODO
 
 {-@
 length_snoc :: xs:List a -> x:a -> {length (xs ++ Cons x Nil) = S (length xs)}
@@ -75,10 +75,10 @@ length_snoc :: List a -> a -> Proof
 length_snoc xs x = undefined -- TODO
 
 {-@
-length_append :: xs:List a -> ys:List a -> {add (length xs) (length ys) = length (xs ++ ys)}
+length_concat :: xs:List a -> ys:List a -> {add (length xs) (length ys) = length (xs ++ ys)}
 @-}
-length_append :: List a -> List a -> Proof
-length_append xs ys = undefined -- TODO
+length_concat :: List a -> List a -> Proof
+length_concat xs ys = undefined -- TODO
 
 -- |
 -- == Utilities

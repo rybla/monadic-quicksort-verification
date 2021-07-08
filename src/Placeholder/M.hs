@@ -1028,22 +1028,22 @@ swap_id i =
 
 -- [ref 9]
 {-@
-writeList_append ::
+writeList_concat ::
   Equality (M Unit) =>
   i:Natural -> xs:List Int -> ys:List Int ->
   EqualProp (M Unit)
-    {writeList i (append xs ys)}
+    {writeList i (concat xs ys)}
     {writeList i xs >> writeList (add i (length xs)) ys}
 @-}
-writeList_append :: Equality (M Unit) => Natural -> List Int -> List Int -> EqualityProp (M ())
-writeList_append i Nil ys =
+writeList_concat :: Equality (M Unit) => Natural -> List Int -> List Int -> EqualityProp (M ())
+writeList_concat i Nil ys =
   [eqpropchain|
       writeList i (Nil ++ ys)
     %==
       writeList i ys
         %by %rewrite Nil ++ ys %to ys
         %by %smt
-        %by append_identity ys
+        %by concat_identity ys
     %==
       apply (\_ -> writeList i ys) it
         %by %smt
@@ -1071,7 +1071,7 @@ writeList_append i Nil ys =
         %by writeList i Nil >> writeList (i + Z) ys
   |]
 --
-writeList_append i (Cons x xs) ys =
+writeList_concat i (Cons x xs) ys =
   [eqpropchain|
       writeList i (Cons x xs ++ ys)
     %==
@@ -1088,7 +1088,7 @@ writeList_append i (Cons x xs) ys =
       write i x >> (writeList (S i) xs >> writeList (S i + length xs) ys)
         %by %rewrite writeList (S i) (xs ++ ys)
                  %to writeList (S i) xs >> writeList (S i + length xs) ys
-        %by writeList_append (S i) xs ys
+        %by writeList_concat (S i) xs ys
     %==
       write i x >> (writeList (S i) xs >> writeList (S (i + length xs)) ys)
         %by %rewrite S i + length xs

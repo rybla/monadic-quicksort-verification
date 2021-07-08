@@ -2,7 +2,7 @@ iqsort_spec_lemma2
 
 --
 
-seq (writeList i (append (Cons p Nil) ys)) (swap i (add i (length ys)))
+seq (writeList i (concat (Cons p Nil) ys)) (swap i (add i (length ys)))
 
 -- infix
 writeList i (Cons p Nil ++ ys)

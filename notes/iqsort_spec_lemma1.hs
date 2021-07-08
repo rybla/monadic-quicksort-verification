@@ -27,7 +27,7 @@ partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
     writeList i (ys' ++ Cons p Nil ++ zs) >>
       iqsort i (length ys) >>
         iqsort (S (i + length ys)) (length zs)
--- writeList_append
+-- writeList_concat
 partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
   permute ys >>= \ys' ->
     writeList i (ys' ++ Cons p Nil) >>
@@ -66,7 +66,7 @@ partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
 
 
 
--- writeList_append
+-- writeList_concat
 partl' p (Nil, Nil, xs) >>= \(ys, zs) ->
   permute ys >>= \ys' ->
     writeList i ys' >>

@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Sort.ListProto where
+module Sort.ListTodo where
 
 import Data.Refined.Bool
 import Data.Refined.List
@@ -15,6 +15,8 @@ import Placeholder.M
 import Relation.Equality.Prop
 import Relation.Equality.Prop.EDSL
 import Relation.Equality.Prop.Reasoning
+import Sort.ListDone
+import Sort.ListWork
 import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (++), (>>), (>>=))
 
 {-@ reflect bind_seq_associativity_with_permute_preserved_length_aux @-}
@@ -137,7 +139,7 @@ pure_refines_permute (Cons x xs) =
                       %to Nil ++ Cons x Nil ++ xs
               %by %smt
               %by Cons x Nil ++ xs
-                ? append_identity (Cons x Nil)
+                ? concat_identity (Cons x Nil)
 
           %==
             pure (Nil, xs) >>= \(ys, zs) ->

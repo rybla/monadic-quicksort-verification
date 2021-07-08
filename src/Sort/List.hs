@@ -16,7 +16,7 @@ import Placeholder.M
 import Relation.Equality.Prop
 import Relation.Equality.Prop.EDSL
 import Relation.Equality.Prop.Reasoning
-import Prelude hiding (Monad, all, foldl, length, pure, read, readList, seq, (+), (++), (>>), (>>=))
+import Prelude hiding (Monad, all, concat, foldl, length, pure, read, readList, seq, (+), (++), (>>), (>>=))
 
 {-@ reflect apply2 @-}
 apply2 :: (a -> b -> c) -> (a -> b -> c)
@@ -65,7 +65,7 @@ permute_aux2 x ys' zs' = ys' ++ Cons x Nil ++ zs'
 
 {-@ reflect sandwich @-}
 sandwich :: List Int -> Int -> List Int -> List Int
-sandwich ys x zs = append (append ys (single x)) zs
+sandwich ys x zs = concat (concat ys (single x)) zs
 
 --
 -- ### Lemmas

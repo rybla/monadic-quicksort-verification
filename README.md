@@ -62,7 +62,7 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 - [x] prove `refinesplus_reflexivity`
 - [x] prove `refinesplus_transitivity`
 - [x] prove `refinesplus_substitutability`
-- [x] prove `writeList_append`
+- [x] prove `writeList_concat`
 - [x] prove `writeList_redundancy`
 - [x] prove `writeList_commutativity`
 
@@ -91,7 +91,7 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
 - [x] prove `permute_kleisli_permute` in `Cons` case
   - [x] prove `permute_kleisli_permute_lemma` in `Cons` case
 - [x] prove `ipartl_spec`
-  - [x] prove `dispatch_preserves_length_append_ys_zs`
+  - [x] prove `dispatch_preserves_length_concat_ys_zs`
   - [x] prove `dispatch_commutativity_seq_bind`
   - [x] prove `ipartl_spec_lemma1`
     - [x] prove `ipartl_spec_lemma1_step1`
@@ -128,6 +128,12 @@ Quicksort][mu s, chiang t - declarative pearl- deriving monadic quicksort]_.
   - [x] prove `iqsort_step2`
   - [x] prove `iqsort_step3`
   - [x] prove `iqsort_step4`
+
+`Sort.IPartl`
+
+- [ ] ipartl_spec_lemma5
+- [ ] ipartl_spec_lemma6
+  - [ ] bind_seq_writeList_read_k
 
 <!-- References -->
 
