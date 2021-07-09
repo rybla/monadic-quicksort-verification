@@ -23,13 +23,13 @@ import Prelude hiding (all, concat, foldl, length, pure, read, readList, seq)
 
 {-@
 ipartl_spec ::
-  (Equality (M (Natural, Natural))) =>
+  (Equality (M ()), Equality (M (List Int)), (Equality (() -> M (Natural, Natural))), Equality (M (Natural, Natural))) =>
   i:Natural -> p:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus ((Natural, Natural))
     {ipartl_spec_aux1 i p xs ys zs}
     {ipartl_spec_aux2 i p xs ys zs}
 @-}
-ipartl_spec :: (Equality (M (Natural, Natural))) => Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec :: (Equality (M ()), Equality (M (List Int)), (Equality (() -> M (Natural, Natural))), Equality (M (Natural, Natural))) => Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
 ipartl_spec i p Nil ys zs =
   refinesplus_equalprop
     (ipartl_spec_aux1 i p Nil ys zs)
@@ -63,9 +63,9 @@ ipartl_spec i p (Cons x xs) ys zs =
     refinesplus_transitivity step2 step3 step4 step2to3 step3to4
   where
     step1 = ipartl_spec_aux1 i p (Cons x xs) ys zs
-    step1to2 = undefined
+    step1to2 = ipartl_spec_lemma6 i p x xs ys zs
     step2 = ipartl_spec_lemma6_aux2 i p x xs ys zs
-    step2to3 = undefined
+    step2to3 = ipartl_spec_lemma5 i p x xs ys zs
     step3 = ipartl_spec_lemma1_aux1 i p x xs ys zs
-    step3to4 = undefined
-    step4 = ipartl_spec_aux2 i p x xs ys zs
+    step3to4 = ipartl_spec_lemma1 i p x xs ys zs
+    step4 = ipartl_spec_aux2 i p (Cons x xs) ys zs
