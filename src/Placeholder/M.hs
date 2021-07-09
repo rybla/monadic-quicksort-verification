@@ -1477,3 +1477,23 @@ subst_curr' = undefined
 bind_associativity' m k1 k2 = undefined
 
 writeListToLength2_helper = undefined
+
+pure' = undefined
+
+-- {-@
+-- bind_seq_writeList_read_k ::
+--   i:Natural -> ys:List Int -> zs:List Int -> x:Int -> xs:List Int -> k:(Int -> M a) ->
+--   EqualProp (M a)
+--     {bind (seq (writeList i (concat (concat ys zs) (Cons x xs))) (read (add (add i (length ys)) (length zs)))) k}
+--     {seq (writeList i (concat (concat ys zs) (Cons x xs))) (k x)}
+-- @-}
+-- bind_seq_writeList_read_k :: Natural -> List Int -> List Int -> Int -> List Int -> (Int -> M a) -> EqualityProp (M a)
+bind_seq_writeList_read_k = undefined
+
+seq_bind_associativity' = undefined
+
+fold_ipartl_spec_lemma6_aux2 = undefined
+
+unfold_ipartl_spec_lemma2_aux2 = undefined
+
+length_Cons = undefined

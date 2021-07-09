@@ -1,4 +1,4 @@
-{-@ LIQUID "--compile-spec" @-}
+-- {-@ LIQUID "--compile-spec" @-}
 {-@ LIQUID "--no-termination" @-}
 -- needed this because `partl` threw termination checking errors even with lazy annotation
 {-# LANGUAGE QuasiQuotes #-}
@@ -139,13 +139,24 @@ ipartl_spec_lemma1_aux1_aux2 i p x xs ys zs' =
 
 {-@
 ipartl_spec_lemma1 ::
+  (Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M (List Int, List Int)), Equality (M (List Int, List Int, List Int))) =>
   i:Natural -> p:Int -> x:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
   RefinesPlus ((Natural, Natural))
     {ipartl_spec_lemma1_aux1 i p       x xs  ys zs}
     {ipartl_spec_aux2        i p (Cons x xs) ys zs}
 @-}
-ipartl_spec_lemma1 :: Natural -> Int -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
-ipartl_spec_lemma1 i p x xs ys zs = undefined -- TODO
+ipartl_spec_lemma1 :: (Equality (M (List Int, List Int, List Int)), Equality (M (Natural, Natural)), Equality (M (List Int, List Int)), Equality (M (List Int, List Int, List Int))) => Natural -> Int -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec_lemma1 i p x xs ys zs =
+  refinesplus_transitivity step1 step2 step4 step1to2 $
+    refinesplus_transitivity step2 step3 step4 step2to3 step3to4
+  where
+    step1 = ipartl_spec_lemma1_aux1 i p x xs ys zs
+    step1to2 = refinesplus_equalprop step1 step2 (ipartl_spec_lemma1_aux1to2 i p x xs ys zs) ? seq_bind_associativity' (writeList (S (add (add i (length ys)) (length zs))) xs) (dispatch x p (ys, zs, xs)) (ipartl_spec_lemma1_aux1A_aux i p x)
+    step2 = ipartl_spec_lemma1_step2 i p x xs ys zs ? seq_bind_associativity' ? seq_bind_associativity' (writeList (S (add (add i (length ys)) (length zs))) xs) (dispatch x p (ys, zs, xs)) (ipartl_spec_lemma1_aux1A_aux i p x)
+    step2to3 = ipartl_spec_lemma1_step2to3 i p x xs ys zs ? seq_bind_associativity' ? seq_bind_associativity' (writeList (S (add (add i (length ys)) (length zs))) xs) (dispatch x p (ys, zs, xs)) (ipartl_spec_lemma1_aux1A_aux i p x)
+    step3 = ipartl_spec_lemma1_step3 i p x xs ys zs ? seq_bind_associativity' ? seq_bind_associativity' (writeList (S (add (add i (length ys)) (length zs))) xs) (dispatch x p (ys, zs, xs)) (ipartl_spec_lemma1_aux1A_aux i p x)
+    step3to4 = ipartl_spec_lemma1_step3to4 i p x xs ys zs ? seq_bind_associativity' ? seq_bind_associativity' (writeList (S (add (add i (length ys)) (length zs))) xs) (dispatch x p (ys, zs, xs)) (ipartl_spec_lemma1_aux1A_aux i p x)
+    step4 = ipartl_spec_aux2 i p (Cons x xs) ys zs ? seq_bind_associativity' ? seq_bind_associativity' (writeList (S (add (add i (length ys)) (length zs))) xs) (dispatch x p (ys, zs, xs)) (ipartl_spec_lemma1_aux1A_aux i p x)
 
 -- ipartl_spec_lemma1 steps
 
@@ -699,7 +710,7 @@ ipartl_spec_lemma4_aux2_aux :: Natural -> Int -> List Int -> M ()
 ipartl_spec_lemma4_aux2_aux i x zs' =
   writeList i (Cons x zs')
 
-{-@
+{-@ assume
 ipartl_spec_lemma4 ::
   i:Natural -> x:Int -> zs:List Int ->
   RefinesPlus (())
@@ -707,7 +718,7 @@ ipartl_spec_lemma4 ::
     {ipartl_spec_lemma4_aux2 i x zs}
 @-}
 ipartl_spec_lemma4 :: Natural -> Int -> List Int -> EqualityProp (M ())
-ipartl_spec_lemma4 i x zs = undefined -- TODO
+ipartl_spec_lemma4 i x zs = assumedProp
 
 --
 -- ipartl_spec_lemma5
@@ -798,8 +809,8 @@ ipartl_spec_lemma5 i p x xs ys zs =
                 )
 
             %by %rewrite seq (ipartl_spec_lemma3_aux2 i p x xs ys zs) (ipartl i p (S (length ys), length zs, length xs))
-                     %to bind (permute zs) (ipartl_spec_lemma1_aux1_aux1 i p x xs ys)
-            %by undefined -- TODO
+                     %to bind (permute zs) (ipartl_spec_lemma1_aux1_aux1 i p x xs ys) 
+            %by seq_bind_associativity' (ipartl_spec_lemma3_aux2 i p x xs ys zs) (ipartl i p (S (length ys), length zs, length xs))
 
           %== seq
                 (writeList (add (add (add i (length ys)) (length zs)) one) xs)
@@ -814,7 +825,7 @@ ipartl_spec_lemma5 i p x xs ys zs =
             
             %by %rewrite ipartl_spec_lemma2_aux2 i p x xs ys zs
                      %to bind (permute (concat zs (single x))) (ipartl_spec_lemma1_aux1_aux2 i p x xs ys)
-            %by undefined -- TODO
+            %by unfold_ipartl_spec_lemma2_aux2 i p x xs ys zs
 
           %== ipartl_spec_lemma1_aux1 i p x xs ys zs
         |]
@@ -871,10 +882,8 @@ ipartl_spec_lemma6 i p x xs ys zs =
             (writeList i (concat (concat ys zs) (Cons x xs)))
             (ipartl i p (length ys, length zs, S (length xs)))
 
-        %by %rewrite length (Cons x xs)
-                %to S (length xs)
-        %by undefined %-- TODO: Liquid Type Mismatch
-        %-- %by %reflexivity
+        %by %rewrite length (Cons x xs) %to S (length xs)
+        %by length_Cons x xs
 
       %== seq
             (writeList i (concat (concat ys zs) (Cons x xs)))
@@ -919,26 +928,10 @@ ipartl_spec_lemma6 i p x xs ys zs =
                 %to if leq x p then seq (swap (add i (length ys)) (add (add i (length ys)) (length zs))) (ipartl i p (S (length ys), length zs, length xs)) else ipartl i p (length ys, S (length zs), (length xs))
         %by %reflexivity
 
-      %-- TODO: need to actually fold in definitions of 
-      %-- ipartl_spec_lemma2_aux1
-      %-- ipartl_spec_lemma3_aux1
-
       %== ipartl_spec_lemma6_aux2 i p x xs ys zs
             
-        %by %symmetry
-        %by undefined
-        %-- %by %reflexivity
+        %by fold_ipartl_spec_lemma6_aux2 i p x xs ys zs
   |]
-
-{-@
-bind_seq_writeList_read_k ::
-  i:Natural -> ys:List Int -> zs:List Int -> x:Int -> xs:List Int -> k:(Int -> M a) ->
-  EqualProp (M a)
-    {bind (seq (writeList i (concat (concat ys zs) (Cons x xs))) (read (add (add i (length ys)) (length zs)))) k}
-    {seq (writeList i (concat (concat ys zs) (Cons x xs))) (k x)}
-@-}
-bind_seq_writeList_read_k :: Natural -> List Int -> List Int -> Int -> List Int -> (Int -> M a) -> EqualityProp (M a)
-bind_seq_writeList_read_k i ys zs x xs k = undefined -- TODO
 
 --
 -- ipartl_spec_lemma6
@@ -995,3 +988,59 @@ ipartl_spec_aux2 i p xs ys zs =
   bind
     (partl' p (ys, zs, xs))
     (writeListToLength2 i)
+
+{-@
+ipartl_spec ::
+  (Equality (M (List Int, List Int)), Equality (M (List Int, List Int, List Int)), Equality (M ()), Equality (M (List Int)), (Equality (() -> M (Natural, Natural))), Equality (M (Natural, Natural))) =>
+  i:Natural -> p:Int -> xs:List Int -> ys:List Int -> zs:List Int ->
+  RefinesPlus ((Natural, Natural))
+    {ipartl_spec_aux1 i p xs ys zs}
+    {ipartl_spec_aux2 i p xs ys zs}
+@-}
+ipartl_spec :: (Equality (M (List Int, List Int)), Equality (M (List Int, List Int, List Int)), Equality (M ()), Equality (M (List Int)), (Equality (() -> M (Natural, Natural))), Equality (M (Natural, Natural))) => Natural -> Int -> List Int -> List Int -> List Int -> EqualityProp (M (Natural, Natural))
+ipartl_spec i p Nil ys zs =
+  refinesplus_equalprop
+    (ipartl_spec_aux1 i p Nil ys zs)
+    (ipartl_spec_aux2 i p Nil ys zs)
+    [eqp| ipartl_spec_aux1 i p Nil ys zs
+      %== seq
+            (writeList i (concat (concat ys zs) Nil))
+            (ipartl i p (length ys, length zs, length Nil))
+      %== seq
+            (writeList i (concat (concat ys zs) Nil))
+            (ipartl i p (length ys, length zs, Z))
+          %by %rewrite length Nil
+                   %to Z
+          %by %reflexivity
+      %== seq
+            (writeList i (concat (concat ys zs) Nil))
+            (pure' (length ys, length zs))
+          %by %rewrite ipartl i p (length ys, length zs, Z)
+                   %to pure (length ys, length zs)
+          %by %reflexivity
+      %== seq
+            (writeList i (concat ys zs))
+            (pure (length ys, length zs))
+        %by %smt
+        %by concat_identity (concat ys zs)
+      %== writeListToLength2 i (ys, zs)
+      %== bind
+            (pure (ys, zs))
+            (writeListToLength2 i)
+        %by pure_bind (ys, zs) (writeListToLength2 i)
+      %== bind
+            (partl' p (ys, zs, Nil))
+            (writeListToLength2 i)
+          %by undefined
+    |]
+ipartl_spec i p (Cons x xs) ys zs =
+  refinesplus_transitivity step1 step2 step4 step1to2 $
+    refinesplus_transitivity step2 step3 step4 step2to3 step3to4
+  where
+    step1 = ipartl_spec_aux1 i p (Cons x xs) ys zs
+    step1to2 = ipartl_spec_lemma6 i p x xs ys zs
+    step2 = ipartl_spec_lemma6_aux2 i p x xs ys zs
+    step2to3 = ipartl_spec_lemma5 i p x xs ys zs
+    step3 = ipartl_spec_lemma1_aux1 i p x xs ys zs
+    step3to4 = ipartl_spec_lemma1 i p x xs ys zs
+    step4 = ipartl_spec_aux2 i p (Cons x xs) ys zs
