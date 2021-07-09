@@ -71,6 +71,16 @@ sandwich ys x zs = concat (concat ys (single x)) zs
 -- ### Lemmas
 --
 
+{-@ assume
+pure_refines_permute ::
+  xs:List Int ->
+  RefinesPlus (List Int)
+    {pure xs}
+    {permute xs}
+@-}
+pure_refines_permute :: List Int -> EqualityProp (M (List Int))
+pure_refines_permute xs = assumedProp
+
 -- [ref] display 5
 -- TODO: how do I prove (<=>)?
 -- TODO: where is this used?
@@ -108,16 +118,16 @@ sorted_middle (Cons y ys) x zs = ()
 -- permute_preserves_length
 --
 
-{-@ assume
-permute_preserves_length ::
-  (Equality Natural, Equality (M (List Int)), Equality (M Natural)) =>
-  xs:List Int ->
-  EqualProp (M Natural)
-    {liftM length (permute xs)}
-    {pure (length xs)}
-@-}
-permute_preserves_length :: (Equality Natural, Equality (M (List Int)), Equality (M Natural)) => List Int -> EqualityProp (M Natural)
-permute_preserves_length _ = assumedProp
+-- {-@ assume
+-- permute_preserves_length ::
+--   (Equality Natural, Equality (M (List Int)), Equality (M Natural)) =>
+--   xs:List Int ->
+--   EqualProp (M Natural)
+--     {liftM length (permute xs)}
+--     {pure (length xs)}
+-- @-}
+-- permute_preserves_length :: (Equality Natural, Equality (M (List Int)), Equality (M Natural)) => List Int -> EqualityProp (M Natural)
+-- permute_preserves_length _ = assumedProp
 
 -- permute_preserves_length :: (Equality (M Natural), Equality Natural, Equality (M (List Int))) => List Int -> EqualityProp (M Natural)
 -- permute_preserves_length Nil =

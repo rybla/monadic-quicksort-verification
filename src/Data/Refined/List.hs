@@ -80,6 +80,14 @@ length_concat :: xs:List a -> ys:List a -> {add (length xs) (length ys) = length
 length_concat :: List a -> List a -> Proof
 length_concat xs ys = undefined -- TODO
 
+-- {-@
+-- concat_concat_single ::
+--   ys:List a -> zs:List a -> x:a ->
+--   {concat (concat ys zs) (single x) = concat ys (snoc zs x)}
+-- @-}
+-- concat_concat_single :: List a -> List a -> a -> Proof
+concat_concat_single ys zs x = undefined
+
 -- |
 -- == Utilities
 
