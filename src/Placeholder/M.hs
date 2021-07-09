@@ -483,7 +483,7 @@ import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import Relation.Equality.Prop
 import Relation.Equality.Prop.EDSL
-import Prelude hiding (Monad, length, pure, read, readList, seq, (+), (++), (>>), (>>=))
+import Prelude hiding (Monad, concat, length, pure, read, readList, seq, (+), (++), (>>), (>>=))
 
 leq :: Int -> Int -> Bool
 leq x y = x <= y
@@ -1030,7 +1030,7 @@ writeListToLength :: Natural -> List Int -> M Natural
 writeListToLength i xs = writeList i xs >> pure (length xs)
 
 writeListToLength2 :: Natural -> (List Int, List Int) -> M (Natural, Natural)
-writeListToLength2 i (xs, ys) = writeList i (xs ++ ys) >> pure (length xs, length ys)
+writeListToLength2 i (xs, ys) = seq (writeList i (concat xs ys)) (pure (length xs, length ys))
 
 writeListToLength3 :: Natural -> (List Int, List Int, List Int) -> M (Natural, Natural, Natural)
 writeListToLength3 i (xs, ys, zs) = writeList i (xs ++ ys ++ zs) >> pure (length xs, length ys, length zs)
@@ -1455,3 +1455,25 @@ distribute_if c m1 m2 k = undefined
 -- @-}
 -- permute_preserves_length :: List Int -> EqualityProp (M Natural)
 permute_preserves_length xs = undefined
+
+-- {-@ assume
+-- subst_curr' ::
+--   m1:M a -> m2:M a -> k:(a -> M b) ->
+--   (EqualProp (M a) {m1} {m2}) ->
+--   EqualProp (M b) {m1 >>= k} {m2 >>= k}
+-- @-}
+-- subst_curr' :: M a -> M a -> (a -> M b) -> EqualityProp (M a) -> EqualityProp (M b)
+subst_curr' = undefined
+
+-- {-@
+-- bind_associativity' ::
+--   Equality (M c) =>
+--   m:M a -> k1:(a -> M b) -> k2:(b -> M c) ->
+--   EqualProp (M c)
+--     {m >>= k1 >>= k2}
+--     {m >>= (k1 >=> k2)}
+-- @-}
+-- bind_associativity' :: Equality (M c) => M a -> (a -> M b) -> (b -> M c) -> EqualityProp (M c)
+bind_associativity' m k1 k2 = undefined
+
+writeListToLength2_helper = undefined
