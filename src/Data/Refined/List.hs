@@ -1,4 +1,5 @@
 {-@ LIQUID "--compile-spec" @-}
+{-# OPTIONS_GHC "-Wno-missing-signatures" #-}
 
 module Data.Refined.List where
 

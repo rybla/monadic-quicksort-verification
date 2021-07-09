@@ -4,8 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7ceb82e1c16a159357cdb5615b0c40c50546c145f630c1addb4a3604606f8422
-
+-- hash: 2d3d28ecd115815616ebdfb52dd2da3d087b140ecd7907a50081612bd3f59118
 
 name:           monadic-quicksort-verification
 version:        0.1.0.0
@@ -27,13 +26,17 @@ source-repository head
 
 library
   exposed-modules:
-      Sort.Array
-      Sort.List
       Data.Refined.Bool
       Data.Refined.List
+      Data.Refined.Nat
       Data.Refined.Natural
       Data.Refined.Tuple
+      Language.Haskell.Liquid.Custom.Equational
+      Language.Haskell.Liquid.Custom.ProofCombinators
       Placeholder.M
+      Sort.IPartl
+      Sort.IQSort
+      Sort.List
   other-modules:
       Paths_monadic_quicksort_verification
   hs-source-dirs:
@@ -47,9 +50,9 @@ library
     , liquidhaskell ==0.8.10.2
     , neat-interpolation
     , parsec
+    , propositional-equality
     , template-haskell
     , text
-    , propositional-equality
   default-language: Haskell2010
 
 test-suite monadic-quicksort-verification-test
@@ -70,6 +73,7 @@ test-suite monadic-quicksort-verification-test
     , monadic-quicksort-verification
     , neat-interpolation
     , parsec
+    , propositional-equality
     , template-haskell
     , text
   default-language: Haskell2010
